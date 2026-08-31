@@ -33,7 +33,6 @@ import com.qreader.reader.help.storage.Backup
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.service.BaseReadAloudService
-import com.qreader.reader.ui.about.CrashLogsDialog
 import com.qreader.reader.ui.association.ImportBookSourceDialog
 import com.qreader.reader.ui.association.ImportReplaceRuleDialog
 import com.qreader.reader.ui.association.ImportRssSourceDialog
@@ -128,7 +127,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             if (!privacyPolicy()) return@launch
             //版本更新
             upVersion()
-            notifyAppCrash()
             //备份同步
             backupSync()
             //设置回调
@@ -248,19 +246,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             showDialogFragment(dialog)
         } else {
             block.resume(null)
-        }
-    }
-
-    private fun notifyAppCrash() {
-        if (!LocalConfig.appCrash || BuildConfig.DEBUG) {
-            return
-        }
-        LocalConfig.appCrash = false
-        alert(getString(R.string.draw), "检测到阅读发生了崩溃，是否打开崩溃日志以便报告问题？") {
-            yesButton {
-                showDialogFragment<CrashLogsDialog>()
-            }
-            noButton()
         }
     }
 

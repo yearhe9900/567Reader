@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseFragment
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RssArticle
 import com.qreader.reader.databinding.FragmentRssArticlesBinding
@@ -167,7 +166,6 @@ class RssArticlesFragment() : VMBaseFragment<RssArticlesViewModel>(R.layout.frag
         articlesFlowJob = viewLifecycleOwner.lifecycleScope.launch {
             appDb.rssArticleDao.flowByOriginSort(rssUrl, viewModel.sortName)
                 .catch {
-                    AppLog.put("订阅文章界面获取数据失败\n${it.localizedMessage}", it)
                 }.flowOn(IO).collect { newList ->
                     if (!isResumed || fullRefresh || newList.isEmpty()) {
                         adapter.setItems(newList)

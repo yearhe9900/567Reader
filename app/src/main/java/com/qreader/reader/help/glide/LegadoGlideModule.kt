@@ -45,7 +45,6 @@ class LegadoGlideModule : AppGlideModule() {
         builder.setMemorySizeCalculator(calculator)
         builder.setBitmapPool(bitmapPool)
         builder.setDiskCache(InternalCacheDiskCacheFactory(context, 1024 * 1024 * 1000))
-        if (!BuildConfig.DEBUG && !AppConfig.recordLog) {
             builder.setLogLevel(Log.ERROR)
         }
     }

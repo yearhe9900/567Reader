@@ -3,7 +3,6 @@ package com.qreader.reader.ui.rss.read
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.SourceType
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RssArticle
@@ -91,7 +90,6 @@ object ReadRss {
                             1 -> fragment.showDialogFragment(PhotoDialog(url))
                         }
                     }.onError {
-                        AppLog.put("加载为链接的正文失败", it, true)
                     }
             }
         }
@@ -113,7 +111,6 @@ object ReadRss {
                             1 -> activity.showDialogFragment(PhotoDialog(url))
                         }
                     }.onError {
-                        AppLog.put("加载为链接的正文失败", it, true)
                     }
             }
         }

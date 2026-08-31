@@ -15,7 +15,6 @@ import com.qreader.reader.service.AudioPlayService
 import com.qreader.reader.service.BaseReadAloudService
 import com.qreader.reader.ui.book.audio.AudioPlayActivity
 import com.qreader.reader.ui.book.read.ReadBookActivity
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.getPrefBoolean
 import com.qreader.reader.utils.postEvent
 
@@ -45,7 +44,6 @@ class MediaButtonReceiver : BroadcastReceiver() {
                 val keycode: Int = keyEvent.keyCode
                 val action: Int = keyEvent.action
                 if (action == KeyEvent.ACTION_DOWN) {
-                    LogUtils.d(TAG, "Receive mediaButton event, keycode:$keycode")
                     when (keycode) {
                         KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
                             if (context.getPrefBoolean("mediaButtonPerNext", false)) {

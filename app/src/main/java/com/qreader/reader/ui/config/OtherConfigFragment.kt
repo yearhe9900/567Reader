@@ -30,7 +30,6 @@ import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.video.config.SettingsDialog
 import com.qreader.reader.ui.widget.code.addJsonPattern
 import com.qreader.reader.ui.widget.number.NumberPickerDialog
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.getPrefBoolean
 import com.qreader.reader.utils.isJsonObject
 import com.qreader.reader.utils.postEvent
@@ -191,15 +190,6 @@ class OtherConfigFragment : PreferenceFragment(),
 
             PreferKey.defaultBookTreeUri -> {
                 upPreferenceSummary(key, AppConfig.defaultBookTreeUri)
-            }
-
-            PreferKey.recordLog -> {
-                AppConfig.recordLog = appCtx.getPrefBoolean(PreferKey.recordLog)
-                LogUtils.upLevel()
-                LogUtils.logDeviceInfo()
-                LiveEventBus.config().enableLogger(AppConfig.recordLog)
-                AppFreezeMonitor.init(appCtx)
-                DispatchersMonitor.init()
             }
 
             PreferKey.processText -> sharedPreferences?.let {

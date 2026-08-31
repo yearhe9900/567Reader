@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.TxtTocRule
 import com.qreader.reader.databinding.ActivityTxtTocRuleBinding
@@ -126,7 +125,6 @@ class TxtTocRuleActivity : VMBaseActivity<ActivityTxtTocRuleBinding, TxtTocRuleV
     private fun initData() {
         lifecycleScope.launch {
             appDb.txtTocRuleDao.observeAll().catch {
-                AppLog.put("TXT目录规则界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect { tocRules ->
                 adapter.setItems(tocRules, adapter.diffItemCallBack)
             }

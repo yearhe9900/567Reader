@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.ParcelFileDescriptor
 import android.text.TextUtils
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
@@ -118,7 +117,6 @@ class EpubFile(var book: Book) {
 
 
         }.onFailure {
-            AppLog.put("读取Epub文件失败\n${it.localizedMessage}", it)
             it.printOnDebug()
         }.getOrThrow()
     }
@@ -296,10 +294,8 @@ class EpubFile(var book: Book) {
                     cover.compress(Bitmap.CompressFormat.JPEG, 90, out)
                     out.flush()
                     out.close()
-                } ?: AppLog.putDebug("Epub: 封面获取为空. path: ${book.bookUrl}")
             }
         } catch (e: Exception) {
-            AppLog.put("加载书籍封面失败\n${e.localizedMessage}", e)
             e.printOnDebug()
         }
     }
@@ -337,7 +333,6 @@ class EpubFile(var book: Book) {
         epubBook?.let { eBook ->
             val refs = eBook.tableOfContents.tocReferences
             if (refs == null || refs.isEmpty()) {
-                AppLog.putDebug("Epub: NCX file parse error, check the file: ${book.bookUrl}")
                 val spineReferences = eBook.spine.spineReferences
                 var i = 0
                 val size = spineReferences.size

@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import androidx.core.graphics.createBitmap
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
 import com.qreader.reader.help.book.getLocalUri
@@ -206,7 +205,6 @@ class PdfFile(var book: Book) {
                 }
             }
         } catch (e: Exception) {
-            AppLog.put("加载书籍封面失败\n${e.localizedMessage}", e)
             e.printOnDebug()
         }
     }

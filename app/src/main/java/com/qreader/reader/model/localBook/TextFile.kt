@@ -3,7 +3,6 @@ package com.qreader.reader.model.localBook
 import androidx.annotation.Keep
 import com.script.ScriptBindings
 import com.script.rhino.RhinoScriptEngine
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
@@ -502,7 +501,6 @@ class TextFile(private var book: Book) {
             val pattern = try {
                 tocRule.rule.toPattern(Pattern.MULTILINE)
             } catch (e: PatternSyntaxException) {
-                AppLog.put("TXT目录规则正则语法错误:${tocRule.name}\n$e", e)
                 continue
             }
             val matcher = pattern.matcher(content)

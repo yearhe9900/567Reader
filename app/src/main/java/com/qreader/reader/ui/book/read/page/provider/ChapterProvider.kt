@@ -7,7 +7,6 @@ import android.os.Build
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.os.postDelayed
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
@@ -344,7 +343,6 @@ object ChapterProvider {
         visibleBottom = paddingTop + visibleHeight
 
         if (paddingLeft >= visibleRight || paddingTop >= visibleBottom) {
-            AppLog.put("边距设置过大，请重新设置", toast = true)
             setFallbackLayout()
         }
 

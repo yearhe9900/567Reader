@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 import com.qreader.reader.R
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.Theme
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ThemeConfig
@@ -167,7 +166,6 @@ abstract class BaseActivity<VB : ViewBinding>(
             } catch (_: OutOfMemoryError) {
                 toastOnUi("背景图片太大,内存溢出")
             } catch (e: Exception) {
-                AppLog.put("加载背景出错\n${e.localizedMessage}", e)
             }
         }
     }

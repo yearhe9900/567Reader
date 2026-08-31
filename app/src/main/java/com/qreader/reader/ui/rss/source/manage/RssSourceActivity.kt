@@ -12,7 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RssSource
 import com.qreader.reader.databinding.ActivityRssSourceBinding
@@ -346,7 +345,6 @@ class RssSourceActivity : VMBaseActivity<ActivityRssSourceBinding, RssSourceView
                     appDb.rssSourceDao.flowSearch(searchKey)
                 }
             }.catch {
-                AppLog.put("订阅源管理界面更新数据出错", it)
             }.flowOn(IO).conflate().collect {
                 adapter.setItems(it, adapter.diffItemCallback)
                 delay(100)

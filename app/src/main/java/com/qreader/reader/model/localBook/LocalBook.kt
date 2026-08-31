@@ -6,7 +6,6 @@ import androidx.documentfile.provider.DocumentFile
 import com.script.ScriptBindings
 import com.script.rhino.RhinoScriptEngine
 import com.qreader.reader.R
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.data.appDb
@@ -194,7 +193,6 @@ object LocalBook {
             }
         } catch (e: Exception) {
             e.printOnDebug()
-            AppLog.put("获取本地书籍内容失败\n${e.localizedMessage}", e)
             "获取本地书籍内容失败\n${e.localizedMessage}"
         }
         if (book.isEpub) {
@@ -332,7 +330,6 @@ object LocalBook {
                     importFile(uri)
                 }
             }.onFailure {
-                AppLog.put("ImportFile Error:\nFile $fileDoc\n${it.localizedMessage}", it)
                 errorCount += 1
             }
         }
@@ -364,7 +361,6 @@ object LocalBook {
                 name = bookMess["name"] ?: ""
                 author = bookMess["author"]?.takeIf { it.length != tempFileName.length } ?: ""
             } catch (e: Exception) {
-                AppLog.put("执行导入文件名规则出错\n${e.localizedMessage}", e)
             }
         }
         if (name.isBlank()) {
@@ -520,7 +516,6 @@ object LocalBook {
             return true
         } catch (e: Exception) {
             e.printOnDebug()
-            AppLog.put("自动下载webDav书籍失败", e)
             return false
         }
     }

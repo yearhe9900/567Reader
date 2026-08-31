@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Intent
 import com.script.rhino.runScriptWithContext
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BaseSource
@@ -77,7 +76,6 @@ class SourceLoginViewModel(application: Application) : BaseViewModel(application
             }
         }.onError {
             error.invoke()
-            AppLog.put("登录 UI 初始化失败\n$it", it, true)
         }
     }
 

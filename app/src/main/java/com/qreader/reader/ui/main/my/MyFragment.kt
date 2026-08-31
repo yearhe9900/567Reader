@@ -28,7 +28,6 @@ import com.qreader.reader.ui.dict.rule.DictRuleActivity
 import com.qreader.reader.ui.file.FileManageActivity
 import com.qreader.reader.ui.main.MainFragmentInterface
 import com.qreader.reader.ui.replace.ReplaceRuleActivity
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.getPrefBoolean
 import com.qreader.reader.utils.observeEventSticky
 import com.qreader.reader.utils.openUrl
@@ -137,7 +136,6 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
                     }
                 }
 
-                "recordLog" -> LogUtils.upLevel()
             }
         }
 

@@ -2,7 +2,6 @@ package com.qreader.reader.ui.dict.rule
 
 import android.app.Application
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.DictRule
 import com.qreader.reader.help.DefaultData
@@ -16,7 +15,6 @@ class DictRuleViewModel(application: Application) : BaseViewModel(application) {
             appDb.dictRuleDao.update(*dictRule)
         }.onError {
             val msg = "更新字典规则出错\n${it.localizedMessage}"
-            AppLog.put(msg, it)
             context.toastOnUi(msg)
         }
     }
@@ -26,7 +24,6 @@ class DictRuleViewModel(application: Application) : BaseViewModel(application) {
             appDb.dictRuleDao.delete(*dictRule)
         }.onError {
             val msg = "删除字典规则出错\n${it.localizedMessage}"
-            AppLog.put(msg, it)
             context.toastOnUi(msg)
         }
     }

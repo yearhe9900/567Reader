@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseFragment
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookSourcePart
@@ -156,7 +155,6 @@ class ExploreFragment() : VMBaseFragment<ExploreViewModel>(R.layout.fragment_exp
                 Lifecycle.State.RESUMED,
                 AppDatabase.BOOK_SOURCE_TABLE_NAME
             ).catch {
-                AppLog.put("发现界面更新数据出错", it)
             }.conflate().flowOn(IO).collect {
                 binding.tvEmptyMsg.isGone = it.isNotEmpty() || searchView.query.isNotEmpty()
                 adapter.setItems(it, diffItemCallBack)

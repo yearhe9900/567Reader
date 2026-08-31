@@ -21,7 +21,6 @@ import androidx.core.view.isVisible
 import com.qreader.reader.R
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.databinding.ItemTextBinding
 import com.qreader.reader.databinding.PopupActionMenuBinding
@@ -238,7 +237,6 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
                         it.putExtra(Intent.EXTRA_PROCESS_TEXT, callBack.selectedText)
                         context.startActivity(it)
                     }.onFailure { e ->
-                        AppLog.put("执行文本菜单操作出错\n$e", e, true)
                     }
                 }
             }

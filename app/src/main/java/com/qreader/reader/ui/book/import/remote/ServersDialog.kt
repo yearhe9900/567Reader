@@ -15,7 +15,6 @@ import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
 import com.qreader.reader.constant.AppConst.DEFAULT_WEBDAV_ID
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Server
 import com.qreader.reader.databinding.DialogRecyclerViewBinding
@@ -87,7 +86,6 @@ class ServersDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initData() {
         lifecycleScope.launch {
             appDb.serverDao.observeAll().catch {
-                AppLog.put("服务器配置界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

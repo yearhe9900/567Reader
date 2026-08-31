@@ -3,7 +3,6 @@ package com.qreader.reader.ui.book.import.remote
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.data.appDb
 import com.qreader.reader.exception.NoStackTraceException
@@ -122,7 +121,6 @@ class RemoteBookViewModel(application: Application) : BaseViewModel(application)
             val bookList = bookWebDav.getRemoteBookList(url)
             dataCallback?.setItems(bookList)
         }.onError {
-            AppLog.put("获取webDav书籍出错\n${it.localizedMessage}", it)
             context.toastOnUi("获取webDav书籍出错\n${it.localizedMessage}")
         }.onStart {
             loadCallback.invoke(true)
@@ -146,7 +144,6 @@ class RemoteBookViewModel(application: Application) : BaseViewModel(application)
                 remoteBook.isOnBookShelf = true
             }
         }.onError {
-            AppLog.put("导入出错\n${it.localizedMessage}", it)
             context.toastOnUi("导入出错\n${it.localizedMessage}")
             if (it is SecurityException) {
                 permissionDenialLiveData.postValue(1)

@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.help.DirectLinkUpload
 import com.qreader.reader.utils.*
 
@@ -26,7 +25,6 @@ class HandleFileViewModel(application: Application) : BaseViewModel(application)
         }.onSuccess {
             success.invoke(it)
         }.onError {
-            AppLog.put("上传文件失败\n${it.localizedMessage}", it)
             it.printOnDebug()
             errorLiveData.postValue(it.localizedMessage)
         }

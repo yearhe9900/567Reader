@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.data.appDb
 import com.qreader.reader.exception.NoStackTraceException
@@ -18,7 +17,6 @@ import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.utils.FileUtils
 import com.qreader.reader.utils.GSON
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.compress.ZipUtils
 import com.qreader.reader.utils.createFolderIfNotExist
 import com.qreader.reader.utils.defaultSharedPreferences
@@ -119,7 +117,6 @@ object Backup {
                     }
                 }
             }.onError {
-                AppLog.put("自动备份失败\n${it.localizedMessage}")
             }
         }
     }
@@ -133,7 +130,6 @@ object Backup {
     }
 
     private suspend fun backup(context: Context, path: String?) {
-        LogUtils.d(TAG, "开始备份 path:$path")
         LocalConfig.lastBackup = System.currentTimeMillis()
         FileUtils.delete(backupPath)
         writeListToJson(appDb.bookDao.all, "bookshelf.json", backupPath)
@@ -241,7 +237,6 @@ object Backup {
             try {
                 AppWebDav.backUpWebDav(zipFileName)
             } catch (e: Exception) {
-                AppLog.put("上传备份至webdav失败\n$e", e)
             }
         }
         FileUtils.delete(backupPath)
@@ -262,14 +257,11 @@ object Backup {
         currentCoroutineContext().ensureActive()
         withContext(IO) {
             if (list.isNotEmpty()) {
-                LogUtils.d(TAG, "阅读备份 $fileName 列表大小 ${list.size}")
                 val file = FileUtils.createFileIfNotExist(path + File.separator + fileName)
                 file.outputStream().buffered().use {
                     GSON.writeToOutputStream(it, list)
                 }
-                LogUtils.d(TAG, "阅读备份 $fileName 写入大小 ${file.length()}")
             } else {
-                LogUtils.d(TAG, "阅读备份 $fileName 列表为空")
             }
         }
     }

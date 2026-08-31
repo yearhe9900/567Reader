@@ -6,7 +6,6 @@ import com.script.ScriptBindings
 import com.script.buildScriptBindings
 import com.script.rhino.RhinoScriptEngine
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.rule.RowUi
 import com.qreader.reader.help.CacheManager
 import com.qreader.reader.help.ConcurrentRateLimiter.Companion.updateConcurrentRate
@@ -119,7 +118,6 @@ interface BaseSource : JsExtensions {
                     putAll(map)
                 }
             } catch (e: Exception) {
-                AppLog.put("执行请求头规则出错\n$e", e)
             }
         }
         if (!has(AppConst.UA_NAME, true)) {
@@ -173,7 +171,6 @@ interface BaseSource : JsExtensions {
             val cache = CacheManager.get("userInfo_${getKey()}") ?: return null
             return AES(key).decryptStr(cache)
         } catch (e: Exception) {
-            AppLog.put("获取登陆信息出错", e)
             return null
         }
     }
@@ -225,7 +222,6 @@ interface BaseSource : JsExtensions {
             CacheManager.put("userInfo_${getKey()}", encodeStr)
             true
         } catch (e: Exception) {
-            AppLog.put("保存登陆信息出错", e)
             false
         }
     }

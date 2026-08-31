@@ -23,7 +23,6 @@ import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import com.qreader.reader.BuildConfig
 import com.qreader.reader.R
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.PreferKey
@@ -69,7 +68,6 @@ import com.qreader.reader.model.localBook.MobiFile
 import com.qreader.reader.receiver.NetworkChangedListener
 import com.qreader.reader.receiver.TimeBatteryReceiver
 import com.qreader.reader.service.BaseReadAloudService
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.bookmark.BookmarkDialog
 import com.qreader.reader.ui.book.changesource.ChangeBookSourceDialog
 import com.qreader.reader.ui.book.changesource.ChangeChapterSourceDialog
@@ -106,7 +104,6 @@ import com.qreader.reader.ui.widget.PopupAction
 import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.utils.ACache
 import com.qreader.reader.utils.Debounce
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.NetworkUtils
 import com.qreader.reader.utils.StartActivityContract
 import com.qreader.reader.utils.applyOpenTint
@@ -573,7 +570,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                 ReadBook.loadContent(false)
             }
 
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_toc_regex -> showDialogFragment(
                 TxtTocRuleDialog(ReadBook.book?.tocUrl)
             )
@@ -674,7 +670,6 @@ class ReadBookActivity : BaseReadBookActivity(),
         if (0 != (event.source and InputDevice.SOURCE_CLASS_POINTER)) {
             if (event.action == MotionEvent.ACTION_SCROLL) {
                 val axisValue = event.getAxisValue(MotionEvent.AXIS_VSCROLL)
-                LogUtils.d("onGenericMotionEvent", "axisValue = $axisValue")
                 // 获得垂直坐标上的滚动方向
                 if (axisValue < 0.0f) { // 滚轮向下滚
                     mouseWheelPage(PageDirection.NEXT, axisValue)
@@ -1335,7 +1330,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                         }
                     }
                 }.onError {
-                    AppLog.put("执行购买操作出错\n${it.localizedMessage}", it, true)
                 }
             }
             noButton()
@@ -1366,7 +1360,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                         }
                     }
                 }.onError {
-                    AppLog.put("执行图片链接click键值出错\n${it.localizedMessage}", it, true)
                 }
                 return true
             }
@@ -1383,7 +1376,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                     evalJS(jsStr, urlNoOption)
                 }
             }.onError {
-                AppLog.put("执行图片链接js键值出错\n${it.localizedMessage}", it, true)
             }
             return true
         }
@@ -1405,7 +1397,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                 }
             }
         }.onError {
-            AppLog.put("执行图片链接click键值出错\n${it.localizedMessage}", it, true)
         }
     }
 

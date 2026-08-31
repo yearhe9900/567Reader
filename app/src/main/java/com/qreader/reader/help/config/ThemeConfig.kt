@@ -8,7 +8,6 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.graphics.toColorInt
 import com.qreader.reader.R
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.constant.Theme
@@ -295,7 +294,6 @@ object ThemeConfig {
             AppConfig.isNightTheme = isNightTheme
             applyDayNight(context)
         } catch (e: Exception) {
-            AppLog.put("设置主题出错\n$e", e, true)
         }
     }
 

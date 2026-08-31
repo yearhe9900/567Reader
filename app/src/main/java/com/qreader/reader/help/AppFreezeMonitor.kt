@@ -9,7 +9,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import com.qreader.reader.help.config.AppConfig
-import com.qreader.reader.utils.LogUtils
 
 object AppFreezeMonitor {
 
@@ -27,7 +26,6 @@ object AppFreezeMonitor {
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     fun init(context: Context) {
-        if (!AppConfig.recordLog) {
             if (registeredReceiver) {
                 registeredReceiver = false
                 context.unregisterReceiver(screenStatusReceiver)
@@ -49,12 +47,10 @@ object AppFreezeMonitor {
                 val extra = elapsed - 3000
 
                 if (extra > 300) {
-                    LogUtils.d(TAG, "检测到应用被系统冻结，时长：$extra 毫秒")
                 }
 
                 previous = current
 
-                if (AppConfig.recordLog) {
                     handler.postDelayed(this, 3000)
                 }
             }
@@ -71,8 +67,6 @@ object AppFreezeMonitor {
 
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                Intent.ACTION_SCREEN_ON -> LogUtils.d(TAG, "SCREEN_ON")
-                Intent.ACTION_SCREEN_OFF -> LogUtils.d(TAG, "SCREEN_OFF")
             }
         }
     }

@@ -7,7 +7,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.appDb
@@ -95,7 +94,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                 book != null -> initBook(book)
                 else -> {
                     ReadBook.upMsg(context.getString(R.string.no_book))
-                    AppLog.put("未找到书籍\nbookUrl:$bookUrl")
                 }
             }
             val index = intent.getIntExtra("index", -1)
@@ -109,7 +107,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         }.onError {
             val msg = "初始化数据失败\n${it.localizedMessage}"
             ReadBook.upMsg(msg)
-            AppLog.put(msg, it)
         }.onFinally {
             ReadBook.saveRead()
         }
@@ -218,7 +215,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                     }
 
                     else -> {
-                        AppLog.put("LoadTocError:${it.localizedMessage}", it)
                         ReadBook.upMsg("LoadTocError:${it.localizedMessage}")
                     }
                 }
@@ -260,7 +256,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
         execute {
             AppWebDav.getBookProgress(book)
         }.onError {
-            AppLog.put("拉取阅读进度失败《${book.name}》\n${it.localizedMessage}", it)
         }.onSuccess { progress ->
             progress ?: return@onSuccess
             if (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos == book.durChapterPos) {
@@ -273,7 +268,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                 alertSync?.invoke(progress)
             } else if (progress.durChapterIndex < book.simulatedTotalChapterNum()) {
                 ReadBook.setProgress(progress)
-                AppLog.put("自动同步阅读进度成功《${book.name}》 ${progress.durChapterTitle}")
                 context.toastOnUi("已同步最新阅读进度")
             }
         }
@@ -295,7 +289,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             ReadBook.upMsg(null)
             ReadBook.loadContent(resetPageOffset = true)
         }.onError {
-            AppLog.put("换源失败\n$it", it, true)
             ReadBook.upMsg(null)
         }.onFinally {
             postEvent(EventBus.SOURCE_CHANGED, book.bookUrl)
@@ -343,7 +336,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
             }.onCompletion {
                 ReadBook.upMsg(null)
             }.catch {
-                AppLog.put("自动换源失败\n${it.localizedMessage}", it)
                 context.toastOnUi("自动换源失败\n${it.localizedMessage}")
             }.collect()
         }
@@ -557,7 +549,6 @@ class ReadBookViewModel(application: Application) : BaseViewModel(application) {
                 }
             }
         }.onError {
-            AppLog.put("保存图片出错\n${it.localizedMessage}", it)
             context.toastOnUi("保存图片出错\n${it.localizedMessage}")
         }
     }

@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RssArticle
 import com.qreader.reader.data.entities.RssSource
@@ -52,7 +51,6 @@ class RssArticlesViewModel(application: Application) : BaseViewModel(application
             isLoading = false
         }.onError {
             loadFinallyLiveData.postValue(false)
-            AppLog.put("rss获取内容失败", it)
             loadErrorLiveData.postValue(it.stackTraceStr)
         }
     }
@@ -71,7 +69,6 @@ class RssArticlesViewModel(application: Application) : BaseViewModel(application
             isLoading = false
         }.onError {
             loadFinallyLiveData.postValue(false)
-            AppLog.put("rss获取内容失败", it)
             loadErrorLiveData.postValue(it.stackTraceStr)
         }
     }

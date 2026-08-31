@@ -10,7 +10,6 @@ import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.widget.CodeEditor
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.help.CacheManager
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.http.BackstageWebView
@@ -158,7 +157,6 @@ class CodeEditViewModel(application: Application) : BaseViewModel(application) {
         }.onSuccess {
             editor.setText(it)
         }.onError {
-            AppLog.put("格式化失败",it, true)
         }
     }
 

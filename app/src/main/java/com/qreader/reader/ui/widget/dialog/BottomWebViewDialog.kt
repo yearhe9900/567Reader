@@ -35,7 +35,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.qreader.reader.R
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.databinding.DialogWebViewBinding
@@ -163,7 +162,6 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
             manager.beginTransaction().remove(this).commit()
             super.show(manager, tag)
         }.onFailure {
-            AppLog.put("显示对话框失败 tag:$tag", it)
         }
     }
 
@@ -419,7 +417,6 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
                         }
                         true
                     } catch (e: Exception) {
-                        AppLog.put("config err", e)
                         null
                     }
                 } ?: run {
@@ -620,7 +617,6 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
                 }
             }
         } catch (e: Exception) {
-            AppLog.put("config err", e)
         }
     }
 
@@ -744,11 +740,9 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
 
         /* 监听网页日志 */
         override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-            if (!AppConfig.recordLog) return false
             val source = source ?: return false
             val messageLevel = consoleMessage.messageLevel().name
             val message = consoleMessage.message()
-            AppLog.put(
                 "${source.getTag()}${messageLevel}: $message",
                 NoStackTraceException("\n${message}\n- Line ${consoleMessage.lineNumber()} of ${consoleMessage.sourceId()}")
             )

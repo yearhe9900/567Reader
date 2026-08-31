@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.script.rhino.runScriptWithContext
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.constant.EventBus
@@ -86,7 +85,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
             }
             throw NoStackTraceException("未找到书籍")
         }.onError {
-            AppLog.put(it.localizedMessage, it)
             context.toastOnUi(it.localizedMessage)
         }
     }
@@ -167,7 +165,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
                 }
 
                 else -> {
-                    AppLog.put("下载远程书籍<${book.name}>失败", it)
                 }
             }
         }.onFinally {
@@ -213,7 +210,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
                         loadChapter(it, runPreUpdateJs, isFromBookInfo = true)
                     }
                 }.onError {
-                    AppLog.put("获取书籍信息失败\n${it.localizedMessage}", it)
                     context.toastOnUi(R.string.error_get_book_info)
                 }
         }
@@ -264,7 +260,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
                     chapterListData.postValue(it)
                 }.onError {
                     chapterListData.postValue(emptyList())
-                    AppLog.put("获取目录失败\n${it.localizedMessage}", it)
                     context.toastOnUi(R.string.error_get_chapter_list)
                 }
         }
@@ -332,7 +327,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
             when (it) {
                 is NoBooksDirException -> actionLive.postValue("selectBooksDir")
                 else -> {
-                    AppLog.put("ImportWebFileError\n${it.localizedMessage}", it)
                     context.toastOnUi("ImportWebFileError\n${it.localizedMessage}")
                     webFiles.remove(webFile)
                 }
@@ -348,7 +342,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
                 AppPattern.bookFileRegex.matches(it)
             }
         }.onError {
-            AppLog.put("getArchiveEntriesName Error:\n${it.localizedMessage}", it)
             context.toastOnUi("getArchiveEntriesName Error:\n${it.localizedMessage}")
         }.onSuccess {
             onSuccess.invoke(it)
@@ -372,7 +365,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
             val book = changeToLocalBook(it)
             success?.invoke(book)
         }.onError {
-            AppLog.put("importArchiveBook Error:\n${it.localizedMessage}", it)
             context.toastOnUi("importArchiveBook Error:\n${it.localizedMessage}")
         }
     }
@@ -540,7 +532,6 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
                 }
             }
         }.onError {
-            AppLog.put("${source.bookSourceName}: ${it.localizedMessage}", it)
             context.toastOnUi("$name click error\n${it.localizedMessage}")
         }
     }

@@ -6,7 +6,6 @@ import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseService
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.constant.NotificationId
@@ -115,7 +114,6 @@ class CacheBookService : BaseService() {
                         }.onFailure {
                             removeDownload(bookUrl)
                             val msg = "《$name》目录为空且加载详情页失败\n${it.localizedMessage}"
-                            AppLog.put(msg, it, true)
                             return@execute
                         }
                     }
@@ -126,7 +124,6 @@ class CacheBookService : BaseService() {
                         }
                         removeDownload(bookUrl)
                         val msg = "《$name》目录为空且加载目录失败\n${it.localizedMessage}"
-                        AppLog.put(msg, it, true)
                         return@execute
                     }.getOrNull()?.let { toc ->
                         appDb.bookChapterDao.insert(*toc.toTypedArray())

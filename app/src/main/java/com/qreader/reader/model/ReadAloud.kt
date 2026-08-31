@@ -3,7 +3,6 @@ package com.qreader.reader.model
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.data.appDb
@@ -12,7 +11,6 @@ import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.service.BaseReadAloudService
 import com.qreader.reader.service.HttpReadAloudService
 import com.qreader.reader.service.TTSReadAloudService
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.StringUtils
 import com.qreader.reader.utils.postEvent
 import com.qreader.reader.utils.startForegroundServiceCompat
@@ -54,12 +52,10 @@ object ReadAloud {
         intent.putExtra("play", play)
         intent.putExtra("pageIndex", pageIndex)
         intent.putExtra("startPos", startPos)
-        LogUtils.d("ReadAloud", intent.toString())
         try {
             context.startForegroundServiceCompat(intent)
         } catch (e: Exception) {
             val msg = "启动朗读服务出错\n${e.localizedMessage}"
-            AppLog.put(msg, e)
             context.toastOnUi(msg)
         }
     }

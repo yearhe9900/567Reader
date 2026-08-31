@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.databinding.DialogFontSelectBinding
 import com.qreader.reader.help.config.AppConfig
@@ -159,7 +158,6 @@ class FontSelectDialog : BaseDialogFragment(R.layout.dialog_font_select),
         }.onSuccess {
             adapter.setItems(it)
         }.onError {
-            AppLog.put("加载字体文件失败\n${it.localizedMessage}", it)
             toastOnUi("getFontFiles:${it.localizedMessage}")
         }
     }

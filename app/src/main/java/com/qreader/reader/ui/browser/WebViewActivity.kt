@@ -45,7 +45,6 @@ import com.qreader.reader.utils.viewbindingdelegate.viewBinding
 import com.qreader.reader.utils.visible
 import android.webkit.JavascriptInterface
 import android.webkit.URLUtil
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.help.webView.WebJsExtensions
 import com.qreader.reader.help.webView.WebJsExtensions.Companion.basicJs
 import com.qreader.reader.help.webView.WebJsExtensions.Companion.nameBasic
@@ -413,7 +412,6 @@ class WebViewActivity : VMBaseActivity<ActivityWebViewBinding, WebViewModel>() {
                 if (sessionShowWebLog) {
                     val messageLevel = consoleMessage.messageLevel().name
                     val message = consoleMessage.message()
-                    AppLog.put("${source.getTag()}${messageLevel}: $message",
                         NoStackTraceException("\n${message}\n- Line ${consoleMessage.lineNumber()} of ${consoleMessage.sourceId()}"))
                     return true
                 }

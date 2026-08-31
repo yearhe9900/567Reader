@@ -1,7 +1,6 @@
 package com.qreader.reader.utils
 
 import com.qreader.reader.BuildConfig
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern.semicolonRegex
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.model.analyzeRule.AnalyzeUrl
@@ -78,7 +77,6 @@ object UrlUtil {
         conn.instanceFollowRedirects = false
         conn.connect()
 
-        if (AppConfig.recordLog || BuildConfig.DEBUG) {
             val headers = conn.headerFields
             val headersString = buildString {
                 headers.forEach { (key, value) ->
@@ -90,7 +88,6 @@ object UrlUtil {
                    }
                }
             }
-            AppLog.put("$url response header:\n$headersString")
         }
 
         // val fileSize = conn.getContentLengthLong() / 1024
@@ -130,7 +127,6 @@ object UrlUtil {
             val newUrl= URL(URLDecoder.decode(redirectUrl, "UTF-8"))
             getFileNameFromPath(newUrl)
         } else {
-            AppLog.put("Cannot obtain URL file name, enable recordLog for response header")
             null
         }
     }
@@ -143,7 +139,6 @@ object UrlUtil {
         ) {
             path.substringAfterLast("/")
         } else {
-            AppLog.put("getFileNameFromPath: Unexpected file suffix: $suffix")
             null
         }
     }
@@ -160,7 +155,6 @@ object UrlUtil {
         //检查截取的后缀字符是否合法 [a-zA-Z0-9]
         return if (suffix.length > 5 || !suffix.matches(fileSuffixRegex)) {
             if (default == null) {
-                AppLog.put("Cannot find legal suffix:\n target: $str\n suffix: $suffix")
             }
             default ?: "ext"
         } else {

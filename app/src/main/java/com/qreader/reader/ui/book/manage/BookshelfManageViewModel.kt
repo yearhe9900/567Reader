@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -93,19 +92,16 @@ class BookshelfManageViewModel(application: Application) : BaseViewModel(applica
                 if (book.origin == source.bookSourceUrl) return@forEachIndexed
                 val newBook = WebBook.preciseSearchAwait(source, book.name, book.author)
                     .onFailure {
-                        AppLog.put("搜索书籍出错\n${it.localizedMessage}", it, true)
                     }.getOrNull() ?: return@forEachIndexed
                 kotlin.runCatching {
                     if (newBook.tocUrl.isEmpty()) {
                         WebBook.getBookInfoAwait(source, newBook)
                     }
                 }.onFailure {
-                    AppLog.put("获取书籍详情出错\n${it.localizedMessage}", it, true)
                     return@forEachIndexed
                 }
                 WebBook.getChapterListAwait(source, newBook)
                     .onFailure {
-                        AppLog.put("获取目录出错\n${it.localizedMessage}", it, true)
                     }.getOrNull()?.let { toc ->
                         book.migrateTo(newBook, toc)
                         book.removeType(BookType.updateError)

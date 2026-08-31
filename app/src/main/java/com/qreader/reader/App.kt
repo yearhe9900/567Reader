@@ -32,7 +32,6 @@ import com.qreader.reader.data.entities.rule.ExploreRule
 import com.qreader.reader.data.entities.rule.SearchRule
 import com.qreader.reader.help.AppFreezeMonitor
 import com.qreader.reader.help.AppWebDav
-import com.qreader.reader.help.CrashHandler
 import com.qreader.reader.help.DefaultData
 import com.qreader.reader.help.DispatchersMonitor
 import com.qreader.reader.help.LifecycleHelp
@@ -51,7 +50,6 @@ import com.qreader.reader.help.source.SourceHelp
 import com.qreader.reader.help.storage.Backup
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.utils.ChineseUtils
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.defaultSharedPreferences
 import com.qreader.reader.utils.getPrefBoolean
 import com.qreader.reader.utils.isDebuggable
@@ -69,7 +67,6 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        CrashHandler(this)
         if (isDebuggable) {
             ThreadUtils.setThreadAssertsDisabledForTesting(true)
         }
@@ -78,16 +75,12 @@ class App : Application() {
         registerActivityLifecycleCallbacks(LifecycleHelp)
         defaultSharedPreferences.registerOnSharedPreferenceChangeListener(AppConfig)
         Coroutine.async {
-            LogUtils.init(this@App)
-            LogUtils.d("App", "onCreate")
-            LogUtils.logDeviceInfo()
             //预下载Cronet so
             Cronet.preDownload()
             createNotificationChannels()
             LiveEventBus.config()
                 .lifecycleObserverAlwaysActive(true)
                 .autoClear(false)
-                .enableLogger(BuildConfig.DEBUG || AppConfig.recordLog)
                 .setLogger(EventLogger())
             DefaultData.upVersion()
             AppFreezeMonitor.init(this@App)
@@ -237,12 +230,10 @@ class App : Application() {
 
         override fun log(level: Level, msg: String) {
             super.log(level, msg)
-            LogUtils.d(TAG, msg)
         }
 
         override fun log(level: Level, msg: String, th: Throwable?) {
             super.log(level, msg, th)
-            LogUtils.d(TAG, "$msg\n${th?.stackTraceToString()}")
         }
 
         companion object {

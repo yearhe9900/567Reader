@@ -2,7 +2,6 @@ package com.qreader.reader.help
 
 import android.net.Uri
 import com.qreader.reader.R
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -221,7 +220,6 @@ object AppWebDav {
             }
         } catch (e: Exception) {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav导出失败\n${e.localizedMessage}", e, true)
         }
     }
 
@@ -235,7 +233,6 @@ object AppWebDav {
             }
         } catch (e: Exception) {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav导出失败\n${e.localizedMessage}", e, true)
         }
     }
 
@@ -256,7 +253,6 @@ object AppWebDav {
             onSuccess?.invoke()
         } catch (e: Exception) {
             currentCoroutineContext().ensureActive()
-            AppLog.put("上传进度失败\n${e.localizedMessage}", e, toast)
         }
     }
 
@@ -271,7 +267,6 @@ object AppWebDav {
             onSuccess?.invoke()
         } catch (e: Exception) {
             currentCoroutineContext().ensureActive()
-            AppLog.put("上传进度失败\n${e.localizedMessage}", e)
         }
     }
 
@@ -298,7 +293,6 @@ object AppWebDav {
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("获取书籍进度失败\n${it.localizedMessage}", it)
         }
         return null
     }

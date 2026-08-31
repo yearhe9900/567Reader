@@ -8,7 +8,6 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.qreader.reader.R
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.exception.NoStackTraceException
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -94,7 +93,6 @@ data class ReplaceRule(
             try {
                 Pattern.compile(pattern)
             } catch (ex: PatternSyntaxException) {
-                AppLog.put("正则语法错误或不支持：${ex.localizedMessage}", ex)
                 return false
             }
             // Pattern.compile测试通过，但是部分情况下会替换超时，报错，一般发生在修改表达式时漏删了

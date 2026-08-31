@@ -1,7 +1,6 @@
 package com.qreader.reader.model.webBook
 
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookSourcePart
@@ -108,7 +107,6 @@ class SearchModel(private val scope: CoroutineScope, private val callBack: CallB
             }.onCompletion {
                 if (it == null) callBack.onSearchFinish(searchBooks.isEmpty(), hasMore)
             }.catch {
-                AppLog.put("书源搜索出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }

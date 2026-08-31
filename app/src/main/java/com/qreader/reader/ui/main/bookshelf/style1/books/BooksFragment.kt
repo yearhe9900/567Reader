@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter.StateRestorationPolicy
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseFragment
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
@@ -242,7 +241,6 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
                 Lifecycle.State.RESUMED,
                 AppDatabase.BOOK_TABLE_NAME
             ).catch {
-                AppLog.put("书架更新出错", it)
             }.conflate().flowOn(Dispatchers.Default).collect { list ->
                 itemCount = list.size
                 val spanCount = bookshelfLayout

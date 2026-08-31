@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.exception.NoStackTraceException
 import com.qreader.reader.help.config.ThemeConfig
 import com.qreader.reader.help.http.decompressed
@@ -70,7 +69,6 @@ class ImportThemeViewModel(app: Application) : BaseViewModel(app) {
             importSourceAwait(text.trim())
         }.onError {
             errorLiveData.postValue("ImportError:${it.localizedMessage}")
-            AppLog.put("ImportError:${it.localizedMessage}", it)
         }.onSuccess {
             comparisonSource()
         }

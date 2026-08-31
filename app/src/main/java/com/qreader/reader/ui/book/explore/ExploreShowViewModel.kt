@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.qreader.reader.BuildConfig
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookSource
 import com.qreader.reader.data.entities.SearchBook
@@ -47,14 +46,12 @@ class ExploreShowViewModel(application: Application) : BaseViewModel(application
                     }
                 keys
             }.catch {
-                AppLog.put("发现列表界面获取书籍数据失败\n${it.localizedMessage}", it)
             }.collect {
                 bookshelf.clear()
                 bookshelf.addAll(it)
                 upAdapterLiveData.postValue("isInBookshelf")
             }
         }.onError {
-            AppLog.put("加载书架数据失败", it)
         }
     }
 

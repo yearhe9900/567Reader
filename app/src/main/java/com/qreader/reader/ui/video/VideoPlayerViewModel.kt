@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import com.script.rhino.runScriptWithContext
 import com.qreader.reader.base.BaseViewModel
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookSource
 import com.qreader.reader.data.entities.RssSource
@@ -88,7 +87,6 @@ class VideoPlayerViewModel(application: Application) : BaseViewModel(application
                 }
             }
         }.onError {
-            AppLog.put("${source.getTag()}: ${it.localizedMessage}", it)
             context.toastOnUi("$name click error\n${it.localizedMessage}")
         }
     }

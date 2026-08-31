@@ -10,7 +10,6 @@ import com.qreader.reader.api.controller.RssSourceController
 import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.service.WebService
 import com.qreader.reader.utils.GSON
-import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.stackTraceStr
 import com.qreader.reader.web.utils.AssetsWeb
 import kotlinx.coroutines.runBlocking
@@ -30,7 +29,6 @@ class HttpServer(port: Int) : NanoHTTPD(port) {
         var uri = session.uri
 
         val startAt = System.currentTimeMillis()
-        LogUtils.d(TAG) {
             "${session.method.name} - $uri - ${session.queryParameterString} - Start($startAt)"
         }
 
@@ -132,12 +130,10 @@ class HttpServer(port: Int) : NanoHTTPD(port) {
             }
             response.addHeader("Access-Control-Allow-Methods", "GET, POST")
             response.addHeader("Access-Control-Allow-Origin", session.headers["origin"])
-            LogUtils.d(TAG) {
                 "${session.method.name} - $uri - ${session.queryParameterString} - End($startAt)"
             }
             return response
         } catch (e: Exception) {
-            LogUtils.d(TAG) {
                 "${session.method.name} - $uri - ${session.queryParameterString} - Error End($startAt)\n$e\n${e.stackTraceStr}"
             }
             return newFixedLengthResponse(e.message)

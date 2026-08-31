@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.R
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.KeyboardAssist
 import com.qreader.reader.databinding.ItemFilletTextBinding
@@ -133,7 +132,6 @@ class KeyboardToolPop(
     fun upAdapterData() {
         scope.launch {
             appDb.keyboardAssistsDao.flowByType(0).catch {
-                AppLog.put("键盘帮助浮窗获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

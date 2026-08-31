@@ -1,7 +1,6 @@
 package com.qreader.reader.help.http
 
 import android.webkit.CookieManager
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.help.CacheManager
 import com.qreader.reader.utils.NetworkUtils
@@ -68,7 +67,6 @@ object CookieManager {
         }.onFailure {
             CookieStore.removeCookie(url)
             val msg = "设置cookie出错，已清除cookie $domain cookie:$newCookie\n$it"
-            AppLog.put(msg, it)
         }
 
         return request

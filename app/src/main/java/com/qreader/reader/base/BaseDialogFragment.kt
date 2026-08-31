@@ -16,7 +16,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.textfield.TextInputLayout
 import com.qreader.reader.R
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.lib.theme.ThemeStore
@@ -96,7 +95,6 @@ abstract class BaseDialogFragment(
             manager.beginTransaction().remove(this).commit()
             super.show(manager, tag)
         }.onFailure {
-            AppLog.put("显示对话框失败 tag:$tag", it)
         }
     }
 
