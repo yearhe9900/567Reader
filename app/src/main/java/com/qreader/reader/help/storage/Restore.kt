@@ -247,17 +247,7 @@ object Restore {
                 if (BackupConfig.keyIsNotIgnore(key)) {
                     when (key) {
                         PreferKey.webDavPassword -> {
-                            kotlin.runCatching {
-                                aes.decryptStr(value.toString())
-                            }.getOrNull()?.let {
-                                edit.putString(key, it)
-                            } ?: let {
-                                if (appCtx.getPrefString(PreferKey.webDavPassword)
-                                        .isNullOrBlank()
-                                ) {
-                                    edit.putString(key, value.toString())
-                                }
-                            }
+                            edit.putString(key, value.toString())
                         }
 
                         else -> when (value) {

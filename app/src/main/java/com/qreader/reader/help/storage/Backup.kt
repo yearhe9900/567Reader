@@ -182,9 +182,7 @@ object Backup {
                 if (BackupConfig.keyIsNotIgnore(key)) {
                     when (key) {
                         PreferKey.webDavPassword -> {
-                            edit.putString(key, aes.runCatching {
-                                encryptBase64(value.toString())
-                            }.getOrDefault(value.toString()))
+                            edit.putString(key, value.toString())
                         }
 
                         else -> when (value) {
