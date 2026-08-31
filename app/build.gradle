@@ -46,7 +46,7 @@ android {
     }
     defaultConfig {
         applicationId "com.qreader.reader"
-        minSdk 21
+        minSdk 33
         targetSdk 36
         versionCode 10000 + gitCommits
         versionName version
