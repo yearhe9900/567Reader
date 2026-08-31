@@ -32,107 +32,64 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.Light"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning,UnusedAttribute">
-        <!-- 主入口 -->
+        <!-- 主入口（开屏页，不再作为启动入口） -->
         <activity
             android:name=".ui.welcome.WelcomeActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false" />
         <!-- 图标1 -->
         <activity
             android:name=".ui.welcome.Launcher1"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher1">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher1" />
         <!-- 图标2 -->
         <activity
             android:name=".ui.welcome.Launcher2"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher2">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher2" />
         <!-- 图标3 -->
         <activity
             android:name=".ui.welcome.Launcher3"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher3">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher3" />
         <!-- 图标4 -->
         <activity
             android:name=".ui.welcome.Launcher4"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher4">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher4" />
         <!-- 图标5 -->
         <activity
             android:name=".ui.welcome.Launcher5"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher5">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher5" />
         <!-- 图标6 -->
         <activity
             android:name=".ui.welcome.Launcher6"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher6">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher6" />
         <!-- 图标7 -->
         <activity
             android:name=".ui.welcome.Launcher7"
             android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/launcher7">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:icon="@mipmap/launcher7" />
         <!-- 主界面 -->
         <activity
             android:name=".ui.main.MainActivity"
             android:alwaysRetainTaskState="true"
             android:configChanges="locale|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|uiMode"
             android:exported="true"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <!-- 阅读界面 -->
         <activity
             android:name=".ui.book.read.ReadBookActivity"

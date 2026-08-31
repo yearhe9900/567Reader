@@ -65,6 +65,10 @@ import com.qreader.reader.ui.association.ImportTxtTocRuleDialog
 import com.qreader.reader.utils.StringUtils
 import com.qreader.reader.utils.clearClip
 import com.qreader.reader.utils.getClipText
+import com.qreader.reader.utils.getPrefBoolean
+import com.qreader.reader.utils.startActivity
+import com.qreader.reader.data.appDb
+import com.qreader.reader.ui.book.read.ReadBookActivity
 
 /**
  * 主界面
@@ -99,6 +103,10 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         upBottomMenu()
         initView()
         upHomePage()
+        // 如果设置了默认进入阅读界面，且有上次阅读的书籍，则打开阅读界面
+        if (getPrefBoolean(PreferKey.defaultToRead) && appDb.bookDao.lastReadBook != null) {
+            startActivity<ReadBookActivity>()
+        }
         onBackPressedDispatcher.addCallback(this) {
             if (pagePosition != 0) {
                 binding.viewPagerMain.currentItem = 0
