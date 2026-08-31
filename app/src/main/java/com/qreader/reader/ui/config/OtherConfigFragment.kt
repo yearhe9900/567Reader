@@ -193,15 +193,6 @@ class OtherConfigFragment : PreferenceFragment(),
                 upPreferenceSummary(key, AppConfig.defaultBookTreeUri)
             }
 
-            PreferKey.recordLog -> {
-                AppConfig.recordLog = appCtx.getPrefBoolean(PreferKey.recordLog)
-                LogUtils.upLevel()
-                LogUtils.logDeviceInfo()
-                LiveEventBus.config().enableLogger(AppConfig.recordLog)
-                AppFreezeMonitor.init(appCtx)
-                DispatchersMonitor.init()
-            }
-
             PreferKey.processText -> sharedPreferences?.let {
                 setProcessTextEnable(it.getBoolean(key, true))
             }

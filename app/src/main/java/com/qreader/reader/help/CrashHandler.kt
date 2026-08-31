@@ -5,12 +5,18 @@ import android.content.Context
 /**
  * 崩溃处理 - 已禁用，所有方法为空实现
  */
-object CrashHandler {
-    fun init(context: Context) {
+class CrashHandler(val context: Context) : Thread.UncaughtExceptionHandler {
+    init {
+        Thread.setDefaultUncaughtExceptionHandler(this)
+    }
+
+    override fun uncaughtException(t: Thread, e: Throwable) {
         // no-op
     }
 
-    fun doHeapDump(force: Boolean = false) {
-        // no-op
+    companion object {
+        fun doHeapDump(force: Boolean = false) {
+            // no-op
+        }
     }
 }

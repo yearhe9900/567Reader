@@ -136,8 +136,6 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
                         WebService.stop(requireContext())
                     }
                 }
-
-                "recordLog" -> LogUtils.upLevel()
             }
         }
 
