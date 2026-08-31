@@ -18,7 +18,6 @@ import com.qreader.reader.lib.prefs.SwitchPreference
 import com.qreader.reader.lib.prefs.fragment.PreferenceFragment
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.service.WebService
-import com.qreader.reader.ui.about.AboutActivity
 import com.qreader.reader.ui.about.ReadRecordActivity
 import com.qreader.reader.ui.book.bookmark.AllBookmarkActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
@@ -163,7 +162,6 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
 
                 "fileManage" -> startActivity<FileManageActivity>()
                 "readRecord" -> startActivity<ReadRecordActivity>()
-                "about" -> startActivity<AboutActivity>()
                 "exit" -> activity?.finish()
             }
             return super.onPreferenceTreeClick(preference)

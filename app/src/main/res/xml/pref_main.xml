@@ -111,12 +111,6 @@
             app:iconSpaceReserved="false" />
 
         <com.qreader.reader.lib.prefs.Preference
-            android:icon="@drawable/ic_cfg_about"
-            android:key="about"
-            android:title="@string/about"
-            app:iconSpaceReserved="false" />
-
-        <com.qreader.reader.lib.prefs.Preference
             android:icon="@drawable/ic_exit"
             android:key="exit"
             android:title="@string/exit"
