@@ -36,14 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
-import com.kyant.shapes.Capsule
-import com.kyant.shapes.RoundedRectangle
 
 /**
  * Liquid Glass 效果演示 Activity
@@ -63,8 +55,6 @@ fun GlassDemoScreen() {
     var showCard by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    val backdrop = rememberLayerBackdrop()
-
     // 渐变背景
     Box(
         modifier = Modifier
@@ -78,7 +68,6 @@ fun GlassDemoScreen() {
                     )
                 )
             )
-            .layerBackdrop(backdrop)
     ) {
         Column(
             modifier = Modifier
@@ -133,16 +122,22 @@ fun GlassDemoScreen() {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 玻璃卡片
+            // 模拟的玻璃卡片（简化版）
             if (showCard) {
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Color.White.copy(alpha = 0.2f),
+                            RoundedCornerShape(16.dp)
+                        )
+                        .padding(16.dp)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "玻璃卡片",
+                            text = "玻璃卡片（简化版）",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -151,7 +146,7 @@ fun GlassDemoScreen() {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "这是一个使用 Liquid Glass 效果的卡片。\n当前选中: Tab ${selectedTab + 1}",
+                            text = "这是一个模拟的玻璃效果卡片。\n当前选中: Tab ${selectedTab + 1}",
                             fontSize = 14.sp,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -160,19 +155,18 @@ fun GlassDemoScreen() {
             }
         }
 
-        // 玻璃底部导航栏
-        GlassBottomNavBar(
-            backdrop = backdrop,
+        // 底部导航栏（简化版）
+        SimpleBottomNavBar(
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        // 玻璃对话框
+        // 玻璃对话框（简化版）
         if (showDialog) {
-            GlassDialog(
+            SimpleGlassDialog(
                 title = "提示",
-                message = "这是一个使用 Liquid Glass 效果的对话框。\n\n你可以在阅读器的弹窗中使用这种效果。",
+                message = "这是一个使用玻璃效果的对话框。\n\n你可以在阅读器的弹窗中使用这种效果。",
                 confirmText = "确定",
                 cancelText = "取消",
                 onConfirm = { showDialog = false },
@@ -183,11 +177,10 @@ fun GlassDemoScreen() {
 }
 
 /**
- * Liquid Glass 风格的底部导航栏
+ * 简化版底部导航栏
  */
 @Composable
-fun GlassBottomNavBar(
-    backdrop: com.kyant.backdrop.Backdrop,
+fun SimpleBottomNavBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -203,17 +196,9 @@ fun GlassBottomNavBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { Capsule() },
-                    effects = {
-                        vibrancy()
-                        blur(8f.dp.toPx())
-                        lens(16f.dp.toPx(), 32f.dp.toPx())
-                    },
-                    onDrawSurface = {
-                        drawRect(Color.White.copy(alpha = 0.2f))
-                    }
+                .background(
+                    Color.White.copy(alpha = 0.2f),
+                    RoundedCornerShape(50)
                 )
                 .padding(vertical = 12.dp, horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -231,16 +216,9 @@ fun GlassBottomNavBar(
                         ) { onTabSelected(index) }
                         .then(
                             if (isSelected) {
-                                Modifier.drawBackdrop(
-                                    backdrop = backdrop,
-                                    shape = { Capsule() },
-                                    effects = {
-                                        vibrancy()
-                                        blur(4f.dp.toPx())
-                                    },
-                                    onDrawSurface = {
-                                        drawRect(Color.White.copy(alpha = 0.3f))
-                                    }
+                                Modifier.background(
+                                    Color.White.copy(alpha = 0.3f),
+                                    RoundedCornerShape(50)
                                 )
                             } else {
                                 Modifier
@@ -252,7 +230,6 @@ fun GlassBottomNavBar(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // 图标占位（实际项目中用 Icon）
                         Text(
                             text = when (index) {
                                 0 -> "🏠"
@@ -274,6 +251,106 @@ fun GlassBottomNavBar(
                             textAlign = TextAlign.Center
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 简化版玻璃对话框
+ */
+@Composable
+fun SimpleGlassDialog(
+    title: String,
+    message: String,
+    confirmText: String = "确定",
+    cancelText: String? = "取消",
+    onConfirm: () -> Unit,
+    onCancel: (() -> Unit)? = null
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.3f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onCancel?.invoke() },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .background(
+                    Color.White.copy(alpha = 0.25f),
+                    RoundedCornerShape(24.dp)
+                )
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = message,
+                fontSize = 16.sp,
+                color = Color.White.copy(alpha = 0.9f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (cancelText != null && onCancel != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = onCancel,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.2f),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = cancelText, fontSize = 16.sp)
+                    }
+
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.4f),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = confirmText, fontSize = 16.sp)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.4f),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = confirmText, fontSize = 16.sp)
                 }
             }
         }
