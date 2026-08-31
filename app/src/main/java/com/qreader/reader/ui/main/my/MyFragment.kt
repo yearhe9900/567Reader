@@ -28,6 +28,7 @@ import com.qreader.reader.ui.dict.rule.DictRuleActivity
 import com.qreader.reader.ui.file.FileManageActivity
 import com.qreader.reader.ui.main.MainFragmentInterface
 import com.qreader.reader.ui.replace.ReplaceRuleActivity
+import com.qreader.reader.ui.compose.GlassDemoActivity
 import com.qreader.reader.utils.LogUtils
 import com.qreader.reader.utils.getPrefBoolean
 import com.qreader.reader.utils.observeEventSticky
@@ -160,6 +161,7 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
 
                 "fileManage" -> startActivity<FileManageActivity>()
                 "readRecord" -> startActivity<ReadRecordActivity>()
+                "glassDemo" -> startActivity<GlassDemoActivity>()
                 "exit" -> activity?.finish()
             }
             return super.onPreferenceTreeClick(preference)

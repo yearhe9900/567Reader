@@ -111,6 +111,13 @@
             app:iconSpaceReserved="false" />
 
         <com.qreader.reader.lib.prefs.Preference
+            android:icon="@drawable/ic_cfg_about"
+            android:key="glassDemo"
+            android:summary="查看 Liquid Glass 效果演示"
+            android:title="玻璃效果演示"
+            app:iconSpaceReserved="false" />
+
+        <com.qreader.reader.lib.prefs.Preference
             android:icon="@drawable/ic_exit"
             android:key="exit"
             android:title="@string/exit"
