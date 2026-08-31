@@ -43,7 +43,6 @@ import com.qreader.reader.ui.main.bookshelf.style1.BookshelfFragment1
 import com.qreader.reader.ui.main.bookshelf.style2.BookshelfFragment2
 import com.qreader.reader.ui.main.explore.ExploreFragment
 import com.qreader.reader.ui.main.my.MyFragment
-import com.qreader.reader.ui.main.rss.RssFragment
 import com.qreader.reader.ui.widget.dialog.TextDialog
 import com.qreader.reader.ui.widget.text.BadgeView
 import com.qreader.reader.utils.isCreated
@@ -60,15 +59,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import splitties.views.bottomPadding
 import kotlin.coroutines.resume
-import com.qreader.reader.help.update.AppUpdate
-import com.qreader.reader.ui.about.UpdateDialog
 import com.qreader.reader.ui.association.ImportDictRuleDialog
 import com.qreader.reader.ui.association.ImportHttpTtsDialog
 import com.qreader.reader.ui.association.ImportTxtTocRuleDialog
 import com.qreader.reader.utils.StringUtils
 import com.qreader.reader.utils.clearClip
 import com.qreader.reader.utils.getClipText
-import kotlin.time.Duration.Companion.hours
 
 /**
  * 主界面
@@ -85,16 +81,15 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     private val idBookshelf1 = 11
     private val idBookshelf2 = 12
     private val idExplore = 1
-    private val idRss = 2
-    private val idMy = 3
+    private val idMy = 2
     private var exitTime: Long = 0
     private var bookshelfReselected: Long = 0
     private var exploreReselected: Long = 0
     private var pagePosition = 0
     private val fragmentMap = hashMapOf<Int, Fragment>()
-    private var bottomMenuCount = 4
+    private var bottomMenuCount = 3
     private val EXIT_INTERVAL = 2000L
-    private val realPositions = arrayOf(idBookshelf, idExplore, idRss, idMy)
+    private val realPositions = arrayOf(idBookshelf, idExplore, idMy)
     private val adapter by lazy {
         TabFragmentPageAdapter(supportFragmentManager)
     }
@@ -167,9 +162,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             R.id.menu_discovery ->
                 viewPagerMain.setCurrentItem(realPositions.indexOf(idExplore), false)
 
-            R.id.menu_rss ->
-                viewPagerMain.setCurrentItem(realPositions.indexOf(idRss), false)
-
             R.id.menu_my_config ->
                 viewPagerMain.setCurrentItem(realPositions.indexOf(idMy), false)
         }
@@ -239,17 +231,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
      */
     private suspend fun upVersion() = suspendCancellableCoroutine sc@{ block ->
         if (LocalConfig.versionCode == appInfo.versionCode) {
-            if (AppConfig.autoUpdateVariant) {
-                if (LocalConfig.lastCheckUpdate + 24.hours.inWholeMilliseconds < System.currentTimeMillis()) {
-                    AppUpdate.giteeUpdate.check(lifecycleScope)
-                        .onSuccess {
-                            showDialogFragment(
-                                UpdateDialog(it)
-                            )
-                        }
-                    LocalConfig.lastCheckUpdate = System.currentTimeMillis()
-                }
-            }
             block.resume(null)
             return@sc
         }
@@ -392,19 +373,13 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     private fun upBottomMenu() {
         val showDiscovery = AppConfig.showDiscovery
-        val showRss = AppConfig.showRSS
         binding.bottomNavigationView.menu.let { menu ->
             menu.findItem(R.id.menu_discovery).isVisible = showDiscovery
-            menu.findItem(R.id.menu_rss).isVisible = showRss
         }
         var index = 0
         if (showDiscovery) {
             index++
             realPositions[index] = idExplore
-        }
-        if (showRss) {
-            index++
-            realPositions[index] = idRss
         }
         index++
         realPositions[index] = idMy
@@ -417,10 +392,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             "bookshelf" -> {}
             "explore" -> if (AppConfig.showDiscovery) {
                 binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idExplore), false)
-            }
-
-            "rss" -> if (AppConfig.showRSS) {
-                binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idRss), false)
             }
 
             "my" -> binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idMy), false)
@@ -459,7 +430,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             if ((fragmentId == idBookshelf1 && any is BookshelfFragment1)
                 || (fragmentId == idBookshelf2 && any is BookshelfFragment2)
                 || (fragmentId == idExplore && any is ExploreFragment)
-                || (fragmentId == idRss && any is RssFragment)
                 || (fragmentId == idMy && any is MyFragment)
             ) {
                 return POSITION_UNCHANGED
@@ -472,7 +442,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 idBookshelf1 -> BookshelfFragment1(position)
                 idBookshelf2 -> BookshelfFragment2(position)
                 idExplore -> ExploreFragment(position)
-                idRss -> RssFragment(position)
                 else -> MyFragment(position)
             }
         }

@@ -181,7 +181,6 @@
     <string name="copy_source">Sao chép nguồn</string>
     <string name="paste_source">Dán nguồn</string>
     <string name="source_rule_s">Mô tả quy tắc nguồn</string>
-    <string name="check_update">Kiểm tra cập nhật</string>
     <string name="camera_scan">Quét mã QR</string>
     <string name="scan_image">Quét ảnh cục bộ</string>
     <string name="rule_summary">Mô tả quy tắc</string>
@@ -236,7 +235,6 @@
     <string name="origin_show">Nguồn: %s</string>
     <string name="import_replace_rule">Nhập quy tắc thay thế</string>
     <string name="import_replace_rule_on_line">Nhập quy tắc trực tuyến</string>
-    <string name="check_update_interval">Khoảng thời gian kiểm tra cập nhật</string>
     <string name="bookshelf_px_0">Theo danh sách gần đây</string>
     <string name="bookshelf_px_1">Theo thời gian cập nhật</string>
     <string name="bookshelf_px_2">Theo tên sách</string>
@@ -1166,12 +1164,7 @@
     <string name="start_from">Bắt đầu từ</string>
     <string name="daily_chapters">Chương hàng ngày</string>
     <string name="start_chapter">Chương bắt đầu</string>
-    <string name="update_to_variant_title">Kiểm tra cập nhật tìm phiên bản</string>
-    <string name="update_to_variant_summary">Kiểm tra cập nhật khi tìm các phiên bản có chữ ký khác</string>
-    <string name="default_version">Hiện tại</string>
     <string name="official_version">Phiên bản chính thức</string>
-    <string name="beta_release_version">Phiên bản beta</string>
-    <string name="beta_releaseA_version">Phiên bản song song</string>
     <string name="stream_read_aloud_audio">Phát âm thanh trực tuyến</string>
     <string name="stream_read_aloud_audio_summary">Tức là vừa tải vừa phát, khi mạng kém thì phát sẽ bị gián đoạn, chỉ có nguồn TTS mới có hiệu lực</string>
     <string name="pause_read_aloud_while_phone_calls_title">Tạm dừng đọc trong khi gọi điện</string>

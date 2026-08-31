@@ -6,9 +6,16 @@ import android.provider.Settings
 import androidx.annotation.Keep
 import cn.hutool.crypto.digest.DigestUtil
 import com.qreader.reader.BuildConfig
-import com.qreader.reader.help.update.AppVariant
 import org.apache.commons.lang3.time.FastDateFormat
 import splitties.init.appCtx
+
+enum class AppVariant {
+    OFFICIAL,
+    BETA_RELEASEA,
+    BETA_RELEASES,
+    BETA_RELEASE,
+    UNKNOWN
+}
 
 @Suppress("ConstPropertyName")
 @SuppressLint("SimpleDateFormat")

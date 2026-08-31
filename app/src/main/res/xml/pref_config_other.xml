@@ -43,12 +43,6 @@
             android:title="@string/show_discovery"
             app:iconSpaceReserved="false" />
 
-        <com.qreader.reader.lib.prefs.SwitchPreference
-            android:defaultValue="true"
-            android:key="showRss"
-            android:title="@string/show_rss"
-            app:iconSpaceReserved="false" />
-
         <com.qreader.reader.lib.prefs.NameListPreference
             android:defaultValue="bookshelf"
             android:key="defaultHomePage"
@@ -169,22 +163,6 @@
             android:key="showAddToShelfAlert"
             android:summary="@string/show_add_to_shelf_alert_summary"
             android:title="@string/show_add_to_shelf_alert_title" />
-
-        <com.qreader.reader.lib.prefs.NameListPreference
-            android:defaultValue="default_version"
-            android:key="updateToVariant"
-            android:summary="@string/update_to_variant_summary"
-            android:title="@string/update_to_variant_title"
-            app:allowDividerAbove="false"
-            app:allowDividerBelow="false"
-            app:entries="@array/default_app_variant"
-            app:entryValues="@array/default_app_variant_value" />
-
-        <com.qreader.reader.lib.prefs.SwitchPreference
-            android:defaultValue="true"
-            android:key="autoUpdateVariant"
-            android:summary="@string/auto_update_summary"
-            android:title="@string/auto_update" />
 
         <com.qreader.reader.lib.prefs.SwitchPreference
             android:defaultValue="true"

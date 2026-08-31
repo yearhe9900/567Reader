@@ -188,7 +188,6 @@
     <string name="copy_source">Copy source</string>
     <string name="paste_source">Paste source</string>
     <string name="source_rule_s">Source rules description</string>
-    <string name="check_update">Check for Updates</string>
     <string name="camera_scan">Scan QR code</string>
     <string name="scan_image">Scan local images</string>
     <string name="rule_summary">Rules description</string>
@@ -244,7 +243,6 @@
     <string name="origin_show">Origin: %s</string>
     <string name="import_replace_rule">Import replace rules</string>
     <string name="import_replace_rule_on_line">Import online rules</string>
-    <string name="check_update_interval">Check interval for updates</string>
     <string name="bookshelf_px_0">By recent list</string>
     <string name="bookshelf_px_1">By update time</string>
     <string name="bookshelf_px_2">By book title</string>
@@ -1186,13 +1184,7 @@
     <string name="start_from">Start from</string>
     <string name="daily_chapters">Daily Chapters</string>
     <string name="start_chapter">Start Chapter</string>
-    <string name="update_to_variant_title">检查更新查找版本</string>
-    <string name="update_to_variant_summary">切换正式版/测试版</string>
-    <string name="default_version">当前</string>
     <string name="official_version">正式版</string>
-    <string name="beta_release_version">测试版</string>
-    <string name="beta_releaseA_version">共存版</string>
-    <string name="beta_releaseS_version" translatable="false">正式版</string>
     <string name="stream_read_aloud_audio">流式播放音频</string>
     <string name="stream_read_aloud_audio_summary">即边下边播，网络不好时播放会断断续续，仅TTS源有效</string>
     <string name="pause_read_aloud_while_phone_calls_title">来电期间暂停朗读</string>
@@ -1248,10 +1240,10 @@
     <string name="r_startStyle">启动页style文本（startStyle）</string>
     <string name="r_startJs">启动页Js（startJs）</string>
     <string name="load_with_web_log">输出 WebLog</string>
-    <string name="auto_update">自动更新</string>
     <string name="time_day">天</string>
     <string name="update_interval">间隔：</string>
     <string name="silent_update">静默更新</string>
+    <string name="auto_update">自动更新</string>
     <string name="show_web_log">输出日志</string>
     <string name="please_focus_cursor_on_textbox">请将光标聚焦在文本框</string>
     <string name="focus_lost_on_textbox">在文本框丢失光标焦点</string>
@@ -1341,6 +1333,5 @@
     <string name="invalid_file_path">文件路径无效</string>
     <string name="is_system_tts_no_export">无法导出系统tts</string>
     <string name="click_image_way">点击图片方式</string>
-    <string name="auto_update_summary">每天自动检查软件是否更新</string>
     <string name="shibboleth">口令</string>
 </resources>

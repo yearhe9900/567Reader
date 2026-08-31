@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.StringRes
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.qreader.reader.R
@@ -14,9 +13,7 @@ import com.qreader.reader.constant.AppLog
 import com.qreader.reader.help.CrashHandler
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.coroutine.Coroutine
-import com.qreader.reader.help.update.AppUpdate
 import com.qreader.reader.ui.widget.dialog.TextDialog
-import com.qreader.reader.ui.widget.dialog.WaitDialog
 import com.qreader.reader.utils.FileDoc
 import com.qreader.reader.utils.compress.ZipUtils
 import com.qreader.reader.utils.createFileIfNotExist
@@ -38,10 +35,6 @@ import java.io.File
 
 class AboutFragment : PreferenceFragmentCompat() {
 
-    private val waitDialog by lazy {
-        WaitDialog(requireContext())
-    }
-
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.about)
         findPreference<Preference>("update_log")?.summary =
@@ -57,7 +50,6 @@ class AboutFragment : PreferenceFragmentCompat() {
         when (preference.key) {
             "contributors" -> openUrl(R.string.contributors_url)
             "update_log" -> showMdFile(getString(R.string.update_log), "updateLog.md")
-            "check_update" -> checkUpdate()
             "mail" -> requireContext().sendMail(getString(R.string.email))
             "license" -> showMdFile(getString(R.string.license), "LICENSE.md")
             "disclaimer" -> showMdFile(getString(R.string.disclaimer), "disclaimer.md")
@@ -82,26 +74,6 @@ class AboutFragment : PreferenceFragmentCompat() {
         val mdText = String(requireContext().assets.open(fileName).readBytes())
         showDialogFragment(TextDialog(title, mdText, TextDialog.Mode.MD))
     }
-
-    /**
-     * 检测更新
-     */
-    private fun checkUpdate() {
-        waitDialog.show()
-        AppUpdate.giteeUpdate.run {
-            check(lifecycleScope)
-                .onSuccess {
-                    showDialogFragment(
-                        UpdateDialog(it)
-                    )
-                }.onError {
-                    appCtx.toastOnUi("${getString(R.string.check_update)}\n${it.localizedMessage}")
-                }.onFinally {
-                    waitDialog.dismiss()
-                }
-        }
-    }
-
 
     /**
      * 加入qq群
