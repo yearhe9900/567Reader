@@ -203,6 +203,7 @@ compose-foundation = { module = "androidx.compose.foundation:foundation" }
 
 # Liquid Glass
 liquid-glass = { module = "io.github.kyant0:backdrop", version = "1.0.6" }
+liquid-glass-shapes = { module = "io.github.kyant0:shapes", version = "1.2.0" }
 
 [bundles]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
