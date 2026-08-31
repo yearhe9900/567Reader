@@ -194,6 +194,16 @@ mozilla-rhino = { module = "org.mozilla:rhino", version.ref = "rhino" }
 renderscript-intrinsics-replacement-toolkit = { module = "com.github.TomasValenta:renderscript-intrinsics-replacement-toolkit", version = "8eaa829ddd" }
 zxing-lite = { module = "com.github.jenly1314:zxing-lite", version.ref = "zxingLite" }
 
+# Compose
+compose-bom = { module = "androidx.compose:compose-bom", version = "2025.08.00" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+
+# Liquid Glass
+liquid-glass = { module = "io.github.kyant0:backdrop", version = "2.0.1" }
+
 [bundles]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
 androidTest = ["androidx-espresso-core", "androidx-junit", "androidx-runner"]
@@ -218,6 +228,7 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 #protobuf = { id = "com.google.protobuf", version = "0.9.4" }
 
