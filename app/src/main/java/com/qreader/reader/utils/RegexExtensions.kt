@@ -75,7 +75,6 @@ fun CharSequence.replace(
                         val exception = RegexTimeoutException(timeoutMsg)
                         block.cancel(exception)
                         appCtx.longToastOnUi(timeoutMsg)
-                        CrashHandler.saveCrashInfo2File(exception)
                         select {
                             job.onJoin {}
                             onTimeout(3000) {
