@@ -70,10 +70,5 @@
         android:title="@string/import_bookshelf"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/menu_log"
-        android:icon="@drawable/ic_cfg_about"
-        android:title="@string/log"
-        app:showAsAction="never" />
 
 </menu>

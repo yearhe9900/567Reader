@@ -66,9 +66,5 @@
 
     </group>
 
-    <item
-        android:id="@+id/menu_log"
-        android:title="@string/log"
-        app:showAsAction="never" />
 
 </menu>

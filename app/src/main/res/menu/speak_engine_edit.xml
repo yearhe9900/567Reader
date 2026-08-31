@@ -40,10 +40,6 @@
         android:title="@string/paste_source"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/menu_log"
-        android:title="@string/log"
-        app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_help"
