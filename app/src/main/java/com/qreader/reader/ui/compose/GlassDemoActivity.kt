@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -18,11 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,19 +28,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
@@ -69,23 +65,17 @@ fun GlassDemoScreen() {
     val backdrop = rememberLayerBackdrop()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 渐变背景 - 作为 backdrop捕获源
-        Box(
+        // 壁纸背景 - 作为 backdrop捕获源（与官方 demo 一致）
+        Image(
+            painter = painterResource(id = com.qreader.reader.R.drawable.wallpaper_light),
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF00C9FF),
-                            Color(0xFF92FE9D),
-                            Color(0xFF00C9FF),
-                            Color(0xFFF9748F)
-                        )
-                    )
-                )
-                .layerBackdrop(backdrop)
+                .layerBackdrop(backdrop),
+            contentScale = ContentScale.Crop
         )
 
+        // 内容区域
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -93,16 +83,32 @@ fun GlassDemoScreen() {
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Liquid Glass Demo",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            // 标题 - 玻璃效果
+            Box(
+                modifier = Modifier
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { Capsule() },
+                        effects = {
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(16f.dp.toPx(), 24f.dp.toPx())
+                        },
+                        onDrawSurface = {
+                            drawRect(Color.White.copy(alpha = 0.3f))
+                        }
+                    )
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                BasicText(
+                    text = "Liquid Glass Demo",
+                    style = TextStyle(Color.White, 24.sp, FontWeight.Bold)
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 显示玻璃对话框按钮 - 使用真正的 Liquid Glass
+            // 显示玻璃对话框按钮
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,10 +118,11 @@ fun GlassDemoScreen() {
                         shape = { Capsule() },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
+                            blur(4f.dp.toPx())
+                            lens(12f.dp.toPx(), 20f.dp.toPx())
                         },
                         onDrawSurface = {
-                            drawRect(Color.White.copy(alpha = 0.3f))
+                            drawRect(Color.White.copy(alpha = 0.25f))
                         }
                     )
                     .clickable(
@@ -124,12 +131,15 @@ fun GlassDemoScreen() {
                     ) { showDialog = true },
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "显示玻璃对话框", fontSize = 18.sp, color = Color.White)
+                BasicText(
+                    text = "显示玻璃对话框",
+                    style = TextStyle(Color.White, 18.sp)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 显示玻璃卡片按钮 - 使用真正的 Liquid Glass
+            // 显示玻璃卡片按钮
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,10 +149,11 @@ fun GlassDemoScreen() {
                         shape = { Capsule() },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
+                            blur(4f.dp.toPx())
+                            lens(12f.dp.toPx(), 20f.dp.toPx())
                         },
                         onDrawSurface = {
-                            drawRect(Color.White.copy(alpha = 0.3f))
+                            drawRect(Color.White.copy(alpha = 0.25f))
                         }
                     )
                     .clickable(
@@ -151,16 +162,15 @@ fun GlassDemoScreen() {
                     ) { showCard = !showCard },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
+                BasicText(
                     text = if (showCard) "隐藏玻璃卡片" else "显示玻璃卡片",
-                    fontSize = 18.sp,
-                    color = Color.White
+                    style = TextStyle(Color.White, 18.sp)
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 玻璃卡片 - 使用真正的 Liquid Glass
+            // 玻璃卡片
             if (showCard) {
                 Box(
                     modifier = Modifier
@@ -171,38 +181,33 @@ fun GlassDemoScreen() {
                             effects = {
                                 vibrancy()
                                 blur(16f.dp.toPx())
+                                lens(20f.dp.toPx(), 32f.dp.toPx())
                             },
                             onDrawSurface = {
                                 drawRect(Color.White.copy(alpha = 0.2f))
                             }
                         )
-                        .clip(RoundedRectangle(24.dp))
-                        .padding(16.dp)
+                        .padding(20.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
+                    Column {
+                        BasicText(
                             text = "玻璃卡片",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            style = TextStyle(Color.White, 20.sp, FontWeight.Bold)
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Text(
+                        BasicText(
                             text = "这是一个真正的 Liquid Glass 效果卡片！\n当前选中: Tab ${selectedTab + 1}",
-                            fontSize = 14.sp,
-                            color = Color.White.copy(alpha = 0.9f)
+                            style = TextStyle(Color.White.copy(alpha = 0.9f), 14.sp)
                         )
                     }
                 }
             }
         }
 
-        // 底部导航栏 - 使用真正的 Liquid Glass
-        GlassBottomNavBar(
+        // 底部导航栏 - 简化版玻璃效果
+        SimpleGlassBottomNavBar(
             backdrop = backdrop,
             selectedTab = selectedTab,
             onTabSelected = { selectedTab = it },
@@ -211,7 +216,7 @@ fun GlassDemoScreen() {
 
         // 玻璃对话框
         if (showDialog) {
-            GlassDialog(
+            SimpleGlassDialog(
                 backdrop = backdrop,
                 title = "提示",
                 message = "这是一个真正的 Liquid Glass 效果对话框！\n\n你可以在阅读器的弹窗中使用这种效果。",
@@ -225,10 +230,10 @@ fun GlassDemoScreen() {
 }
 
 /**
- * Liquid Glass 风格的底部导航栏
+ * 简化版玻璃底部导航栏
  */
 @Composable
-fun GlassBottomNavBar(
+fun SimpleGlassBottomNavBar(
     backdrop: com.kyant.backdrop.Backdrop,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
@@ -239,7 +244,7 @@ fun GlassBottomNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 24.dp, vertical = 16.dp)
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         Row(
@@ -251,9 +256,10 @@ fun GlassBottomNavBar(
                     effects = {
                         vibrancy()
                         blur(12f.dp.toPx())
+                        lens(24f.dp.toPx(), 24f.dp.toPx())
                     },
                     onDrawSurface = {
-                        drawRect(Color.White.copy(alpha = 0.25f))
+                        drawRect(Color.White.copy(alpha = 0.2f))
                     }
                 )
                 .padding(vertical = 12.dp, horizontal = 8.dp),
@@ -276,7 +282,8 @@ fun GlassBottomNavBar(
                                     backdrop = backdrop,
                                     shape = { Capsule() },
                                     effects = {
-                                        blur(4f.dp.toPx())
+                                        blur(6f.dp.toPx())
+                                        lens(8f.dp.toPx(), 12f.dp.toPx())
                                     },
                                     onDrawSurface = {
                                         drawRect(Color.White.copy(alpha = 0.4f))
@@ -292,7 +299,7 @@ fun GlassBottomNavBar(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
+                        BasicText(
                             text = when (index) {
                                 0 -> "🏠"
                                 1 -> "📚"
@@ -300,17 +307,18 @@ fun GlassBottomNavBar(
                                 3 -> "👤"
                                 else -> "📱"
                             },
-                            fontSize = 20.sp
+                            style = TextStyle(fontSize = 20.sp)
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        Text(
+                        BasicText(
                             text = title,
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
+                            style = TextStyle(
+                                Color.White,
+                                12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
                         )
                     }
                 }
@@ -320,10 +328,10 @@ fun GlassBottomNavBar(
 }
 
 /**
- * Liquid Glass 风格的对话框
+ * 简化版玻璃对话框
  */
 @Composable
-fun GlassDialog(
+fun SimpleGlassDialog(
     backdrop: com.kyant.backdrop.Backdrop,
     title: String,
     message: String,
@@ -335,14 +343,13 @@ fun GlassDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.3f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onCancel?.invoke() },
         contentAlignment = Alignment.Center
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .drawBackdrop(
@@ -350,72 +357,103 @@ fun GlassDialog(
                     shape = { RoundedRectangle(24.dp) },
                     effects = {
                         vibrancy()
-                        blur(20f.dp.toPx())
+                        blur(24f.dp.toPx())
+                        lens(32f.dp.toPx(), 48f.dp.toPx())
                     },
                     onDrawSurface = {
                         drawRect(Color.White.copy(alpha = 0.3f))
                     }
                 )
-                .clip(RoundedRectangle(24.dp))
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(24.dp)
         ) {
-            Text(
-                text = title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                BasicText(
+                    text = title,
+                    style = TextStyle(Color.White, 20.sp, FontWeight.Bold)
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = message,
-                fontSize = 16.sp,
-                color = Color.White.copy(alpha = 0.9f),
-                textAlign = TextAlign.Center
-            )
+                BasicText(
+                    text = message,
+                    style = TextStyle(Color.White.copy(alpha = 0.9f), 16.sp)
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            if (cancelText != null && onCancel != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp)
-                            .drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { Capsule() },
-                                effects = {
-                                    blur(4f.dp.toPx())
-                                },
-                                onDrawSurface = {
-                                    drawRect(Color.White.copy(alpha = 0.2f))
-                                }
-                            )
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { onCancel.invoke() },
-                        contentAlignment = Alignment.Center
+                if (cancelText != null && onCancel != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(text = cancelText, fontSize = 16.sp, color = Color.White)
-                    }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .drawBackdrop(
+                                    backdrop = backdrop,
+                                    shape = { Capsule() },
+                                    effects = {
+                                        blur(4f.dp.toPx())
+                                        lens(8f.dp.toPx(), 12f.dp.toPx())
+                                    },
+                                    onDrawSurface = {
+                                        drawRect(Color.White.copy(alpha = 0.2f))
+                                    }
+                                )
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { onCancel.invoke() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BasicText(
+                                text = cancelText,
+                                style = TextStyle(Color.White, 16.sp)
+                            )
+                        }
 
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .drawBackdrop(
+                                    backdrop = backdrop,
+                                    shape = { Capsule() },
+                                    effects = {
+                                        blur(4f.dp.toPx())
+                                        lens(8f.dp.toPx(), 12f.dp.toPx())
+                                    },
+                                    onDrawSurface = {
+                                        drawRect(Color.White.copy(alpha = 0.4f))
+                                    }
+                                )
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) { onConfirm.invoke() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BasicText(
+                                text = confirmText,
+                                style = TextStyle(Color.White, 16.sp)
+                            )
+                        }
+                    }
+                } else {
                     Box(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .height(48.dp)
                             .drawBackdrop(
                                 backdrop = backdrop,
                                 shape = { Capsule() },
                                 effects = {
                                     blur(4f.dp.toPx())
+                                    lens(8f.dp.toPx(), 12f.dp.toPx())
                                 },
                                 onDrawSurface = {
                                     drawRect(Color.White.copy(alpha = 0.4f))
@@ -427,31 +465,11 @@ fun GlassDialog(
                             ) { onConfirm.invoke() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = confirmText, fontSize = 16.sp, color = Color.White)
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { Capsule() },
-                            effects = {
-                                blur(4f.dp.toPx())
-                            },
-                            onDrawSurface = {
-                                drawRect(Color.White.copy(alpha = 0.4f))
-                            }
+                        BasicText(
+                            text = confirmText,
+                            style = TextStyle(Color.White, 16.sp)
                         )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { onConfirm.invoke() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = confirmText, fontSize = 16.sp, color = Color.White)
+                    }
                 }
             }
         }
