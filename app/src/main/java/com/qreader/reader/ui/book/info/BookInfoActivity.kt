@@ -84,6 +84,7 @@ import com.qreader.reader.ui.video.VideoPlayerActivity
 import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.ui.widget.dialog.VariableDialog
 import com.qreader.reader.ui.widget.dialog.WaitDialog
+import com.qreader.reader.ui.compose.GlassAlertDialog
 import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.ConvertUtils
 import com.qreader.reader.utils.FileDoc
@@ -953,36 +954,31 @@ class BookInfoActivity :
     private fun deleteBook() {
         viewModel.getBook()?.let { book ->
             if (LocalConfig.bookInfoDeleteAlert) {
-                alert(
-                    titleResource = R.string.draw,
-                    messageResource = R.string.sure_del
-                ) {
-                    var checkBox: CheckBox? = null
-                    if (book.isLocal) {
-                        checkBox = CheckBox(this@BookInfoActivity).apply {
-                            setText(R.string.delete_book_file)
-                            isChecked = LocalConfig.deleteBookOriginal
+                val dialog = GlassAlertDialog.newInstance(
+                    title = getString(R.string.draw),
+                    message = getString(R.string.sure_del),
+                    confirmText = getString(R.string.ok),
+                    cancelText = getString(R.string.cancel),
+                    showCheckBox = book.isLocal,
+                    checkBoxText = if (book.isLocal) getString(R.string.delete_book_file) else "",
+                    checkBoxChecked = LocalConfig.deleteBookOriginal,
+                    onConfirm = { checkBoxChecked ->
+                        if (book.isLocal) {
+                            LocalConfig.deleteBookOriginal = checkBoxChecked
                         }
-                        val view = LinearLayout(this@BookInfoActivity).apply {
-                            setPadding(16.dpToPx(), 0, 16.dpToPx(), 0)
-                            addView(checkBox)
-                        }
-                        customView { view }
-                    }
-                    yesButton {
-                        if (checkBox != null) {
-                            LocalConfig.deleteBookOriginal = checkBox.isChecked
-                        }
-                        SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, viewModel.bookSource, book) //确认后删除书架
+                        SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, viewModel.bookSource, book)
                         viewModel.delBook(LocalConfig.deleteBookOriginal) {
                             setResult(RESULT_OK)
                             finish()
                         }
+                    },
+                    onCancel = {
+                        // 取消操作
                     }
-                    noButton()
-                }
+                )
+                dialog.show(supportFragmentManager, "glass_delete_dialog")
             } else {
-                SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, viewModel.bookSource, book) //点按钮直接删除书架
+                SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, viewModel.bookSource, book)
                 viewModel.delBook(LocalConfig.deleteBookOriginal) {
                     setResult(RESULT_OK)
                     finish()
