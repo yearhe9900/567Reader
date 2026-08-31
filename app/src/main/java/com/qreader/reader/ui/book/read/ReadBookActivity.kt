@@ -69,7 +69,6 @@ import com.qreader.reader.model.localBook.MobiFile
 import com.qreader.reader.receiver.NetworkChangedListener
 import com.qreader.reader.receiver.TimeBatteryReceiver
 import com.qreader.reader.service.BaseReadAloudService
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.bookmark.BookmarkDialog
 import com.qreader.reader.ui.book.changesource.ChangeBookSourceDialog
 import com.qreader.reader.ui.book.changesource.ChangeChapterSourceDialog
@@ -573,7 +572,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                 ReadBook.loadContent(false)
             }
 
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_toc_regex -> showDialogFragment(
                 TxtTocRuleDialog(ReadBook.book?.tocUrl)
             )

@@ -35,7 +35,6 @@ import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.lib.theme.primaryTextColor
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.info.BookInfoActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.utils.ColorUtils
@@ -170,7 +169,6 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
 
             R.id.menu_search_scope -> alertSearchScope()
             R.id.menu_source_manage -> startActivity<BookSourceActivity>()
-            R.id.menu_log -> showDialogFragment(AppLogDialog())
             R.id.menu_1 -> viewModel.searchScope.update("")
             else -> {
                 if (item.groupId == R.id.menu_group_1) {

@@ -31,7 +31,6 @@ import com.qreader.reader.lib.permission.Permissions
 import com.qreader.reader.lib.permission.PermissionsCompat
 import com.qreader.reader.lib.prefs.fragment.PreferenceFragment
 import com.qreader.reader.lib.theme.primaryColor
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.widget.dialog.WaitDialog
 import com.qreader.reader.utils.FileDoc
@@ -162,7 +161,6 @@ class BackupConfigFragment : PreferenceFragment(),
                 return true
             }
 
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return false
     }

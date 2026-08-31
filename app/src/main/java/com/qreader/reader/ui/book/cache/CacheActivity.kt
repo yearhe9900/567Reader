@@ -34,7 +34,6 @@ import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.dialogs.selector
 import com.qreader.reader.model.CacheBook
 import com.qreader.reader.service.ExportBookService
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.utils.ACache
 import com.qreader.reader.utils.FileDoc
@@ -216,7 +215,6 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
             R.id.menu_export_file_name -> alertExportFileName()
             R.id.menu_export_type -> showExportTypeConfig()
             R.id.menu_export_charset -> showCharsetConfig()
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             else -> if (item.groupId == R.id.menu_group) {
                 binding.titleBar.subtitle = item.title
                 groupId = appDb.bookGroupDao.getByName(item.title.toString())?.groupId ?: 0

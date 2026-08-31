@@ -30,7 +30,6 @@ import com.qreader.reader.lib.dialogs.selector
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.ui.book.source.debug.BookSourceDebugActivity
 import com.qreader.reader.ui.code.CodeEditActivity
@@ -185,7 +184,6 @@ class BookSourceEditActivity :
                 ErrorCorrectionLevel.L
             )
 
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_help -> showHelp("ruleHelp")
             R.id.menu_login -> viewModel.save(getSource()) { source ->
                 startActivity<SourceLoginActivity> {

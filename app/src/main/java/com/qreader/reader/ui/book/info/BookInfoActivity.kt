@@ -65,7 +65,6 @@ import com.qreader.reader.lib.theme.bottomBackground
 import com.qreader.reader.lib.theme.getPrimaryTextColor
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.model.remote.RemoteBookWebDav
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.audio.AudioPlayActivity
 import com.qreader.reader.ui.book.changecover.ChangeCoverDialog
 import com.qreader.reader.ui.book.changesource.ChangeBookSourceDialog
@@ -384,7 +383,6 @@ class BookInfoActivity :
                         viewModel.clearCache(it)
                     }
                 }
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_split_long_chapter -> {
                 upLoading(true)
                 viewModel.getBook()?.let {

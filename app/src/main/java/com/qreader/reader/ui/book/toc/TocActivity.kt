@@ -20,7 +20,6 @@ import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.primaryTextColor
 import com.qreader.reader.model.ReadBook
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.toc.rule.TxtTocRuleDialog
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.widget.dialog.WaitDialog
@@ -165,7 +164,6 @@ class TocActivity : VMBaseActivity<ActivityChapterListBinding, TocViewModel>(),
                 requestCode = 2
             }
 
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return super.onCompatOptionsItemSelected(item)
     }

@@ -75,7 +75,6 @@ import org.jsoup.Jsoup
 import splitties.views.bottomPadding
 import java.io.ByteArrayInputStream
 import java.util.regex.PatternSyntaxException
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.rss.article.ReadRecordDialog
 import com.qreader.reader.ui.rss.source.edit.RssSourceEditActivity
 import com.qreader.reader.utils.StartActivityContract
@@ -290,7 +289,6 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                     putExtra("sourceUrl", it)
                 }
             }
-            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_read_record -> showDialogFragment(ReadRecordDialog(viewModel.rssSource?.sourceUrl))
         }
         return super.onCompatOptionsItemSelected(item)

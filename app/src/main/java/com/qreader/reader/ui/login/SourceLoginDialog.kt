@@ -24,7 +24,6 @@ import com.qreader.reader.databinding.ItemSourceEditBinding
 import com.qreader.reader.databinding.ItemSelectorSingleBinding
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.primaryColor
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.utils.GSON
 import com.qreader.reader.utils.applyTint
 import com.qreader.reader.utils.dpToPx
@@ -659,7 +658,6 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                 }
 
                 R.id.menu_del_login_header -> source.removeLoginHeader()
-                R.id.menu_log -> showDialogFragment<AppLogDialog>()
             }
             return@setOnMenuItemClickListener true
         }
