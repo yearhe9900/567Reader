@@ -1,8 +1,8 @@
 [versions]
 
-kotlin = "2.3.10"
-ksp = "2.3.4"
-agp = "8.13.2"
+kotlin = "2.4.10"
+ksp = "2.4.10"
+agp = "9.3.2"
 appcompat = "1.7.1"
 colorpicker = "1.1.0"
 constraintlayout = "2.2.1"
@@ -195,15 +195,15 @@ renderscript-intrinsics-replacement-toolkit = { module = "com.github.TomasValent
 zxing-lite = { module = "com.github.jenly1314:zxing-lite", version.ref = "zxingLite" }
 
 # Compose
-compose-bom = { module = "androidx.compose:compose-bom", version = "2024.12.01" }
+compose-bom = { module = "androidx.compose:compose-bom", version = "2025.08.00" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 
 # Liquid Glass
-liquid-glass = { module = "io.github.kyant0:backdrop", version = "1.0.6" }
-liquid-glass-shapes = { module = "io.github.kyant0:shapes", version = "1.2.0" }
+liquid-glass = { module = "io.github.kyant0:backdrop", version = "2.0.1" }
+liquid-glass-shapes = { module = "io.github.kyant0:shapes", version = "1.2.1" }
 
 [bundles]
 coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android"]
