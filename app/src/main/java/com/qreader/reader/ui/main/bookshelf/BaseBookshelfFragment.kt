@@ -19,6 +19,7 @@ import com.qreader.reader.databinding.DialogEditTextBinding
 import com.qreader.reader.help.DirectLinkUpload
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.lib.dialogs.alert
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.cache.CacheActivity
 import com.qreader.reader.ui.book.group.GroupManageDialog
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
@@ -118,6 +119,7 @@ abstract class BaseBookshelfFragment(layoutId: Int) : VMBaseFragment<BookshelfVi
             }
 
             R.id.menu_import_bookshelf -> importBookshelfAlert(groupId)
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
     }
 

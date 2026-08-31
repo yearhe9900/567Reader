@@ -26,6 +26,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseService
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.constant.NotificationId
@@ -259,6 +260,7 @@ class AudioPlayService : BaseService(),
             exoPlayer.seekTo(playtime)
             exoPlayer.prepare()
         }.onError {
+            AppLog.put("播放出错\n${it.localizedMessage}", it)
             toastOnUi("$url ${it.localizedMessage}")
             stopSelf()
         }
@@ -405,6 +407,7 @@ class AudioPlayService : BaseService(),
         postEvent(EventBus.AUDIO_STATE, Status.STOP)
         AudioPlay.upLoading(false)
         val errorMsg = "音频播放出错\n${error.errorCodeName} ${error.errorCode}"
+        AppLog.put(errorMsg, error)
         toastOnUi(errorMsg)
     }
 
@@ -577,21 +580,26 @@ class AudioPlayService : BaseService(),
      */
     override fun onAudioFocusChange(focusChange: Int) {
         if (AppConfig.ignoreAudioFocus) {
+            AppLog.put("忽略音频焦点处理(有声)")
             return
         }
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
                 if (needResumeOnAudioFocusGain) {
+                    AppLog.put("音频焦点获得,继续播放")
                     resume()
                 } else {
+                    AppLog.put("音频焦点获得")
                 }
             }
 
             AudioManager.AUDIOFOCUS_LOSS -> {
+                AppLog.put("音频焦点丢失,暂停播放")
                 pause()
             }
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                AppLog.put("音频焦点暂时丢失并会很快再次获得,暂停播放")
                 if (!pause) {
                     needResumeOnAudioFocusGain = true
                     pause(false)
@@ -600,6 +608,7 @@ class AudioPlayService : BaseService(),
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                 // 短暂丢失焦点，这种情况是被其他应用申请了短暂的焦点希望其他声音能压低音量（或者关闭声音）凸显这个声音（比如短信提示音），
+                AppLog.put("音频焦点短暂丢失,不做处理")
             }
         }
     }
@@ -679,6 +688,7 @@ class AudioPlayService : BaseService(),
                 val notification = createNotification()
                 notificationManager.notify(NotificationId.AudioPlayService, notification.build())
             } catch (e: Exception) {
+                AppLog.put("创建音频播放通知出错,${e.localizedMessage}", e, true)
             }
         }
     }
@@ -692,6 +702,7 @@ class AudioPlayService : BaseService(),
                 val notification = createNotification()
                 startForeground(NotificationId.AudioPlayService, notification.build())
             } catch (e: Exception) {
+                AppLog.put("创建音频播放通知出错,${e.localizedMessage}", e, true)
                 //创建通知出错不结束服务就会崩溃,服务必须绑定通知
                 stopSelf()
             }

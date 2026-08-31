@@ -14,6 +14,7 @@ import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.HttpTTS
 import com.qreader.reader.databinding.DialogEditTextBinding
@@ -187,6 +188,7 @@ class SpeakEngineDialog() : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initData() {
         lifecycleScope.launch {
             appDb.httpTTSDao.flowAll().catch {
+                AppLog.put("朗读引擎界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 adapter.setItems(it)
             }

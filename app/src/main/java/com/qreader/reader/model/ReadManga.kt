@@ -1,5 +1,6 @@
 package com.qreader.reader.model
 
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
@@ -183,6 +184,7 @@ object ReadManga : CoroutineScope by MainScope() {
                 }
             }
         }.onError {
+            AppLog.put("加载正文出错\n${it.localizedMessage}")
         }
     }
 
@@ -287,9 +289,11 @@ object ReadManga : CoroutineScope by MainScope() {
             }
             loadContent(durChapterIndex + 1)
             saveRead()
+            AppLog.putDebug("moveToNextChapter-curPageChanged()")
             curPageChanged()
             return true
         } else {
+            AppLog.putDebug("跳转下一章失败,没有下一章")
             return false
         }
     }
@@ -341,6 +345,7 @@ object ReadManga : CoroutineScope by MainScope() {
                 }
                 appDb.bookDao.update(book)
             }.onFailure {
+                AppLog.put("保存漫画阅读进度信息出错\n$it", it)
             }
         }
     }
@@ -507,6 +512,7 @@ object ReadManga : CoroutineScope by MainScope() {
         Coroutine.async {
             AppWebDav.getBookProgress(book)
         }.onError {
+            AppLog.put("拉取阅读进度失败", it)
         }.onSuccess { progress ->
             if (progress == null || progress.durChapterIndex < book.durChapterIndex ||
                 (progress.durChapterIndex == book.durChapterIndex

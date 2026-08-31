@@ -6,6 +6,7 @@ import android.os.Build
 import android.view.ViewGroup
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.databinding.ItemFontBinding
 import com.qreader.reader.utils.*
 import java.io.File
@@ -45,6 +46,7 @@ class FontAdapter(context: Context, curFilePath: String, val callBack: CallBack)
                 tvFont.typeface = typeface
             }.onFailure {
                 it.printOnDebug()
+                AppLog.put("读取字体 ${item.name} 出错\n${it.localizedMessage}", it, true)
             }
             tvFont.text = item.name
             root.setOnClickListener { callBack.onFontSelect(item) }

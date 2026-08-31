@@ -4,6 +4,7 @@
 package com.qreader.reader.lib.cronet
 
 import androidx.annotation.Keep
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.http.CookieManager.cookieJarHeader
@@ -45,6 +46,7 @@ val cronetEngine: ExperimentalCronetEngine? by lazy {
         DebugLog.d("Cronet Version:", engine.versionString)
         return@lazy engine
     } catch (e: Throwable) {
+        AppLog.put("初始化cronetEngine出错", e)
         return@lazy null
     }
 }

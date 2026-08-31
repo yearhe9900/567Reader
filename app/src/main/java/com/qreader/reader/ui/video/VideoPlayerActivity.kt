@@ -56,6 +56,7 @@ import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryTextColor
 import com.qreader.reader.model.VideoPlay
 import com.qreader.reader.service.VideoPlayService
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.model.SourceCallBack
 import com.qreader.reader.ui.association.OnLineImportActivity
 import com.qreader.reader.ui.book.source.edit.BookSourceEditActivity
@@ -698,6 +699,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
                 }
             }
 
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return super.onCompatOptionsItemSelected(item)
     }

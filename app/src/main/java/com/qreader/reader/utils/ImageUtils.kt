@@ -1,5 +1,6 @@
 package com.qreader.reader.utils
 
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookSource
@@ -30,6 +31,7 @@ object ImageUtils {
                 put("src", src)
             } as ByteArray
         }.onFailure {
+            AppLog.putDebug("${src}解密错误", it)
         }.getOrNull()
     }
 
@@ -48,6 +50,7 @@ object ImageUtils {
             } as ByteArray
             ByteArrayInputStream(bytes)
         }.onFailure {
+            AppLog.putDebug("${src}解密错误", it)
         }.getOrNull()
     }
 

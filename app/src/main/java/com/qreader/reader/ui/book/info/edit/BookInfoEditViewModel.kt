@@ -4,6 +4,7 @@ import android.app.Application
 import android.database.sqlite.SQLiteConstraintException
 import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.model.ReadBook
@@ -31,7 +32,9 @@ class BookInfoEditViewModel(application: Application) : BaseViewModel(applicatio
             success?.invoke()
         }.onError {
             if (it is SQLiteConstraintException) {
+                AppLog.put("书籍信息保存失败，存在相同书名作者书籍\n$it", it, true)
             } else {
+                AppLog.put("书籍信息保存失败\n$it", it, true)
             }
         }
     }

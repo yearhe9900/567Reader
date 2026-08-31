@@ -11,6 +11,7 @@ import com.qreader.reader.help.LifecycleHelp
 import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.lib.permission.Permissions
 import com.qreader.reader.lib.permission.PermissionsCompat
+import com.qreader.reader.utils.LogUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,7 @@ abstract class BaseService : LifecycleService() {
 
     @CallSuper
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        LogUtils.d(simpleName) {
             "onStartCommand $intent ${intent?.toUri(0)}"
         }
         if (!isForeground) {
@@ -54,6 +56,7 @@ abstract class BaseService : LifecycleService() {
 
     @CallSuper
     override fun onTaskRemoved(rootIntent: Intent?) {
+        LogUtils.d(simpleName, "onTaskRemoved")
         super.onTaskRemoved(rootIntent)
         stopSelf()
     }
@@ -72,6 +75,7 @@ abstract class BaseService : LifecycleService() {
     @CallSuper
     override fun onTimeout(startId: Int, fgsType: Int) {
         super.onTimeout(startId, fgsType)
+        LogUtils.d(simpleName, "onTimeout startId:$startId fgsType:$fgsType")
         stopSelf()
     }
 

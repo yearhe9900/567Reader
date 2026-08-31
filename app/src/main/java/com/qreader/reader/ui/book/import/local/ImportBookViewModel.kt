@@ -2,6 +2,7 @@ package com.qreader.reader.ui.book.import.local
 
 import android.app.Application
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern.archiveFileRegex
 import com.qreader.reader.constant.AppPattern.bookFileRegex
 import com.qreader.reader.constant.PreferKey
@@ -97,6 +98,7 @@ class ImportBookViewModel(application: Application) : BaseViewModel(application)
             LocalBook.importFiles(fileUris)
         }.onError {
             context.toastOnUi("添加书架失败，请尝试重新选择文件夹")
+            AppLog.put("添加书架失败\n${it.localizedMessage}", it)
         }.onSuccess {
             context.toastOnUi("添加书架成功")
         }.onFinally {

@@ -16,6 +16,7 @@ import com.qreader.reader.data.entities.HttpTTS
 import com.qreader.reader.databinding.DialogHttpTtsEditBinding
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.primaryColor
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.code.CodeEditActivity
 import com.qreader.reader.ui.login.SourceLoginActivity
 import com.qreader.reader.ui.widget.code.addJsPattern
@@ -162,6 +163,7 @@ class HttpTtsEditDialog() : BaseDialogFragment(R.layout.dialog_http_tts_edit, tr
             R.id.menu_paste_source -> viewModel.importFromClip {
                 initView(it)
             }
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_help -> showHelp("httpTTSHelp")
         }
         return true

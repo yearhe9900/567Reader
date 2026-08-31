@@ -3,6 +3,7 @@ package com.qreader.reader.ui.book.bookmark
 import android.app.Application
 import android.net.Uri
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.utils.FileDoc
 import com.qreader.reader.utils.GSON
@@ -29,6 +30,7 @@ class AllBookmarkViewModel(application: Application) : BaseViewModel(application
                 GSON.writeToOutputStream(it, appDb.bookmarkDao.all)
             }
         }.onError {
+            AppLog.put("导出失败\n${it.localizedMessage}", it, true)
         }.onSuccess {
             context.toastOnUi("导出成功")
         }
@@ -56,6 +58,7 @@ class AllBookmarkViewModel(application: Application) : BaseViewModel(application
                 }
             }
         }.onError {
+            AppLog.put("导出失败\n${it.localizedMessage}", it, true)
         }.onSuccess {
             context.toastOnUi("导出成功")
         }

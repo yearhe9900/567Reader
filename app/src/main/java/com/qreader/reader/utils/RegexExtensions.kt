@@ -5,6 +5,7 @@ import com.script.rhino.RhinoScriptEngine
 import com.qreader.reader.data.entities.BookChapter
 import com.qreader.reader.data.entities.ReplaceBook
 import com.qreader.reader.exception.RegexTimeoutException
+import com.qreader.reader.help.CrashHandler
 import com.qreader.reader.help.RegexJsExtensions
 import com.qreader.reader.help.coroutine.Coroutine
 import kotlinx.coroutines.Dispatchers.IO
@@ -74,6 +75,7 @@ fun CharSequence.replace(
                         val exception = RegexTimeoutException(timeoutMsg)
                         block.cancel(exception)
                         appCtx.longToastOnUi(timeoutMsg)
+                        CrashHandler.saveCrashInfo2File(exception)
                         select {
                             job.onJoin {}
                             onTimeout(3000) {

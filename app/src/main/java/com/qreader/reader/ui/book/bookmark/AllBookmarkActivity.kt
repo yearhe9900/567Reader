@@ -7,6 +7,7 @@ import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Bookmark
 import com.qreader.reader.databinding.ActivityAllBookmarkBinding
@@ -45,6 +46,7 @@ class AllBookmarkActivity : VMBaseActivity<ActivityAllBookmarkBinding, AllBookma
         initView()
         lifecycleScope.launch {
             appDb.bookmarkDao.flowAll().catch {
+                AppLog.put("所有书签界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

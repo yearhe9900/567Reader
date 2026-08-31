@@ -9,6 +9,7 @@ import com.script.rhino.rhinoContext
 import com.script.rhino.rhinoContextOrNull
 import com.qreader.reader.constant.AppConst
 import com.qreader.reader.constant.AppConst.dateFormat
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.exception.NoStackTraceException
@@ -111,6 +112,7 @@ interface JsExtensions : JsEncodeUtils {
             analyzeUrl.getStrResponse().body
         }.onFailure {
             rhinoContextOrNull?.ensureActive()
+            AppLog.put("ajax(${urlStr}) error\n${it.localizedMessage}", it)
         }.getOrElse {
             it.stackTraceStr
         }
@@ -169,6 +171,7 @@ interface JsExtensions : JsEncodeUtils {
             analyzeUrl.getStrResponse()
         }.onFailure {
             rhinoContextOrNull?.ensureActive()
+            AppLog.put("connect(${urlStr}) error\n${it.localizedMessage}", it)
         }.getOrElse {
             StrResponse(analyzeUrl.url, it.stackTraceStr)
         }
@@ -191,6 +194,7 @@ interface JsExtensions : JsEncodeUtils {
             analyzeUrl.getStrResponse()
         }.onFailure {
             rhinoContextOrNull?.ensureActive()
+            AppLog.put("connect($urlStr,$header) error\n${it.localizedMessage}", it)
         }.getOrElse {
             StrResponse(analyzeUrl.url, it.stackTraceStr)
         }
@@ -994,6 +998,7 @@ interface JsExtensions : JsEncodeUtils {
             if (key != null) AppCacheManager.put(key, qTTF)
             return qTTF
         } catch (e: Exception) {
+            AppLog.put("[queryTTF] 获取字体处理类出错", e)
             throw e
         }
     }
@@ -1101,6 +1106,7 @@ interface JsExtensions : JsEncodeUtils {
         getSource()?.let {
             Debug.log(it.getKey(), msg.toString())
         } ?: Debug.log(msg.toString())
+        AppLog.putDebug("${getTag() ?: "源"}调试输出: $msg")
         return msg
     }
 

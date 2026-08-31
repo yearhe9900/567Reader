@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import androidx.annotation.Keep
 import androidx.core.graphics.toColorInt
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PageAnim
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.help.DefaultData
@@ -82,6 +83,7 @@ object ReadBookConfig {
                 val json = configFile.readText()
                 configs = GSON.fromJsonArray<Config>(json).getOrThrow()
             } catch (e: Exception) {
+                AppLog.put("读取排版配置文件出错", e)
             }
         }
         (configs ?: DefaultData.readConfigs).let {

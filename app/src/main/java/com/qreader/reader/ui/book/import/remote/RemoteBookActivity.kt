@@ -18,6 +18,7 @@ import com.qreader.reader.help.config.LocalConfig
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.model.remote.RemoteBook
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.import.BaseImportBookActivity
 import com.qreader.reader.ui.widget.SelectActionBar
 import com.qreader.reader.utils.ArchiveUtils
@@ -114,6 +115,7 @@ class RemoteBookActivity : BaseImportBookActivity<RemoteBookViewModel>(),
         when (item.itemId) {
             R.id.menu_refresh -> upPath()
             R.id.menu_server_config -> showDialogFragment<ServersDialog>()
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_help -> showHelp("webDavBookHelp")
             R.id.menu_sort_name -> {
                 item.isChecked = true

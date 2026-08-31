@@ -29,6 +29,7 @@ import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ThemeConfig
 import com.qreader.reader.lib.dialogs.SelectItem
 import com.qreader.reader.lib.dialogs.alert
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.code.config.ChangeThemeDialog
 import com.qreader.reader.ui.code.config.SettingsDialog
 import com.qreader.reader.ui.widget.keyboard.KeyboardToolPop
@@ -325,6 +326,7 @@ class CodeEditActivity :
                 upEdit(autoWarp = !AppConfig.editAutoWrap)
                 putPrefBoolean(PreferKey.editAutoWrap, !AppConfig.editAutoWrap)
             }
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return super.onCompatOptionsItemSelected(item)
     }

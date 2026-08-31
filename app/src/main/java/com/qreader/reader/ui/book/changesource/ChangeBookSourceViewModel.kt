@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.qreader.reader.base.BaseViewModel
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -139,6 +140,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
             }
             searchBooks.sortedWith(comparator)
         }.onFailure {
+            AppLog.put("换源排序出错\n${it.localizedMessage}", it)
         }.getOrDefault(searchBooks)
     }.flowOn(IO)
 
@@ -250,6 +252,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
                 searchStateData.postValue(false)
                 searchFinishCallback?.invoke(searchBooks.isEmpty())
             }.catch {
+                AppLog.put("换源搜索出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }
@@ -388,6 +391,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
             }.onCompletion {
                 searchStateData.postValue(false)
             }.catch {
+                AppLog.put("换源刷新列表出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }

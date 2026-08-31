@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.HttpTTS
 import com.qreader.reader.exception.NoStackTraceException
@@ -69,6 +70,7 @@ class ImportHttpTtsViewModel(app: Application) : BaseViewModel(app) {
             importSourceAwait(text.trim())
         }.onError {
             errorLiveData.postValue("ImportError:${it.localizedMessage}")
+            AppLog.put("ImportError:${it.localizedMessage}", it)
         }.onSuccess {
             comparisonSource()
         }

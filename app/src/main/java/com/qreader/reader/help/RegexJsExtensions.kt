@@ -1,6 +1,7 @@
 package com.qreader.reader.help
 
 import androidx.annotation.Keep
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.model.analyzeRule.RuleData
 import com.qreader.reader.utils.ChineseUtils
 
@@ -13,6 +14,7 @@ class RegexJsExtensions(private val name: String): JsEncodeUtils {
      * 输出调试日志
      */
     fun log(msg: Any?): Any? {
+        AppLog.putDebug("替换净化规则 $name 输出: $msg")
         return msg
     }
 

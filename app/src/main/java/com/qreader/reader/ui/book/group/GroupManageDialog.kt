@@ -15,6 +15,7 @@ import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookGroup
 import com.qreader.reader.databinding.DialogRecyclerViewBinding
@@ -76,6 +77,7 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initData() {
         lifecycleScope.launch {
             appDb.bookGroupDao.flowAll().catch {
+                AppLog.put("书籍分组管理界面获取分组数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 adapter.setItems(it)
             }

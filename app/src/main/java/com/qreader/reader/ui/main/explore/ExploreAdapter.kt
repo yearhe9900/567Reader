@@ -23,6 +23,7 @@ import com.script.rhino.runScriptWithContext
 import com.qreader.reader.R
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.data.entities.BookSource
@@ -507,6 +508,7 @@ class ExploreAdapter(context: Context, val callBack: CallBack) :
                 }.toString()
             }
         } catch (e: Exception) {
+            AppLog.put(source.getTag() + " exploreUi err:" + (e.localizedMessage ?: e.toString()), e)
             null
         }
     }
@@ -521,6 +523,7 @@ class ExploreAdapter(context: Context, val callBack: CallBack) :
                 }
             }
         } catch (e: Exception) {
+            AppLog.put("ExploreUI Button $name JavaScript error", e)
         }
     }
 

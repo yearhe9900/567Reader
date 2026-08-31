@@ -48,6 +48,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     var useDefaultCover = appCtx.getPrefBoolean(PreferKey.useDefaultCover, false)
     var optimizeRender = CanvasRecorderFactory.isSupport
             && appCtx.getPrefBoolean(PreferKey.optimizeRender, false)
+    var recordLog = appCtx.getPrefBoolean(PreferKey.recordLog)
     var editFontScale = appCtx.getPrefInt(PreferKey.editFontScale, 16)
     var editNonPrintable = appCtx.getPrefInt(PreferKey.editNonPrintable, 0)
     var editAutoWrap = appCtx.getPrefBoolean(PreferKey.editAutoWrap, true)
@@ -123,6 +124,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
             PreferKey.optimizeRender -> optimizeRender = CanvasRecorderFactory.isSupport
                     && appCtx.getPrefBoolean(PreferKey.optimizeRender, false)
+
+            PreferKey.recordLog -> recordLog = appCtx.getPrefBoolean(PreferKey.recordLog)
 
         }
     }
@@ -548,6 +551,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     val webDavDir get() = appCtx.getPrefString(PreferKey.webDavDir, "legado")
 
     val webDavDeviceName get() = appCtx.getPrefString(PreferKey.webDavDeviceName, Build.MODEL)
+
+    val recordHeapDump get() = appCtx.getPrefBoolean(PreferKey.recordHeapDump, false)
 
     val loadCoverOnlyWifi get() = appCtx.getPrefBoolean(PreferKey.loadCoverOnlyWifi, false)
 

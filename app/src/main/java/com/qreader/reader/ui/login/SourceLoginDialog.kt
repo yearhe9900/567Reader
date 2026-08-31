@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import com.script.rhino.runScriptWithContext
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.data.entities.rule.RowUi
 import com.qreader.reader.databinding.DialogLoginBinding
@@ -23,6 +24,7 @@ import com.qreader.reader.databinding.ItemSourceEditBinding
 import com.qreader.reader.databinding.ItemSelectorSingleBinding
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.primaryColor
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.utils.GSON
 import com.qreader.reader.utils.applyTint
 import com.qreader.reader.utils.dpToPx
@@ -89,6 +91,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                 handleUpUiData(data)
             }
         } catch (e: Exception) {
+            AppLog.put("upLoginData Error: " + e.localizedMessage, e)
         }
     }
 
@@ -233,12 +236,14 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                 }.toString()
             }
         } catch (e: Exception) {
+            AppLog.put(source.getTag() + " loginUi err:" + (e.localizedMessage ?: e.toString()), e)
             null
         }
     }
 
     fun loginUi(json: String?): List<RowUi>? {
         return GSON.fromJsonArray<RowUi>(json).onFailure {
+            AppLog.put("loginUi json parse err:" + it.localizedMessage, it)
         }.getOrNull()
     }
 
@@ -654,6 +659,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                 }
 
                 R.id.menu_del_login_header -> source.removeLoginHeader()
+                R.id.menu_log -> showDialogFragment<AppLogDialog>()
             }
             return@setOnMenuItemClickListener true
         }
@@ -708,6 +714,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                     }
                 }.onFailure { e ->
                     ensureActive()
+                    AppLog.put("LoginUI Button $name JavaScript error", e)
                 }
             }
         }
@@ -754,6 +761,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                         dismiss()
                     }
                 } catch (e: Exception) {
+                    AppLog.put("登录出错\n${e.localizedMessage}", e)
                     context?.toastOnUi("登录出错\n${e.localizedMessage}")
                     e.printOnDebug()
                 }

@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.snackbar.Snackbar
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
@@ -396,6 +397,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
                 lifecycle,
                 table = AppDatabase.BOOK_SOURCE_TABLE_NAME
             ).catch {
+                AppLog.put("书源界面更新书源出错", it)
             }.flowOn(IO).conflate().collect { data ->
                 adapter.setItems(data, adapter.diffItemCallback, !Debug.isChecking)
                 itemTouchCallback.isCanDrag =

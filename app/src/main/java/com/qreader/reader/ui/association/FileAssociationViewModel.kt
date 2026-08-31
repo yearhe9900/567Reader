@@ -3,6 +3,7 @@ package com.qreader.reader.ui.association
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.constant.AppPattern.bookFileRegex
 import com.qreader.reader.data.entities.Book
@@ -37,6 +38,7 @@ class FileAssociationViewModel(application: Application) : BaseAssociationViewMo
             it.printOnDebug()
             val msg = "无法打开文件\n${it.localizedMessage}"
             errorLive.postValue(msg)
+            AppLog.put(msg, it)
         }
     }
 
@@ -48,6 +50,7 @@ class FileAssociationViewModel(application: Application) : BaseAssociationViewMo
             }
         }.onFailure {
             it.printOnDebug()
+            AppLog.put("尝试导入为JSON文件失败\n${it.localizedMessage}", it)
         }
         if (fileDoc.name.matches(bookFileRegex)) {
             importBookLiveData.postValue(fileDoc.uri)

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
@@ -204,6 +205,7 @@ class BookshelfFragment2() : BaseBookshelfFragment(R.layout.fragment_bookshelf2)
                 Lifecycle.State.RESUMED,
                 AppDatabase.BOOK_TABLE_NAME
             ).catch {
+                AppLog.put("书架更新出错", it)
             }.conflate().flowOn(Dispatchers.Default).collect { list ->
                 books = list
                 booksAdapter.updateItems(groupId)

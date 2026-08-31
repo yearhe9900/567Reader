@@ -18,6 +18,7 @@ import androidx.core.view.isGone
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.databinding.DialogEditTextBinding
 import com.qreader.reader.databinding.DialogReadBgTextBinding
@@ -355,6 +356,7 @@ class BgTextConfigDialog : BaseDialogFragment(R.layout.dialog_read_bg_text) {
             toastOnUi("导出成功, 文件名为 $exportFileName")
         }.onError {
             it.printOnDebug()
+            AppLog.put("导出失败:${it.localizedMessage}", it)
             longToast("导出失败:${it.localizedMessage}")
         }
     }

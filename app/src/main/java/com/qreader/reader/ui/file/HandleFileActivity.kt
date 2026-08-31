@@ -11,6 +11,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.databinding.ActivityTranslucenceBinding
 import com.qreader.reader.databinding.DialogEditTextBinding
 import com.qreader.reader.help.IntentData
@@ -105,6 +106,7 @@ class HandleFileActivity :
                     HandleFileContract.DIR -> kotlin.runCatching {
                         selectDocTree.launch()
                     }.onFailure {
+                        AppLog.put(getString(R.string.open_sys_dir_picker_error), it, true)
                         checkPermissions {
                             FilePickerDialog.show(
                                 supportFragmentManager,
@@ -116,6 +118,7 @@ class HandleFileActivity :
                     HandleFileContract.FILE -> kotlin.runCatching {
                         selectDoc.launch(typesOfExtensions(allowExtensions))
                     }.onFailure {
+                        AppLog.put(getString(R.string.open_sys_dir_picker_error), it, true)
                         checkPermissions {
                             FilePickerDialog.show(
                                 supportFragmentManager,

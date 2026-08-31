@@ -4,6 +4,7 @@ package com.qreader.reader.help.http
 
 import android.text.TextUtils
 import androidx.annotation.Keep
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern.equalsRegex
 import com.qreader.reader.constant.AppPattern.semicolonRegex
 import com.qreader.reader.data.appDb
@@ -29,6 +30,7 @@ object CookieStore : CookieManagerInterface {
             val cookieBean = Cookie(domain, cookie ?: "")
             appDb.cookieDao.insert(cookieBean)
         } catch (e: Exception) {
+            AppLog.put("保存Cookie失败\n$e", e)
         }
     }
 
@@ -42,6 +44,7 @@ object CookieStore : CookieManagerInterface {
                 cookieManager.setCookie(baseUrl, it)
             }
         } catch (e: Exception) {
+            AppLog.put("设置WebCookie失败\n$e", e)
         }
     }
 

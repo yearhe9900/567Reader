@@ -10,6 +10,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.databinding.DialogOpenUrlConfirmBinding
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.primaryColor
@@ -96,6 +97,7 @@ class OpenUrlConfirmDialog() : BaseDialogFragment(R.layout.dialog_open_url_confi
                 toastOnUi(R.string.can_not_open)
             }
         } catch (e: Exception) {
+            AppLog.put("打开链接失败", e, true)
         }
     }
 

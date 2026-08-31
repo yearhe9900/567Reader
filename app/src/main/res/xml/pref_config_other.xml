@@ -205,6 +205,20 @@
             android:title="@string/add_to_text_context_menu_t"
             app:iconSpaceReserved="false" />
 
+        <com.qreader.reader.lib.prefs.SwitchPreference
+            android:defaultValue="false"
+            android:key="recordLog"
+            android:summary="@string/record_debug_log"
+            android:title="@string/record_log"
+            app:iconSpaceReserved="false" />
+
+        <com.qreader.reader.lib.prefs.SwitchPreference
+            android:defaultValue="false"
+            android:key="recordHeapDump"
+            android:summary="@string/record_heap_dump_s"
+            android:title="@string/record_heap_dump_t"
+            app:iconSpaceReserved="false" />
+
     </com.qreader.reader.lib.prefs.PreferenceCategory>
 
 

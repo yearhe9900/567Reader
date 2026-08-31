@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.adapter.ItemViewHolder
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookSourcePart
@@ -139,6 +140,7 @@ class SearchScopeDialog : BaseDialogFragment(R.layout.dialog_search_scope) {
                 lifecycle,
                 table = AppDatabase.BOOK_SOURCE_TABLE_NAME
             ).catch {
+                AppLog.put("多分组/书源界面更新书源出错", it)
             }.flowOn(IO).conflate().collect { data ->
                 screenSources.clear()
                 screenSources.addAll(data)

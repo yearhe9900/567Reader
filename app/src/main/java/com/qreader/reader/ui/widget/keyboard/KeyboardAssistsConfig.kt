@@ -15,6 +15,7 @@ import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.KeyboardAssist
@@ -95,6 +96,7 @@ class KeyboardAssistsConfig(private val callBack: CallBack) : BaseDialogFragment
     private fun initData() {
         lifecycleScope.launch {
             appDb.keyboardAssistsDao.flowAll.catch {
+                AppLog.put("辅助按键配置获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

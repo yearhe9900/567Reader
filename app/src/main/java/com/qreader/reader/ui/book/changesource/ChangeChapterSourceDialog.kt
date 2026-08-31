@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -317,6 +318,7 @@ class ChangeChapterSourceDialog() : BaseDialogFragment(R.layout.dialog_chapter_c
             binding.recyclerViewToc.scrollToPosition(tocAdapter.durChapterIndex - 5)
         }, {
             binding.clToc.gone()
+            AppLog.put("单章换源获取目录出错\n$it", it, true)
         })
     }
 

@@ -12,6 +12,7 @@ import androidx.core.view.allViews
 import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -230,6 +231,7 @@ class SearchContentActivity :
                     }
                 }
             }.onFailure {
+                AppLog.put("全文搜索出错\n${it.localizedMessage}", it)
             }
             binding.tvCurrentSearchInfo.post {
                 binding.fbStop.invisible()

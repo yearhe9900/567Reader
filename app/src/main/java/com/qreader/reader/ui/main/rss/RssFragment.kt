@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseFragment
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RssSource
@@ -142,6 +143,7 @@ class RssFragment() : VMBaseFragment<RssViewModel>(R.layout.fragment_rss), MainF
         groupsFlowJob?.cancel()
         groupsFlowJob = viewLifecycleOwner.lifecycleScope.launch {
             appDb.rssSourceDao.flowEnabledGroups().catch {
+                AppLog.put("订阅界面获取分组数据失败\n${it.localizedMessage}", it)
             }.flowWithLifecycleAndDatabaseChange(
                 viewLifecycleOwner.lifecycle,
                 Lifecycle.State.RESUMED,
@@ -170,6 +172,7 @@ class RssFragment() : VMBaseFragment<RssViewModel>(R.layout.fragment_rss), MainF
                 Lifecycle.State.RESUMED,
                 AppDatabase.RSS_SOURCE_TABLE_NAME
             ).catch {
+                AppLog.put("订阅界面更新数据出错", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

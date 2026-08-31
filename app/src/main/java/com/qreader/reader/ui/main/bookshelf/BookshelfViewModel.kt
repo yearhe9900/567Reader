@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.stream.JsonWriter
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookSource
@@ -114,6 +115,7 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                 context.toastOnUi("添加网址失败")
             }
         }.onError {
+            AppLog.put("添加网址出错\n${it.localizedMessage}", it, true)
         }.onFinally {
             addBookProgressLiveData.postValue(-1)
         }

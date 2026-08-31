@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.TxtTocRule
 import com.qreader.reader.databinding.DialogTocRegexEditBinding
@@ -84,6 +85,7 @@ class TxtTocRuleEditDialog() : BaseDialogFragment(R.layout.dialog_toc_regex_edit
         try {
             Pattern.compile(tocRule.rule, Pattern.MULTILINE)
         } catch (ex: PatternSyntaxException) {
+            AppLog.put("正则语法错误或不支持(txt)：${ex.localizedMessage}", ex, true)
             return false
         }
 

@@ -1,5 +1,6 @@
 package com.qreader.reader.help.source
 
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.exception.NoStackTraceException
 import com.qreader.reader.help.CacheManager
@@ -59,6 +60,7 @@ object SourceVerificationHelp {
         var waitUserInput = false
         while (getResult(source.getKey()) == null) {
             if (!waitUserInput && html == null) {
+                AppLog.putDebug("等待返回验证结果...")
                 waitUserInput = true
             }
             LockSupport.parkNanos(this, waitTime)

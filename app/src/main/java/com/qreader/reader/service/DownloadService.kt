@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseService
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.constant.NotificationId
 import com.qreader.reader.utils.IntentType
@@ -119,6 +120,7 @@ class DownloadService : BaseService() {
                 else -> "下载出错,${it.localizedMessage}"
             }
             toastOnUi(msg)
+            AppLog.put(msg, it)
         }
     }
 
@@ -217,6 +219,7 @@ class DownloadService : BaseService() {
                 openFileUri(uri, type)
             }
         }.onFailure {
+            AppLog.put("打开下载文件${fileName}出错", it)
         }
     }
 

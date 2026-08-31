@@ -7,6 +7,7 @@ import com.jayway.jsonpath.JsonPath
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RssSource
@@ -108,6 +109,7 @@ class ImportRssSourceViewModel(app: Application) : BaseViewModel(app) {
             importSourceAwait(text)
         }.onError {
             errorLiveData.postValue("ImportError:${it.localizedMessage}")
+            AppLog.put("ImportError:${it.localizedMessage}", it)
         }.onSuccess {
             comparisonSource()
         }

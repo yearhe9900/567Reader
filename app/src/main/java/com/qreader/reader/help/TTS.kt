@@ -3,6 +3,7 @@ package com.qreader.reader.help
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.utils.buildMainHandler
 import com.qreader.reader.utils.splitNotBlank
 import com.qreader.reader.utils.toastOnUi
@@ -87,9 +88,11 @@ class TTS {
             text?.splitNotBlank("\n")?.forEachIndexed { i, s ->
                 result = tts.speak(s, TextToSpeech.QUEUE_ADD, null, tag + i)
                 if (result == TextToSpeech.ERROR) {
+                    AppLog.put("tts朗读出错:$text")
                 }
             }
         }.onFailure {
+            AppLog.put("tts朗读出错", it)
             appCtx.toastOnUi(it.localizedMessage)
         }
     }

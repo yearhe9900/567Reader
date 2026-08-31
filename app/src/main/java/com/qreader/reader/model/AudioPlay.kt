@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.constant.Status
@@ -194,6 +195,7 @@ object AudioPlay : CoroutineScope by MainScope() {
                             contentLoadFinish(chapter, content)
                         }
                     }.onError {
+                        AppLog.put("获取资源链接出错\n$it", it, true)
                         upLoading(false)
                     }.onCancel {
                         removeLoading(index)

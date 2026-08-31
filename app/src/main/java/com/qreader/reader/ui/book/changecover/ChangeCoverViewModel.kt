@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.qreader.reader.base.BaseViewModel
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -138,6 +139,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
                     search()
                 }
             } catch (e: Exception) {
+                AppLog.put("封面规则搜索出错\n${e.localizedMessage}", e)
                 search()
             }
         }
@@ -160,6 +162,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
             }.onCompletion {
                 searchStateData.postValue(0)
             }.catch {
+                AppLog.put("封面换源搜索出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }

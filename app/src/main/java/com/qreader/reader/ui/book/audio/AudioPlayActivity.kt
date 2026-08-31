@@ -27,6 +27,7 @@ import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.model.AudioPlay
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.service.AudioPlayService
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.changesource.ChangeBookSourceDialog
 import com.qreader.reader.ui.book.source.edit.BookSourceEditActivity
 import com.qreader.reader.ui.book.toc.TocActivityResult
@@ -180,6 +181,7 @@ class AudioPlayActivity :
                 showDialogFragment(AudioSkipCredits.newInstance(it))
             }
 
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return super.onCompatOptionsItemSelected(item)
     }

@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.databinding.ActivityRssFavoritesBinding
 import com.qreader.reader.lib.dialogs.alert
@@ -112,6 +113,7 @@ class RssFavoritesActivity : BaseActivity<ActivityRssFavoritesBinding>() {
     private fun upFragments() {
         lifecycleScope.launch {
             appDb.rssStarDao.flowGroups().catch {
+                AppLog.put("订阅分组数据获取失败\n${it.localizedMessage}", it)
             }.distinctUntilChanged().flowOn(IO).collect {
                 groupList.clear()
                 groupList.addAll(it)

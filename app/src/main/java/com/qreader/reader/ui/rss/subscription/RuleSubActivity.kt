@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.RuleSub
 import com.qreader.reader.databinding.ActivityRuleSubBinding
@@ -71,6 +72,7 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
     private fun initData() {
         lifecycleScope.launch {
             appDb.ruleSubDao.flowAll().catch {
+                AppLog.put("规则订阅界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 binding.tvEmptyMsg.isGone = it.isNotEmpty()
                 adapter.setItems(it)

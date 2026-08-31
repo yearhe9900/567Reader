@@ -8,6 +8,7 @@ import com.bumptech.glide.Glide
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseService
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
@@ -202,6 +203,7 @@ class ExportBookService : BaseService() {
                 } catch (e: Throwable) {
                     ensureActive()
                     exportMsg[bookUrl] = e.localizedMessage ?: "ERROR"
+                    AppLog.put("导出书籍<${book?.name ?: bookUrl}>出错", e)
                 } finally {
                     exportProgress.remove(bookUrl)
                     postEvent(EventBus.EXPORT_BOOK, bookUrl)
@@ -510,6 +512,7 @@ class ExportBookService : BaseService() {
             }
             epubBook.coverImage = LazyResource(provider, "Images/cover.jpg")
         }.onFailure {
+            AppLog.put("获取书籍封面出错\n${it.localizedMessage}", it)
         }
     }
 
@@ -687,6 +690,7 @@ class ExportBookService : BaseService() {
             }
 
             val elapsed = System.currentTimeMillis() - currentTimeMillis
+            AppLog.put("分割导出书籍 ${book.name} 一共耗时 $elapsed")
         }
 
 
@@ -866,6 +870,7 @@ class ExportBookService : BaseService() {
                 val left = v[0].toInt()
                 val right = v[1].toInt()
                 if (left > right) {
+                    AppLog.put("Error expression : $s; left > right")
                     continue
                 }
                 for (i in left..right)

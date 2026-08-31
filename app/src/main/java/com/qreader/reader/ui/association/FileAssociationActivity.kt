@@ -8,6 +8,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.databinding.ActivityTranslucenceBinding
 import com.qreader.reader.exception.InvalidBooksDirException
 import com.qreader.reader.help.config.AppConfig
@@ -204,6 +205,7 @@ class FileAssociationActivity :
 
                     else -> {
                         val msg = "导入书籍失败\n${it.localizedMessage}"
+                        AppLog.put(msg, it)
                         toastOnUi(msg)
                         handler.postDelayed(2000) {
                             finish()

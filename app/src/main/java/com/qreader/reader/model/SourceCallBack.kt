@@ -3,6 +3,7 @@ package com.qreader.reader.model
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.script.rhino.runScriptWithContext
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
 import com.qreader.reader.data.entities.BookSource
@@ -77,6 +78,7 @@ object SourceCallBack {
                     }
                 }
             }.onFailure {
+                AppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
             }
         }
     }
@@ -103,6 +105,7 @@ object SourceCallBack {
                 }
             }
         }.onError {
+            AppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
         }
     }
 
@@ -122,6 +125,7 @@ object SourceCallBack {
                     }
                 }
             }.onFailure {
+                AppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
             }
         }
     }

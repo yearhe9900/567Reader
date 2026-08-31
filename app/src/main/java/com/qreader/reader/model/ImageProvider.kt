@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.util.Size
 import androidx.collection.LruCache
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog.putDebug
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookSource
 import com.qreader.reader.exception.NoStackTraceException

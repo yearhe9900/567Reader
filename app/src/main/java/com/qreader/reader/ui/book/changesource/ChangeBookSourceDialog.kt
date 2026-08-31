@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -392,6 +393,7 @@ class ChangeBookSourceDialog() : BaseDialogFragment(R.layout.dialog_book_change_
         if (book.isWebFile) { //文件类书源不解析目录
             val source = appDb.bookSourceDao.getBookSource(book.origin)
             if (source == null) {
+                AppLog.put("书源不存在", null, true)
                 return
             }
             waitDialog.dismiss()
@@ -405,6 +407,7 @@ class ChangeBookSourceDialog() : BaseDialogFragment(R.layout.dialog_book_change_
             onSuccess?.invoke()
         }, {
             waitDialog.dismiss()
+            AppLog.put("换源获取目录出错\n$it", it, true)
         })
         waitDialog.setOnCancelListener {
             coroutine.cancel()

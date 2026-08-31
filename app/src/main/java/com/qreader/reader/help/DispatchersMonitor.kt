@@ -1,6 +1,7 @@
 package com.qreader.reader.help
 
 import com.qreader.reader.help.config.AppConfig
+import com.qreader.reader.utils.LogUtils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
@@ -31,6 +32,7 @@ object DispatchersMonitor {
 
     fun init() {
         scope.coroutineContext.cancelChildren()
+        if (!AppConfig.recordLog) {
             return
         }
         monitor(IO)
@@ -48,6 +50,7 @@ object DispatchersMonitor {
                     }
                 }.onJoin {}
                 onTimeout(5000) {
+                    LogUtils.d(TAG, "Dispatcher $dispatcher is timed out waiting for for 5000ms.")
                 }
             }
         }

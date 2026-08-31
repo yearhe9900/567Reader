@@ -26,6 +26,7 @@ import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.code.CodeEditActivity
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.login.SourceLoginActivity
@@ -202,6 +203,7 @@ class RssSourceEditActivity :
                 ErrorCorrectionLevel.L
             )
 
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_help -> showHelp("rssRuleHelp")
         }
         return super.onCompatOptionsItemSelected(item)

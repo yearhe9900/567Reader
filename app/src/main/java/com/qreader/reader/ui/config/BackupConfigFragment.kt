@@ -15,6 +15,7 @@ import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.exception.NoStackTraceException
 import com.qreader.reader.help.AppWebDav
@@ -30,6 +31,7 @@ import com.qreader.reader.lib.permission.Permissions
 import com.qreader.reader.lib.permission.PermissionsCompat
 import com.qreader.reader.lib.prefs.fragment.PreferenceFragment
 import com.qreader.reader.lib.theme.primaryColor
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.widget.dialog.WaitDialog
 import com.qreader.reader.utils.FileDoc
@@ -160,6 +162,7 @@ class BackupConfigFragment : PreferenceFragment(),
                 return true
             }
 
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
         }
         return false
     }
@@ -289,6 +292,7 @@ class BackupConfigFragment : PreferenceFragment(),
                 appCtx.toastOnUi(R.string.backup_success)
             } catch (e: Throwable) {
                 ensureActive()
+                AppLog.put("备份出错\n${e.localizedMessage}", e)
                 appCtx.toastOnUi(
                     appCtx.getString(
                         R.string.backup_fail,
@@ -322,6 +326,7 @@ class BackupConfigFragment : PreferenceFragment(),
             restoreJob = coroutineContext[Job]
             showRestoreDialog(requireContext())
         }.onError {
+            AppLog.put("恢复备份出错WebDavError\n${it.localizedMessage}", it)
             if (context == null) {
                 return@onError
             }
@@ -368,6 +373,7 @@ class BackupConfigFragment : PreferenceFragment(),
         val task = Coroutine.async {
             AppWebDav.restoreWebDav(name)
         }.onError {
+            AppLog.put("WebDav恢复出错\n${it.localizedMessage}", it)
             appCtx.toastOnUi("WebDav恢复出错\n${it.localizedMessage}")
         }.onFinally {
             waitDialog.dismiss()

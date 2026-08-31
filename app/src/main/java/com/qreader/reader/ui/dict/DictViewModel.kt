@@ -2,6 +2,7 @@ package com.qreader.reader.ui.dict
 
 import android.app.Application
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.DictRule
 import com.qreader.reader.help.coroutine.Coroutine
@@ -44,6 +45,7 @@ class DictViewModel(application: Application) : BaseViewModel(application) {
         execute {
             dictRule.buttonClick(name, click)
         }.onError {
+            AppLog.put("$name click error\n${it.localizedMessage}", it)
         }
     }
 

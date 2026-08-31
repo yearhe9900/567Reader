@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.Index
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.data.appDb
 import com.qreader.reader.exception.RegexTimeoutException
@@ -158,6 +159,7 @@ data class BookChapter(
                     } catch (_: CancellationException) {
                         return@run
                     } catch (e: Exception) {
+                        AppLog.put("${item.name}替换出错\n替换内容\n${displayTitle}", e)
                         appCtx.toastOnUi("${item.name}替换出错")
                     }
                 }

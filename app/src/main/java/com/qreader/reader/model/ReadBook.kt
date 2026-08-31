@@ -1,5 +1,6 @@
 package com.qreader.reader.model
 
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.PageAnim.scrollPageAnim
 import com.qreader.reader.data.appDb
@@ -259,6 +260,7 @@ object ReadBook : CoroutineScope by MainScope() {
         Coroutine.async {
             AppWebDav.getBookProgress(book)
         }.onError {
+            AppLog.put("拉取阅读进度失败", it)
         }.onSuccess { progress ->
             if (progress == null || progress.durChapterIndex < book.durChapterIndex ||
                 (progress.durChapterIndex == book.durChapterIndex
@@ -338,17 +340,21 @@ object ReadBook : CoroutineScope by MainScope() {
             curTextChapter = nextTextChapter
             nextTextChapter = null
             if (curTextChapter == null) {
+                AppLog.putDebug("moveToNextChapter-章节未加载,开始加载")
                 if (upContentInPlace) callBack?.upContent()
                 loadContent(durChapterIndex, upContent, resetPageOffset = false)
             } else if (upContent && upContentInPlace) {
+                AppLog.putDebug("moveToNextChapter-章节已加载,刷新视图")
                 callBack?.upContent()
             }
             loadContent(durChapterIndex.plus(1), upContent, false)
             saveRead()
             callBack?.upMenuView()
+            AppLog.putDebug("moveToNextChapter-curPageChanged()")
             curPageChanged()
             return true
         } else {
+            AppLog.putDebug("跳转下一章失败,没有下一章")
             return false
         }
     }
@@ -365,17 +371,21 @@ object ReadBook : CoroutineScope by MainScope() {
             curTextChapter = nextTextChapter
             nextTextChapter = null
             if (curTextChapter == null) {
+                AppLog.putDebug("moveToNextChapter-章节未加载,开始加载")
                 if (upContentInPlace) callBack?.upContentAwait()
                 loadContentAwait(durChapterIndex, upContent, resetPageOffset = false)
             } else if (upContent && upContentInPlace) {
+                AppLog.putDebug("moveToNextChapter-章节已加载,刷新视图")
                 callBack?.upContentAwait()
             }
             loadContent(durChapterIndex.plus(1), upContent, false)
             saveRead()
             callBack?.upMenuView()
+            AppLog.putDebug("moveToNextChapter-curPageChanged()")
             curPageChanged()
             return true
         } else {
+            AppLog.putDebug("跳转下一章失败,没有下一章")
             return false
         }
     }
@@ -581,6 +591,7 @@ object ReadBook : CoroutineScope by MainScope() {
                 )
             }
         }.onError {
+            AppLog.put("加载正文出错\n${it.localizedMessage}")
         }
     }
 
@@ -598,6 +609,7 @@ object ReadBook : CoroutineScope by MainScope() {
                 contentLoadFinishAwait(book, chapter, content, upContent, resetPageOffset)
                 success?.invoke()
             } catch (e: Exception) {
+                AppLog.put("加载正文出错\n${e.localizedMessage}")
             } finally {
                 removeLoading(index)
             }
@@ -761,6 +773,7 @@ object ReadBook : CoroutineScope by MainScope() {
             if (it is CancellationException) {
                 return@onError
             }
+            AppLog.put("ChapterProvider ERROR", it)
             appCtx.toastOnUi("ChapterProvider ERROR:\n${it.stackTraceStr}")
         }.onSuccess {
             success?.invoke()
@@ -846,6 +859,7 @@ object ReadBook : CoroutineScope by MainScope() {
             if (it is CancellationException) {
                 return@onFailure
             }
+            AppLog.put("ChapterProvider ERROR", it)
             appCtx.toastOnUi("ChapterProvider ERROR:\n${it.stackTraceStr}")
         }
     }
@@ -913,6 +927,7 @@ object ReadBook : CoroutineScope by MainScope() {
                 }
                 book.update()
             }.onFailure {
+                AppLog.put("保存书籍阅读进度信息出错\n$it", it)
             }
         }
     }

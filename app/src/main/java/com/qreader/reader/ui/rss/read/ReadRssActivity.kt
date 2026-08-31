@@ -35,6 +35,7 @@ import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
 import com.qreader.reader.constant.AppConst
 import com.qreader.reader.constant.AppConst.imagePathKey
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.databinding.ActivityRssReadBinding
 import com.qreader.reader.help.WebCacheManager
 import com.qreader.reader.help.webView.WebJsExtensions
@@ -74,6 +75,7 @@ import org.jsoup.Jsoup
 import splitties.views.bottomPadding
 import java.io.ByteArrayInputStream
 import java.util.regex.PatternSyntaxException
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.rss.article.ReadRecordDialog
 import com.qreader.reader.ui.rss.source.edit.RssSourceEditActivity
 import com.qreader.reader.utils.StartActivityContract
@@ -288,6 +290,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                     putExtra("sourceUrl", it)
                 }
             }
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             R.id.menu_read_record -> showDialogFragment(ReadRecordDialog(viewModel.rssSource?.sourceUrl))
         }
         return super.onCompatOptionsItemSelected(item)
@@ -572,6 +575,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                 if (source.showWebLog) {
                     val messageLevel = consoleMessage.messageLevel().name
                     val message = consoleMessage.message()
+                    AppLog.put("${source.getTag()}${messageLevel}: $message",
                         NoStackTraceException("\n${message}\n- Line ${consoleMessage.lineNumber()} of ${consoleMessage.sourceId()}"))
                     return true
                 }
@@ -640,6 +644,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                             return createEmptyResource()
                         }
                     } catch (e: PatternSyntaxException) {
+                        AppLog.put("黑名单规则正则语法错误 源名称:${source.sourceName} 正则:$it", e)
                     }
                 }
             } else {
@@ -652,6 +657,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                             }
                         } catch (e: PatternSyntaxException) {
                             val msg = "白名单规则正则语法错误 源名称:${source.sourceName} 正则:$it"
+                            AppLog.put(msg, e)
                         }
                     }
                     return createEmptyResource()
@@ -743,8 +749,10 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                             }.toString()
                         }
                     }.onFailure {
+                        AppLog.put("${source.getTag()}: url跳转拦截js出错", it)
                     }.getOrNull()
                     if (SystemClock.uptimeMillis() - startTime > 99) {
+                        AppLog.put("${source.getTag()}: url跳转拦截js执行耗时过长")
                     }
                     if (result.isTrue()) return true
                 }

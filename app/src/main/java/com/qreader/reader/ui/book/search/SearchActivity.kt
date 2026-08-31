@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -34,6 +35,7 @@ import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.lib.theme.primaryTextColor
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.info.BookInfoActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.utils.ColorUtils
@@ -168,6 +170,7 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
 
             R.id.menu_search_scope -> alertSearchScope()
             R.id.menu_source_manage -> startActivity<BookSourceActivity>()
+            R.id.menu_log -> showDialogFragment(AppLogDialog())
             R.id.menu_1 -> viewModel.searchScope.update("")
             else -> {
                 if (item.groupId == R.id.menu_group_1) {
@@ -393,6 +396,7 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
                 key.isNullOrBlank() -> appDb.searchKeywordDao.flowByTime()
                 else -> appDb.searchKeywordDao.flowSearch(key)
             }.catch {
+                AppLog.put("搜索界面获取搜索历史数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 historyKeyAdapter.setItems(it)
                 if (it.isEmpty()) {

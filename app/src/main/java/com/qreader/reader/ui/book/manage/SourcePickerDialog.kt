@@ -14,6 +14,7 @@ import com.qreader.reader.R
 import com.qreader.reader.base.BaseDialogFragment
 import com.qreader.reader.base.adapter.ItemViewHolder
 import com.qreader.reader.base.adapter.RecyclerAdapter
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookSource
 import com.qreader.reader.data.entities.BookSourcePart
@@ -90,6 +91,7 @@ class SourcePickerDialog : BaseDialogFragment(R.layout.dialog_source_picker),
                 searchKey.isNullOrEmpty() -> appDb.bookSourceDao.flowEnabled()
                 else -> appDb.bookSourceDao.flowSearchEnabled(searchKey)
             }.catch {
+                AppLog.put("书源选择界面获取书源数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

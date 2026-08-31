@@ -10,6 +10,7 @@ import android.text.style.ImageSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.ReplacementSpan
 import android.text.style.URLSpan
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.AppPattern
 import com.qreader.reader.constant.PageAnim
 import com.qreader.reader.data.entities.Book
@@ -173,6 +174,7 @@ class TextChapterLayout(
             listener?.onLayoutPageCompleted(textPages.lastIndex, textPage)
         } catch (e: Exception) {
             e.printStackTrace()
+            AppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
         }
     }
 
@@ -182,6 +184,7 @@ class TextChapterLayout(
             listener?.onLayoutCompleted()
         } catch (e: Exception) {
             e.printStackTrace()
+            AppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
         } finally {
             listener = null
         }
@@ -197,6 +200,7 @@ class TextChapterLayout(
             listener?.onLayoutException(e)
         } catch (e: Exception) {
             e.printStackTrace()
+            AppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
         } finally {
             listener = null
         }

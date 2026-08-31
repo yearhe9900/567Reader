@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import cn.hutool.core.lang.Validator
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.help.config.AppConfig
 import okhttp3.internal.publicsuffix.PublicSuffixDatabase
 import splitties.systemservices.connectivityManager
@@ -183,6 +184,7 @@ object NetworkUtils {
             relativeUrl = parseUrl.toString()
             return relativeUrl
         } catch (e: Exception) {
+            AppLog.put("网址拼接出错\n${e.localizedMessage}", e)
         }
         return relativeUrl
     }

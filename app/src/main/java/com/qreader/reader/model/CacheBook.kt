@@ -1,6 +1,7 @@
 package com.qreader.reader.model
 
 import android.content.Context
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.data.appDb
@@ -270,6 +271,7 @@ object CacheBook {
             if ((errorDownloadMap[chapter.primaryStr()] ?: 0) < 3 && !isStopped) {
                 waitDownloadSet.add(chapter.index)
             } else {
+                AppLog.put(
                     "下载${book.name}-${chapter.title}失败\n${error.localizedMessage}",
                     error
                 )

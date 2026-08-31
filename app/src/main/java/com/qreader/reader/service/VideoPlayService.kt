@@ -37,6 +37,7 @@ import com.shuyu.gsyvideoplayer.listener.GSYSampleCallBack
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseService
 import com.qreader.reader.constant.AppConst
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.constant.NotificationId
 import com.qreader.reader.help.MediaHelp
@@ -270,6 +271,7 @@ class VideoPlayService : BaseService() {
                 val notification = createNotification()
                 notificationManager.notify(NotificationId.VideoPlayService, notification.build())
             } catch (e: Exception) {
+                AppLog.put("创建视频播放通知出错,${e.localizedMessage}", e, true)
             }
         }
     }
@@ -279,6 +281,7 @@ class VideoPlayService : BaseService() {
             val notification = createNotification()
             startForeground(NotificationId.VideoPlayService, notification.build())
         } catch (e: Exception) {
+            AppLog.put("创建视频播放通知出错,${e.localizedMessage}", e, true)
             //创建通知出错不结束服务就会崩溃,服务必须绑定通知
             stopSelf()
         }

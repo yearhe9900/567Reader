@@ -13,6 +13,7 @@ import com.shuyu.gsyvideoplayer.listener.GSYMediaPlayerListener
 import com.shuyu.gsyvideoplayer.utils.CommonUtil
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer
 import com.qreader.reader.R
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.SourceType
 import com.qreader.reader.data.appDb
@@ -152,6 +153,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                     }
                 }
             }.onError {
+                AppLog.put("加载视频链接失败", it, true)
             }
             return
         }
@@ -185,6 +187,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                         }
                     }
                 }.onError {
+                    AppLog.put("加载订阅源视频链接失败", it, true)
                 }
             } else {
                 Rss.getContent(loadScope, rssArticle, ruleContent, s)
@@ -215,6 +218,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                             }
                         }
                     }.onError {
+                        AppLog.put("加载订阅源为链接的正文失败", it, true)
                     }
             }
             return
@@ -277,6 +281,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                     }
                 }
             }.onError {
+                AppLog.put("获取资源链接出错\n$it", it, true)
             }
         isLoading = false
     }

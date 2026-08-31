@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.ReplaceRule
 import com.qreader.reader.databinding.ActivityReplaceRuleBinding
@@ -217,6 +218,7 @@ class ReplaceRuleActivity : VMBaseActivity<ActivityReplaceRuleBinding, ReplaceRu
                     appDb.replaceRuleDao.flowSearch("%$searchKey%")
                 }
             }.catch {
+                AppLog.put("替换规则管理界面更新数据出错", it)
             }.flowOn(IO).conflate().collect {
                 if (dataInit) {
                     setResult(RESULT_OK)

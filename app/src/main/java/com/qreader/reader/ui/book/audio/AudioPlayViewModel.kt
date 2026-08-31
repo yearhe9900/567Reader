@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.lifecycle.MutableLiveData
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseViewModel
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.BookType
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.data.appDb
@@ -64,6 +65,7 @@ class AudioPlayViewModel(application: Application) : BaseViewModel(application) 
             WebBook.getBookInfoAwait(bookSource, book)
             return true
         } catch (e: Exception) {
+            AppLog.put("详情页出错: ${e.localizedMessage}", e, true)
             return false
         }
     }

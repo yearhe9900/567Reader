@@ -3,6 +3,7 @@ package com.qreader.reader.lib.webdav
 import android.annotation.SuppressLint
 import android.net.Uri
 import cn.hutool.core.net.URLDecoder
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.exception.NoStackTraceException
 import com.qreader.reader.help.http.newCallResponse
 import com.qreader.reader.help.http.okHttpClient
@@ -288,6 +289,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
+            AppLog.put("WebDav创建目录失败\n${it.localizedMessage}", it)
         }.isSuccess
     }
 
@@ -344,6 +346,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
+            AppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
             throw WebDavException("WebDav上传失败\n${it.localizedMessage}")
         }
     }
@@ -364,6 +367,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
+            AppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
             throw WebDavException("WebDav上传失败\n${it.localizedMessage}")
         }
     }
@@ -384,6 +388,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
+            AppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
             throw WebDavException("WebDav上传失败\n${it.localizedMessage}")
         }
     }
@@ -414,6 +419,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
+            AppLog.put("WebDav删除失败\n${it.localizedMessage}", it)
         }.isSuccess
     }
 
@@ -429,6 +435,7 @@ open class WebDav(
                     it.startsWith("Basic", ignoreCase = true)
                 }
                 if (headers.isNotEmpty() && !supportBasicAuth) {
+                    AppLog.put("服务器不支持BasicAuth认证")
                 }
             }
 

@@ -14,6 +14,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
 import com.qreader.reader.constant.AppConst.charsets
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.IntentAction
 import com.qreader.reader.data.AppDatabase
@@ -33,6 +34,7 @@ import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.dialogs.selector
 import com.qreader.reader.model.CacheBook
 import com.qreader.reader.service.ExportBookService
+import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.utils.ACache
 import com.qreader.reader.utils.FileDoc
@@ -214,6 +216,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
             R.id.menu_export_file_name -> alertExportFileName()
             R.id.menu_export_type -> showExportTypeConfig()
             R.id.menu_export_charset -> showCharsetConfig()
+            R.id.menu_log -> showDialogFragment<AppLogDialog>()
             else -> if (item.groupId == R.id.menu_group) {
                 binding.titleBar.subtitle = item.title
                 groupId = appDb.bookGroupDao.getByName(item.title.toString())?.groupId ?: 0
@@ -256,6 +259,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
             }.flowWithLifecycleAndDatabaseChange(
                 lifecycle, table = AppDatabase.BOOK_TABLE_NAME
             ).catch {
+                AppLog.put("缓存管理界面获取书籍列表失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect { books ->
                 adapter.setItems(books)
                 viewModel.loadCacheFiles(books)
@@ -267,6 +271,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
     private fun initGroupData() {
         lifecycleScope.launch {
             appDb.bookGroupDao.flowAll().catch {
+                AppLog.put("缓存管理界面获取分组数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 groupList.clear()
                 groupList.addAll(it)
@@ -375,6 +380,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
                                 else "Error"
                         } ?: run {
                             lyEtEpubFilename.helperText = "Error"
+                            AppLog.put("未找到书籍，position is $position")
                         }
                     }
                 }

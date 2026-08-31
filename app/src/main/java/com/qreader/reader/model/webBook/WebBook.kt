@@ -1,5 +1,6 @@
 package com.qreader.reader.model.webBook
 
+import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
 import com.qreader.reader.data.entities.BookSource
@@ -276,6 +277,7 @@ object WebBook {
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
+            AppLog.put("执行preUpdateJs规则失败 书源:${bookSource.bookSourceName}", it)
         }
     }
 

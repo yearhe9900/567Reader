@@ -9,6 +9,8 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.qreader.reader.R
 import com.qreader.reader.constant.AppConst.appInfo
+import com.qreader.reader.constant.AppLog
+import com.qreader.reader.help.CrashHandler
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.ui.widget.dialog.TextDialog
@@ -53,6 +55,7 @@ class AboutFragment : PreferenceFragmentCompat() {
             "disclaimer" -> showMdFile(getString(R.string.disclaimer), "disclaimer.md")
             "privacyPolicy" -> showMdFile(getString(R.string.privacy_policy), "privacyPolicy.md")
             "gzGzh" -> requireContext().sendToClip(getString(R.string.legado_gzh))
+            "crashLog" -> showDialogFragment<CrashLogsDialog>()
             "saveLog" -> saveLog()
             "createHeapDump" -> createHeapDump()
         }
@@ -96,6 +99,7 @@ class AboutFragment : PreferenceFragmentCompat() {
                 appCtx.toastOnUi("未设置备份目录")
                 return@async
             }
+            if (!AppConfig.recordLog) {
                 appCtx.toastOnUi("未开启日志记录，请去其他设置里打开记录日志")
                 delay(3000)
             }
@@ -104,6 +108,7 @@ class AboutFragment : PreferenceFragmentCompat() {
             copyHeapDump(doc)
             appCtx.toastOnUi("已保存至备份目录")
         }.onError {
+            AppLog.put("保存日志出错\n${it.localizedMessage}", it, true)
         }
     }
 
@@ -113,11 +118,13 @@ class AboutFragment : PreferenceFragmentCompat() {
                 appCtx.toastOnUi("未设置备份目录")
                 return@async
             }
+            if (!AppConfig.recordHeapDump) {
                 appCtx.toastOnUi("未开启堆转储记录，请去其他设置里打开记录堆转储")
                 delay(3000)
             }
             appCtx.toastOnUi("开始创建堆转储")
             System.gc()
+            CrashHandler.doHeapDump(true)
             val doc = FileDoc.fromUri(Uri.parse(backupPath), true)
             if (!copyHeapDump(doc)) {
                 appCtx.toastOnUi("未找到堆转储文件")
@@ -125,6 +132,7 @@ class AboutFragment : PreferenceFragmentCompat() {
                 appCtx.toastOnUi("已保存至备份目录")
             }
         }.onError {
+            AppLog.put("保存堆转储失败\n${it.localizedMessage}", it)
         }
     }
 
@@ -171,6 +179,7 @@ class AboutFragment : PreferenceFragmentCompat() {
                 process.inputStream.copyTo(it)
             }
         } catch (e: Exception) {
+            AppLog.put("保存Logcat失败\n$e", e)
         }
     }
 
