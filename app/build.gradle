@@ -112,7 +112,7 @@ android {
     android.applicationVariants.configureEach { variant ->
         variant.outputs.configureEach {
             def flavor = variant.productFlavors[0].name
-            outputFileName = "${name}_${flavor}_${defaultConfig.versionName}.apk"
+            outputFileName = "567Reader.apk"
         }
     }
 
