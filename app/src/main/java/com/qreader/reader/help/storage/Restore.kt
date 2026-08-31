@@ -99,7 +99,6 @@ object Restore {
     }
 
     private suspend fun restore(path: String) {
-        val aes = BackupAES()
         fileToListT<Book>(path, "bookshelf.json")?.let {
             it.forEach { book ->
                 book.upType()
@@ -186,10 +185,7 @@ object Restore {
         File(path, "servers.json").takeIf {
             it.exists()
         }?.runCatching {
-            var json = readText()
-            if (!json.isJsonArray()) {
-                json = aes.decryptStr(json)
-            }
+            val json = readText()
             GSON.fromJsonArray<Server>(json).getOrNull()?.let {
                 appDb.serverDao.insert(*it.toTypedArray())
             }

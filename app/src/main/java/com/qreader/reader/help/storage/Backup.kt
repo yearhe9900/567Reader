@@ -135,7 +135,6 @@ object Backup {
     private suspend fun backup(context: Context, path: String?) {
         LogUtils.d(TAG, "开始备份 path:$path")
         LocalConfig.lastBackup = System.currentTimeMillis()
-        val aes = BackupAES()
         FileUtils.delete(backupPath)
         writeListToJson(appDb.bookDao.all, "bookshelf.json", backupPath)
         writeListToJson(appDb.bookmarkDao.all, "bookmark.json", backupPath)
@@ -152,12 +151,8 @@ object Backup {
         writeListToJson(appDb.keyboardAssistsDao.all, "keyboardAssists.json", backupPath)
         writeListToJson(appDb.dictRuleDao.all, "dictRule.json", backupPath)
         GSON.toJson(appDb.serverDao.all).let { json ->
-            aes.runCatching {
-                encryptBase64(json)
-            }.getOrDefault(json).let {
-                FileUtils.createFileIfNotExist(backupPath + File.separator + "servers.json")
-                    .writeText(it)
-            }
+            FileUtils.createFileIfNotExist(backupPath + File.separator + "servers.json")
+                .writeText(json)
         }
         currentCoroutineContext().ensureActive()
         GSON.toJson(ReadBookConfig.configList).let {
