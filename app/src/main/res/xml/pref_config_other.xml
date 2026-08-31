@@ -61,11 +61,6 @@
         app:layout="@layout/view_preference_category">
 
         <com.qreader.reader.lib.prefs.Preference
-            android:key="localPassword"
-            android:summary="@string/set_local_password_summary"
-            android:title="@string/set_local_password" />
-
-        <com.qreader.reader.lib.prefs.Preference
             android:key="userAgent"
             android:title="@string/user_agent" />
 

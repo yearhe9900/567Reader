@@ -23,7 +23,6 @@ import com.qreader.reader.constant.AppConst.appInfo
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.databinding.ActivityMainBinding
-import com.qreader.reader.databinding.DialogEditTextBinding
 import com.qreader.reader.help.AppWebDav
 import com.qreader.reader.help.LifecycleHelp
 import com.qreader.reader.help.book.BookHelp
@@ -129,8 +128,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             if (!privacyPolicy()) return@launch
             //版本更新
             upVersion()
-            //设置本地密码
-            setLocalPassword()
             notifyAppCrash()
             //备份同步
             backupSync()
@@ -251,33 +248,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             showDialogFragment(dialog)
         } else {
             block.resume(null)
-        }
-    }
-
-    /**
-     * 设置本地密码
-     */
-    private suspend fun setLocalPassword() = suspendCancellableCoroutine sc@{ block ->
-        if (LocalConfig.password != null) {
-            block.resume(null)
-            return@sc
-        }
-        alert(R.string.set_local_password, R.string.set_local_password_summary) {
-            val editTextBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
-                editView.hint = "password"
-            }
-            customView {
-                editTextBinding.root
-            }
-            onDismiss {
-                block.resume(null)
-            }
-            okButton {
-                LocalConfig.password = editTextBinding.editView.text.toString()
-            }
-            cancelButton {
-                LocalConfig.password = ""
-            }
         }
     }
 

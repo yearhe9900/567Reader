@@ -19,7 +19,6 @@ import com.qreader.reader.databinding.DialogEditTextBinding
 import com.qreader.reader.help.AppFreezeMonitor
 import com.qreader.reader.help.DispatchersMonitor
 import com.qreader.reader.help.config.AppConfig
-import com.qreader.reader.help.config.LocalConfig
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.prefs.fragment.PreferenceFragment
 import com.qreader.reader.lib.theme.primaryColor
@@ -166,7 +165,6 @@ class OtherConfigFragment : PreferenceFragment(),
             }
 
             PreferKey.clearWebViewData -> clearWebViewData()
-            "localPassword" -> alertLocalPassword()
             PreferKey.shrinkDatabase -> shrinkDatabase()
         }
         return super.onPreferenceTreeClick(preference)
@@ -352,21 +350,6 @@ class OtherConfigFragment : PreferenceFragment(),
                 componentName,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP
             )
-        }
-    }
-
-    private fun alertLocalPassword() {
-        context?.alert(R.string.set_local_password, R.string.set_local_password_summary) {
-            val editTextBinding = DialogEditTextBinding.inflate(layoutInflater).apply {
-                editView.hint = "password"
-            }
-            customView {
-                editTextBinding.root
-            }
-            okButton {
-                LocalConfig.password = editTextBinding.editView.text.toString()
-            }
-            cancelButton()
         }
     }
 
