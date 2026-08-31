@@ -69,29 +69,21 @@ fun GlassDemoScreen() {
     val backdrop = rememberLayerBackdrop()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 背景图片 - 提供给 backdrop捕获
-        Image(
-            painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .layerBackdrop(backdrop),
-            contentScale = ContentScale.Crop
-        )
-
-        // 渐变覆盖层
+        // 渐变背景 - 作为 backdrop捕获源
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF667eea).copy(alpha = 0.7f),
-                            Color(0xFF764ba2).copy(alpha = 0.7f),
-                            Color(0xFFf093fb).copy(alpha = 0.7f)
+                            Color(0xFF00C9FF),
+                            Color(0xFF92FE9D),
+                            Color(0xFF00C9FF),
+                            Color(0xFFF9748F)
                         )
                     )
                 )
+                .layerBackdrop(backdrop)
         )
 
         Column(
