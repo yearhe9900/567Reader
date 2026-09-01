@@ -111,10 +111,12 @@ android {
         }
     }
 
-    android.applicationVariants.configureEach { variant ->
-        variant.outputs.configureEach {
-            def flavor = variant.productFlavors[0].name
-            outputFileName = "567Reader.apk"
+    // AGP 9.0+ 使用新的 API 设置输出文件名
+    androidComponents {
+        onVariants(selector().all()) { variant ->
+            variant.outputs.forEach { output ->
+                output.outputFileName.set("567Reader.apk")
+            }
         }
     }
 
