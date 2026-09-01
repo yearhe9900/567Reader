@@ -107,6 +107,7 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
 
     private fun initRecyclerView() {
         binding.rvBookshelf.setEdgeEffectColor(primaryColor)
+        // 悬浮玻璃导航栏占位：底部 padding 见 fragment_books.xml（paddingBottom + clipToPadding）
         upFastScrollerBar()
         binding.refreshLayout.setColorSchemeColors(accentColor)
         binding.refreshLayout.setOnRefreshListener {

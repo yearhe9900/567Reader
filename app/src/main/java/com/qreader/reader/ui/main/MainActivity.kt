@@ -4,18 +4,20 @@ package com.qreader.reader.ui.main
 
 import android.os.Bundle
 import android.text.format.DateUtils
-import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.activity.viewModels
-import androidx.core.view.get
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.postDelayed
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.qreader.reader.BuildConfig
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
@@ -43,12 +45,9 @@ import com.qreader.reader.ui.main.bookshelf.style2.BookshelfFragment2
 import com.qreader.reader.ui.main.explore.ExploreFragment
 import com.qreader.reader.ui.main.my.MyFragment
 import com.qreader.reader.ui.widget.dialog.TextDialog
-import com.qreader.reader.ui.widget.text.BadgeView
 import com.qreader.reader.utils.isCreated
-import com.qreader.reader.utils.navigationBarHeight
 import com.qreader.reader.utils.observeEvent
 import com.qreader.reader.utils.setEdgeEffectColor
-import com.qreader.reader.utils.setOnApplyWindowInsetsListenerCompat
 import com.qreader.reader.utils.showDialogFragment
 import com.qreader.reader.utils.toastOnUi
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
@@ -56,22 +55,24 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import splitties.views.bottomPadding
 import kotlin.coroutines.resume
 import com.qreader.reader.ui.association.ImportDictRuleDialog
 import com.qreader.reader.ui.association.ImportHttpTtsDialog
 import com.qreader.reader.ui.association.ImportTxtTocRuleDialog
+import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
 import com.qreader.reader.utils.StringUtils
 import com.qreader.reader.utils.clearClip
 import com.qreader.reader.utils.getClipText
 
 /**
  * 主界面
+ *
+ * 整页迁移 Compose：Activity 保留 [VMBaseActivity] 继承（主题/系统栏/语言/返回键复用），
+ * UI 层改为 [MainScreen]（Compose），内容区 ViewPager + 三个 Fragment 暂保留 View 体系，
+ * 底部导航栏替换为 LiquidBottomTabs 玻璃态胶囊栏。
  */
 @Suppress("PrivatePropertyName")
 class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
-    BottomNavigationView.OnNavigationItemSelectedListener,
-    BottomNavigationView.OnNavigationItemReselectedListener,
     MainViewModel.CallBack {
 
     override val binding by viewBinding(ActivityMainBinding::inflate)
@@ -92,15 +93,23 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     private val adapter by lazy {
         TabFragmentPageAdapter(supportFragmentManager)
     }
-    private var onUpBooksBadgeView: BadgeView? = null
+
+    // Compose 状态（由 MainScreen 消费，ViewPager 联动驱动）
+    private var selectedTab by mutableIntStateOf(0)
+    private var showDiscovery by mutableStateOf(false)
+    private var badgeCount by mutableIntStateOf(0)
+    private var glassConfig by mutableStateOf(NavBarGlassConfig())
+    private lateinit var viewPager: ViewPager
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
+        // 延迟到 Activity attach 之后再读 SharedPreferences（字段初始化阶段 mBase 尚为 null 会 NPE）
+        glassConfig = NavBarGlassConfig.load(this)
         upBottomMenu()
         initView()
         upHomePage()
         onBackPressedDispatcher.addCallback(this) {
             if (pagePosition != 0) {
-                binding.viewPagerMain.currentItem = 0
+                viewPager.currentItem = 0
                 return@addCallback
             }
             (fragmentMap[getFragmentId(0)] as? BookshelfFragment2)?.let {
@@ -134,40 +143,61 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             //设置回调
             viewModel.setActivityCallback(this@MainActivity)
             //自动更新书源
-            binding.viewPagerMain.postDelayed(1000) {
+            viewPager.postDelayed(1000) {
                 viewModel.ruleSubsUp()
             }
             readShibboleth(1500)
             //自动更新书籍
             val isAutoRefreshedBook = savedInstanceState?.getBoolean("isAutoRefreshedBook") ?: false
             if (AppConfig.autoRefreshBook && !isAutoRefreshedBook) {
-                binding.viewPagerMain.postDelayed(2000) {
+                viewPager.postDelayed(2000) {
                     viewModel.upAllBookToc()
                 }
             }
-            binding.viewPagerMain.postDelayed(3000) {
+            viewPager.postDelayed(3000) {
                 viewModel.postLoad()
             }
         }
     }
 
-    override fun onNavigationItemSelected(item: MenuItem): Boolean = binding.run {
-        when (item.itemId) {
-            R.id.menu_bookshelf ->
-                viewPagerMain.setCurrentItem(0, false)
-
-            R.id.menu_discovery ->
-                viewPagerMain.setCurrentItem(realPositions.indexOf(idExplore), false)
-
-            R.id.menu_my_config ->
-                viewPagerMain.setCurrentItem(realPositions.indexOf(idMy), false)
+    private fun initView() {
+        viewPager = ViewPager(this).apply {
+            id = R.id.view_pager_main
+            setEdgeEffectColor(primaryColor)
+            offscreenPageLimit = 3
+            adapter = this@MainActivity.adapter
+            addOnPageChangeListener(PageChangeCallback())
         }
-        return false
+        binding.composeView.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.composeView.setContent {
+            MainScreen(
+                viewPager = viewPager,
+                selectedTabIndex = { selectedTab },
+                onTabSelected = { position -> selectTab(position) },
+                onTabReselected = { position -> reselectTab(position) },
+                badgeCount = badgeCount,
+                showDiscovery = showDiscovery,
+                isEInkMode = AppConfig.isEInkMode,
+                glassConfig = glassConfig,
+            )
+        }
     }
 
-    override fun onNavigationItemReselected(item: MenuItem) {
-        when (item.itemId) {
-            R.id.menu_bookshelf -> {
+    /**
+     * 切换 tab（对应原 onNavigationItemSelected）
+     */
+    private fun selectTab(position: Int) {
+        viewPager.setCurrentItem(position, false)
+    }
+
+    /**
+     * 重选当前 tab（对应原 onNavigationItemReselected）：书架回顶 / 发现压缩
+     */
+    private fun reselectTab(position: Int) {
+        when (getFragmentId(position)) {
+            idBookshelf1, idBookshelf2 -> {
                 if (System.currentTimeMillis() - bookshelfReselected > 300) {
                     bookshelfReselected = System.currentTimeMillis()
                 } else {
@@ -175,30 +205,13 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 }
             }
 
-            R.id.menu_discovery -> {
+            idExplore -> {
                 if (System.currentTimeMillis() - exploreReselected > 300) {
                     exploreReselected = System.currentTimeMillis()
                 } else {
-                    (fragmentMap[1] as? ExploreFragment)?.compressExplore()
+                    (fragmentMap[idExplore] as? ExploreFragment)?.compressExplore()
                 }
             }
-        }
-    }
-
-    private fun initView() = binding.run {
-        viewPagerMain.setEdgeEffectColor(primaryColor)
-        viewPagerMain.offscreenPageLimit = 3
-        viewPagerMain.adapter = adapter
-        viewPagerMain.addOnPageChangeListener(PageChangeCallback())
-        bottomNavigationView.setOnNavigationItemSelectedListener(this@MainActivity)
-        bottomNavigationView.setOnNavigationItemReselectedListener(this@MainActivity)
-        if (AppConfig.isEInkMode) {
-            bottomNavigationView.setBackgroundResource(R.drawable.bg_eink_border_top)
-        }
-        bottomNavigationView.setOnApplyWindowInsetsListenerCompat { view, windowInsets ->
-            val height = windowInsets.navigationBarHeight
-            view.bottomPadding = height
-            windowInsets.inset(0, 0, 0, height)
         }
     }
 
@@ -315,25 +328,15 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override fun observeLiveBus() {
         viewModel.onUpBooksLiveData.observe(this) {
-            if (onUpBooksBadgeView == null) {
-                onUpBooksBadgeView = binding.bottomNavigationView.addBadgeView(0)
-            }
-            onUpBooksBadgeView!!.setBadgeCount(it)
+            badgeCount = it ?: 0
         }
         observeEvent<String>(EventBus.RECREATE) {
             recreate()
         }
         observeEvent<Boolean>(EventBus.NOTIFY_MAIN) {
-            binding.apply {
-                if (it) {
-                    bottomNavigationView.menu.clear()
-                    bottomNavigationView.inflateMenu(R.menu.main_bnv)
-                    onUpBooksBadgeView = null
-                }
-                upBottomMenu()
-                if (it) {
-                    viewPagerMain.setCurrentItem(bottomMenuCount - 1, false)
-                }
+            upBottomMenu()
+            if (it) {
+                viewPager.setCurrentItem(bottomMenuCount - 1, false)
             }
         }
         observeEvent<String>(PreferKey.threadCount) {
@@ -342,10 +345,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     }
 
     private fun upBottomMenu() {
-        val showDiscovery = AppConfig.showDiscovery
-        binding.bottomNavigationView.menu.let { menu ->
-            menu.findItem(R.id.menu_discovery).isVisible = showDiscovery
-        }
+        showDiscovery = AppConfig.showDiscovery
         var index = 0
         if (showDiscovery) {
             index++
@@ -361,10 +361,10 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         when (AppConfig.defaultHomePage) {
             "bookshelf" -> {}
             "explore" -> if (AppConfig.showDiscovery) {
-                binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idExplore), false)
+                viewPager.setCurrentItem(realPositions.indexOf(idExplore), false)
             }
 
-            "my" -> binding.viewPagerMain.setCurrentItem(realPositions.indexOf(idMy), false)
+            "my" -> viewPager.setCurrentItem(realPositions.indexOf(idMy), false)
         }
     }
 
@@ -380,7 +380,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
         override fun onPageSelected(position: Int) {
             pagePosition = position
-            binding.bottomNavigationView.menu[realPositions[position]].isChecked = true
+            selectedTab = position
         }
 
     }
@@ -450,7 +450,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
      * 读取导入口令
      */
     fun readShibboleth(delay: Long) {
-        binding.viewPagerMain.postDelayed(delay) {
+        viewPager.postDelayed(delay) {
             val text = this@MainActivity.getClipText()
             if (!text.isNullOrBlank()) {
                 if ("#L:" in text) {
@@ -478,6 +478,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override fun onResume() {
         super.onResume()
+        // 从设置页返回后刷新玻璃态配置，使底部导航栏即时生效
+        glassConfig = NavBarGlassConfig.load(this)
         if (LifecycleHelp.activitySize() == 1) {
             readShibboleth(500)
         }

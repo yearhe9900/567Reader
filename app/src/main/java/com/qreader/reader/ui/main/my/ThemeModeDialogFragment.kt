@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
@@ -158,11 +159,14 @@ class ThemeModeDialogFragment : DialogFragment() {
             if (isLightTheme) Color(0xFF29293A).copy(0.23f)
             else Color(0xFF121212).copy(0.56f)
 
-        // 背景采样源：调用方截取的页面截图优先，回退到 wallpaper_light
-        val backdropPainter: Painter = if (backdropBitmap != null) {
-            BitmapPainter(backdropBitmap!!.asImageBitmap())
+        // 背景采样源：调用方截取的页面截图优先；截不到时回退到「我的」页同款纯色，
+        // 不再回退 wallpaper_light，避免弹框里又出现壁纸图片。
+        val pageBackgroundColor = if (isLightTheme) Color(0xFFF2F2F7) else Color.Black
+        val bitmap = backdropBitmap
+        val backdropPainter: Painter = if (bitmap != null) {
+            BitmapPainter(bitmap.asImageBitmap())
         } else {
-            painterResource(id = R.drawable.wallpaper_light)
+            ColorPainter(pageBackgroundColor)
         }
 
         val handleConfirm: () -> Unit = {

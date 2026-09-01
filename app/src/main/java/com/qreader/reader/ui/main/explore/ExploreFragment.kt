@@ -103,6 +103,7 @@ class ExploreFragment() : VMBaseFragment<ExploreViewModel>(R.layout.fragment_exp
 
     private fun initRecyclerView() {
         binding.rvFind.setEdgeEffectColor(primaryColor)
+        // 悬浮玻璃导航栏占位：底部 padding 见 fragment_explore.xml（paddingBottom + clipToPadding）
         binding.rvFind.layoutManager = linearLayoutManager
         binding.rvFind.adapter = adapter
         adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {

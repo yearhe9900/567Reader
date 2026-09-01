@@ -22,6 +22,7 @@ import com.qreader.reader.ui.book.bookmark.AllBookmarkActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.ui.book.toc.rule.TxtTocRuleActivity
 import com.qreader.reader.ui.compose.GlassDemoActivity
+import com.qreader.reader.ui.compose.NavBarGlassSettingsActivity
 import com.qreader.reader.ui.config.ConfigActivity
 import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
@@ -103,8 +104,9 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
     /**
      * 弹出「主题模式」选择对话框（Liquid Glass 风格）。
      *
-     * 与 BookInfoActivity 的删除图书弹框做法一致：先在 Activity 层截取当前页面
-     * （`window.decorView`），再交给 [ThemeModeDialogFragment]（DialogFragment）显示。
+     * 与 BookInfoActivity 的删除图书弹框做法一致：先截取「我的」页自身的 ComposeView
+     * （`binding.composeView`，避免截整窗时底部玻璃导航栏的硬件图层在软件截图下不绘制），
+     * 再交给 [ThemeModeDialogFragment]（DialogFragment）显示。
      *
      * 之所以不在 Compose 内部用 Dialog / Popup：Compose 的 Dialog 与 focusable=true 的
      * Popup 都会创建子 Window，focusable=false 的 Popup 内容区又会受 insets 影响，
@@ -113,14 +115,18 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
      * DialogFragment 的窗口尺寸与 Activity 一致，截图可无缝覆盖，从根源消除该问题。
      */
     private fun showThemeModeDialog() {
+        // 只截「我的」页自身的 ComposeView（与之前 Popup 方案 LocalView.current 同源）。
+        // 不要截 activity.window.decorView：主界面整窗含 Compose MainScreen + 底部玻璃导航栏
+        // （drawBackdrop 走 RenderNode/AGSL 硬件图层），软件 Canvas 截图时硬件图层不绘制，
+        // 整张图会空白/扁平，弹框就变成"覆盖全屏的纯色页"而非"在原页上磨砂"，观感即"像弹出新页面"。
+        val composeView = binding.composeView
         val pageBitmap = try {
-            val rootView = activity?.window?.decorView
-            if (rootView != null && rootView.width > 0 && rootView.height > 0) {
+            if (composeView.width > 0 && composeView.height > 0) {
                 Bitmap.createBitmap(
-                    rootView.width,
-                    rootView.height,
+                    composeView.width,
+                    composeView.height,
                     Bitmap.Config.ARGB_8888
-                ).also { rootView.draw(Canvas(it)) }
+                ).also { composeView.draw(Canvas(it)) }
             } else {
                 null
             }
@@ -165,6 +171,7 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
             "fileManage" -> startActivity<FileManageActivity>()
             "readRecord" -> startActivity<ReadRecordActivity>()
             "glassDemo" -> startActivity<GlassDemoActivity>()
+            "navBarGlass" -> startActivity<NavBarGlassSettingsActivity>()
             "appVersion" -> showAppVersion()
             "exit" -> activity?.finish()
         }

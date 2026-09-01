@@ -146,6 +146,12 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+        <!-- 底部导航栏玻璃态设置界面 -->
+        <activity
+            android:name=".ui.compose.NavBarGlassSettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
         <!-- 阅读漫画界面 -->
         <activity
             android:name=".ui.book.manga.ReadMangaActivity"

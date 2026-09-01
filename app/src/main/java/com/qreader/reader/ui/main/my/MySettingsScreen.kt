@@ -116,7 +116,9 @@ fun MySettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
+                // 底部 88dp 为悬浮玻璃导航栏预留（导航栏 72dp + 16dp 余量），
+                // 保证滚到底时最后一项不被导航栏遮挡
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp)
         ) {
             categories.forEachIndexed { index, category ->
                 // 仅卡片之间加 16dp，第一个卡片之前由 Column top=12dp 给出呼吸感
@@ -424,7 +426,7 @@ private fun buildSettingCategories(
             )
         ),
 
-        // 分组二：外观与服务 —— 主题模式（点击弹窗选择）、Web 服务（开关切换）
+        // 分组二：外观与服务 —— 主题模式（点击弹窗选择）、底部导航栏、Web 服务（开关切换）
         SettingCategory(
             title = "外观与服务",
             items = listOf(
@@ -435,6 +437,13 @@ private fun buildSettingCategories(
                     title = context.getString(R.string.theme_mode),
                     summary = context.getString(R.string.theme_mode_desc),
                     value = themeModeLabels.getOrNull(themeModeIndex)
+                ),
+                // 底部导航栏：进入玻璃态样式调节页（模糊/折射/透明度/色差）
+                SettingItem.Action(
+                    key = "navBarGlass",
+                    icon = R.drawable.ic_cfg_theme,
+                    title = "底部导航栏",
+                    summary = "调节玻璃态样式（模糊、折射、透明度、色差）"
                 ),
                 // Web 服务：开关切换，摘要由上层根据连接状态动态提供
                 SettingItem.Toggle(

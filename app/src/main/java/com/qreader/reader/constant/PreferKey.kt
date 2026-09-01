@@ -208,4 +208,10 @@ object PreferKey {
     const val editAutoWrap = "editAutoWrap"
     const val editAutoComplete = "editAutoComplete"
     const val showBoardLine = "showBoardLine"
+
+    // 底部导航栏玻璃态配置（NavBarGlassConfig）
+    const val navBarBlurRadius = "navBarBlurRadius"
+    const val navBarRefractionHeight = "navBarRefractionHeight"
+    const val navBarRefractionAmount = "navBarRefractionAmount"
+    const val navBarChromaticAberration = "navBarChromaticAberration"
 }

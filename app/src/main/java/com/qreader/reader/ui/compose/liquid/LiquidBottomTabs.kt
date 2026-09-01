@@ -54,6 +54,22 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sign
 
+/**
+ * 底部导航栏玻璃态样式的可调参数。
+ *
+ * 与 AndroidLiquidGlass 官方 GlassPlayground 对齐（去掉对 Capsule 无效的 Corner radius）：
+ * @param blurRadiusDp 背景模糊半径（dp），值越大背景越朦胧。
+ * @param refractionHeightDp 折射高度（lens height），控制透镜凸起/凹陷程度。
+ * @param refractionAmountDp 折射强度（lens amount），控制背景被拉伸/扭曲的幅度。
+ * @param chromaticAberration 是否开启色差（镜头色散）效果。
+ */
+data class LiquidGlassStyle(
+    val blurRadiusDp: Float = 8f,
+    val refractionHeightDp: Float = 24f,
+    val refractionAmountDp: Float = 24f,
+    val chromaticAberration: Boolean = true
+)
+
 @Composable
 fun LiquidBottomTabs(
     selectedTabIndex: () -> Int,
@@ -61,15 +77,16 @@ fun LiquidBottomTabs(
     backdrop: Backdrop,
     tabsCount: Int,
     modifier: Modifier = Modifier,
+    accentColor: Color? = null,
+    containerColor: Color? = null,
+    isLightTheme: Boolean = !isSystemInDarkTheme(),
+    glassStyle: LiquidGlassStyle = LiquidGlassStyle(),
     content: @Composable RowScope.() -> Unit
 ) {
-    val isLightTheme = !isSystemInDarkTheme()
-    val accentColor =
-        if (isLightTheme) Color(0xFF0088FF)
-        else Color(0xFF0091FF)
-    val containerColor =
-        if (isLightTheme) Color(0xFFFAFAFA).copy(0.4f)
-        else Color(0xFF121212).copy(0.4f)
+    val effectiveAccentColor =
+        accentColor ?: if (isLightTheme) Color(0xFF0088FF) else Color(0xFF0091FF)
+    val effectiveContainerColor =
+        containerColor ?: if (isLightTheme) Color(0xFFFAFAFA).copy(0.4f) else Color(0xFF121212).copy(0.4f)
 
     val tabsBackdrop = rememberLayerBackdrop()
 
@@ -166,8 +183,11 @@ fun LiquidBottomTabs(
                     shape = { Capsule() },
                     effects = {
                         vibrancy()
-                        blur(8f.dp.toPx())
-                        lens(24f.dp.toPx(), 24f.dp.toPx())
+                        blur(glassStyle.blurRadiusDp.dp.toPx())
+                        lens(
+                            glassStyle.refractionHeightDp.dp.toPx(),
+                            glassStyle.refractionAmountDp.dp.toPx()
+                        )
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
@@ -175,7 +195,7 @@ fun LiquidBottomTabs(
                         scaleX = scale
                         scaleY = scale
                     },
-                    onDrawSurface = { drawRect(containerColor) }
+                    onDrawSurface = { drawRect(effectiveContainerColor) }
                 )
                 .then(interactiveHighlight.modifier)
                 .height(64f.dp)
@@ -204,23 +224,23 @@ fun LiquidBottomTabs(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
-                            blur(8f.dp.toPx())
+                            blur(glassStyle.blurRadiusDp.dp.toPx())
                             lens(
-                                24f.dp.toPx() * progress,
-                                24f.dp.toPx() * progress
+                                glassStyle.refractionHeightDp.dp.toPx() * progress,
+                                glassStyle.refractionAmountDp.dp.toPx() * progress
                             )
                         },
                         highlight = {
                             val progress = dampedDragAnimation.pressProgress
                             Highlight.Default.copy(alpha = progress)
                         },
-                        onDrawSurface = { drawRect(containerColor) }
+                        onDrawSurface = { drawRect(effectiveContainerColor) }
                     )
                     .then(interactiveHighlight.modifier)
                     .height(56f.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 4f.dp)
-                    .graphicsLayer(colorFilter = ColorFilter.tint(accentColor)),
+                    .graphicsLayer(colorFilter = ColorFilter.tint(effectiveAccentColor)),
                 verticalAlignment = Alignment.CenterVertically,
                 content = content
             )
@@ -244,7 +264,7 @@ fun LiquidBottomTabs(
                         lens(
                             10f.dp.toPx() * progress,
                             14f.dp.toPx() * progress,
-                            chromaticAberration = true
+                            chromaticAberration = glassStyle.chromaticAberration
                         )
                     },
                     highlight = {
