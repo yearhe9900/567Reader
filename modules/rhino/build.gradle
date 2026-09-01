@@ -2,7 +2,7 @@ plugins {
     //d 'com.android.library'
     //id 'org.jetbrains.kotlin.android'
     alias libs.plugins.android.library
-    alias libs.plugins.kotlin.android
+    // kotlin.android 已内置在 AGP 9.0+ 中
 }
 
 android {

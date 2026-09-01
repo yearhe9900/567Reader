@@ -1,6 +1,6 @@
 plugins {
     alias libs.plugins.android.library
-    alias libs.plugins.kotlin.android
+    // kotlin.android 已内置在 AGP 9.0+ 中
 }
 
 android {

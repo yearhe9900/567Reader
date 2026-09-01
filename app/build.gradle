@@ -6,7 +6,7 @@ plugins {
 //    id 'com.google.devtools.ksp'
 
     alias libs.plugins.android.application
-    alias libs.plugins.kotlin.android
+    // kotlin.android 已内置在 AGP 9.0+ 中，不再需要单独声明
     alias libs.plugins.kotlin.parcelize
     alias libs.plugins.room
     alias libs.plugins.ksp
