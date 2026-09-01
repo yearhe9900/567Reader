@@ -19,7 +19,18 @@ static def releaseTime() {
 }
 
 def name = "567Reader"
-def version = "3." + releaseTime()
+// 版本号格式：主版本.子版本.阶段版本.日期_阶段标识
+// 主版本：主要模块重大变化
+// 子版本：功能增加或变化
+// 阶段版本：Bug修复或小变动
+// 日期：修改日期
+// 阶段标识：alpha/beta/rc/release
+def majorVersion = 1
+def minorVersion = 0
+def patchVersion = 0
+def dateVersion = new Date().format("yyMMdd", TimeZone.getTimeZone("GMT+8"))
+def stageVersion = "beta"
+def version = "${majorVersion}.${minorVersion}.${patchVersion}.${dateVersion}_${stageVersion}"
 def gitCommits = Integer.parseInt('git rev-list HEAD --count'.execute().text.trim())
 
 android {

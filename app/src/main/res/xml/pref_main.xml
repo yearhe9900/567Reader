@@ -118,6 +118,13 @@
             app:iconSpaceReserved="false" />
 
         <com.qreader.reader.lib.prefs.Preference
+            android:icon="@drawable/ic_about"
+            android:key="appVersion"
+            android:summary="当前应用版本"
+            android:title="系统版本"
+            app:iconSpaceReserved="false" />
+
+        <com.qreader.reader.lib.prefs.Preference
             android:icon="@drawable/ic_exit"
             android:key="exit"
             android:title="@string/exit"

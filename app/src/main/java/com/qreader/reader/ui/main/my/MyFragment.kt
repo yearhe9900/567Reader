@@ -38,6 +38,7 @@ import com.qreader.reader.utils.sendToClip
 import com.qreader.reader.utils.setEdgeEffectColor
 import com.qreader.reader.utils.showHelp
 import com.qreader.reader.utils.startActivity
+import com.qreader.reader.utils.toastOnUi
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
 
 class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInterface {
@@ -162,6 +163,16 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
                 "fileManage" -> startActivity<FileManageActivity>()
                 "readRecord" -> startActivity<ReadRecordActivity>()
                 "glassDemo" -> startActivity<GlassDemoActivity>()
+                "appVersion" -> {
+                    // 显示版本详情
+                    try {
+                        val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
+                        val versionName = packageInfo.versionName
+                        toastOnUi("当前版本: $versionName")
+                    } catch (e: Exception) {
+                        toastOnUi("获取版本信息失败")
+                    }
+                }
                 "exit" -> activity?.finish()
             }
             return super.onPreferenceTreeClick(preference)
