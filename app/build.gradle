@@ -29,9 +29,10 @@ def majorVersion = 1
 def minorVersion = 0
 def patchVersion = 0
 def dateVersion = new Date().format("yyMMdd", TimeZone.getTimeZone("GMT+8"))
-def stageVersion = "beta"
+def stageVersion = "release"
 def version = "${majorVersion}.${minorVersion}.${patchVersion}.${dateVersion}_${stageVersion}"
-def gitCommits = Integer.parseInt('git rev-list HEAD --count'.execute().text.trim())
+// versionCode 基于日期生成，避免配置缓存阶段执行外部进程（git rev-list 会破坏 Configuration Cache）
+def versionCodeVal = 100000 + Integer.parseInt(dateVersion)
 
 android {
     compileSdk = compile_sdk_version
@@ -60,7 +61,7 @@ android {
         applicationId "com.qreader.reader"
         minSdk 33
         targetSdk 36
-        versionCode 10000 + gitCommits
+        versionCode versionCodeVal
         versionName version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         project.ext.set("archivesBaseName", name + "_" + version)
@@ -108,7 +109,6 @@ android {
             manifestPlaceholders.put("app_name", "@string/app_name")
 
             applicationIdSuffix '.debug'
-            versionNameSuffix 'debug'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro', 'cronet-proguard-rules.pro'
         }

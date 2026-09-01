@@ -3,6 +3,7 @@ package com.qreader.reader.ui.book.info
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -954,6 +955,21 @@ class BookInfoActivity :
     private fun deleteBook() {
         viewModel.getBook()?.let { book ->
             if (LocalConfig.bookInfoDeleteAlert) {
+                // 捕获当前页面作为玻璃对话框的 backdrop 采样源，使其在原页面上弹出
+                val pageBitmap = try {
+                    val rootView = window.decorView
+                    if (rootView.width > 0 && rootView.height > 0) {
+                        Bitmap.createBitmap(
+                            rootView.width,
+                            rootView.height,
+                            Bitmap.Config.ARGB_8888
+                        ).also { rootView.draw(Canvas(it)) }
+                    } else {
+                        null
+                    }
+                } catch (_: Exception) {
+                    null
+                }
                 val dialog = GlassAlertDialog.newInstance(
                     title = getString(R.string.draw),
                     message = getString(R.string.sure_del),
@@ -962,6 +978,7 @@ class BookInfoActivity :
                     showCheckBox = book.isLocal,
                     checkBoxText = if (book.isLocal) getString(R.string.delete_book_file) else "",
                     checkBoxChecked = LocalConfig.deleteBookOriginal,
+                    backdropBitmap = pageBitmap,
                     onConfirm = { checkBoxChecked ->
                         if (book.isLocal) {
                             LocalConfig.deleteBookOriginal = checkBoxChecked
