@@ -44,6 +44,7 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
         }
         binding.ivBook.setColorFilter(accentColor)
         binding.vwTitleLine.setBackgroundColor(accentColor)
+        applyCustomWelcomeBackground()
     }
 
     override fun setupSystemBar() {
@@ -52,7 +53,7 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
         upNavigationBarColor()
     }
 
-    override fun upBackgroundImage() {
+    private fun applyCustomWelcomeBackground() {
         if (getPrefBoolean(PreferKey.customWelcome)) {
             kotlin.runCatching {
                 when (ThemeConfig.getTheme()) {
@@ -95,7 +96,6 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
                 }
             }
         }
-        super.upBackgroundImage()
     }
 
     private fun startMainActivity() {

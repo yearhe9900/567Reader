@@ -1,41 +1,37 @@
 package com.qreader.reader.ui.main.my
 
-import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.preference.Preference
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.qreader.reader.R
 import com.qreader.reader.base.BaseFragment
 import com.qreader.reader.constant.EventBus
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.databinding.FragmentMyConfigBinding
 import com.qreader.reader.help.config.ThemeConfig
-import com.qreader.reader.lib.dialogs.selector
-import com.qreader.reader.lib.prefs.NameListPreference
-import com.qreader.reader.lib.prefs.SwitchPreference
-import com.qreader.reader.lib.prefs.fragment.PreferenceFragment
-import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.service.WebService
 import com.qreader.reader.ui.about.ReadRecordActivity
 import com.qreader.reader.ui.book.bookmark.AllBookmarkActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.ui.book.toc.rule.TxtTocRuleActivity
+import com.qreader.reader.ui.compose.GlassDemoActivity
 import com.qreader.reader.ui.config.ConfigActivity
 import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
 import com.qreader.reader.ui.file.FileManageActivity
 import com.qreader.reader.ui.main.MainFragmentInterface
 import com.qreader.reader.ui.replace.ReplaceRuleActivity
-import com.qreader.reader.ui.compose.GlassDemoActivity
-import com.qreader.reader.utils.LogUtils
-import com.qreader.reader.utils.getPrefBoolean
+import com.qreader.reader.utils.getPrefString
 import com.qreader.reader.utils.observeEventSticky
-import com.qreader.reader.utils.openUrl
 import com.qreader.reader.utils.putPrefBoolean
-import com.qreader.reader.utils.sendToClip
-import com.qreader.reader.utils.setEdgeEffectColor
+import com.qreader.reader.utils.putPrefString
 import com.qreader.reader.utils.showHelp
 import com.qreader.reader.utils.startActivity
 import com.qreader.reader.utils.toastOnUi
@@ -53,13 +49,91 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
 
     private val binding by viewBinding(FragmentMyConfigBinding::bind)
 
+    private var webServiceChecked by mutableStateOf(WebService.isRun)
+    private var webServiceSummary by mutableStateOf("")
+    private var themeModeIndex by mutableStateOf(0)
+    private var composeInitialized = false
+
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
         setSupportToolbar(binding.titleBar.toolbar)
-        val fragmentTag = "prefFragment"
-        var preferenceFragment = childFragmentManager.findFragmentByTag(fragmentTag)
-        if (preferenceFragment == null) preferenceFragment = MyPreferenceFragment()
-        childFragmentManager.beginTransaction()
-            .replace(R.id.pre_fragment, preferenceFragment, fragmentTag).commit()
+
+        val ctx = requireContext()
+        themeModeIndex = ctx.getPrefString(PreferKey.themeMode, "0")?.toIntOrNull() ?: 0
+        webServiceSummary = if (WebService.isRun) {
+            WebService.hostAddress
+        } else {
+            getString(R.string.web_service_desc)
+        }
+
+        observeEventSticky<String>(EventBus.WEB_SERVICE) {
+            webServiceChecked = WebService.isRun
+            webServiceSummary = if (WebService.isRun) {
+                WebService.hostAddress
+            } else {
+                getString(R.string.web_service_desc)
+            }
+        }
+    }
+
+    /**
+     * 懒加载 Compose：仅在 Fragment 真正可见（resume）时才 setContent。
+     * 原因：MainActivity 的 ViewPager 使用 offscreenPageLimit=3 会预加载本页，
+     * 若在离屏阶段就渲染 Liquid Glass 的 backdrop（GPU/RenderEffect），
+     * 会在启动早期触发 Surface 渲染异常导致黑屏。
+     */
+    override fun onResume() {
+        super.onResume()
+        if (composeInitialized) return
+        composeInitialized = true
+        binding.composeView.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+        )
+        binding.composeView.setContent {
+            MySettingsScreen(
+                webServiceChecked = webServiceChecked,
+                webServiceSummary = webServiceSummary,
+                themeModeIndex = themeModeIndex,
+                onActionClick = { key -> handleSettingAction(key) },
+                onWebServiceToggle = { checked -> handleWebServiceToggle(checked) },
+                onShowThemeModeDialog = { showThemeModeDialog() }
+            )
+        }
+    }
+
+    /**
+     * 弹出「主题模式」选择对话框（Liquid Glass 风格）。
+     *
+     * 与 BookInfoActivity 的删除图书弹框做法一致：先在 Activity 层截取当前页面
+     * （`window.decorView`），再交给 [ThemeModeDialogFragment]（DialogFragment）显示。
+     *
+     * 之所以不在 Compose 内部用 Dialog / Popup：Compose 的 Dialog 与 focusable=true 的
+     * Popup 都会创建子 Window，focusable=false 的 Popup 内容区又会受 insets 影响，
+     * 两者都会让「截图（整个 DecorView）」与「弹框内容区」坐标系/尺寸不一致，
+     * 叠加 ContentScale.Crop 居中裁剪后表现为页面下移、闪动。
+     * DialogFragment 的窗口尺寸与 Activity 一致，截图可无缝覆盖，从根源消除该问题。
+     */
+    private fun showThemeModeDialog() {
+        val pageBitmap = try {
+            val rootView = activity?.window?.decorView
+            if (rootView != null && rootView.width > 0 && rootView.height > 0) {
+                Bitmap.createBitmap(
+                    rootView.width,
+                    rootView.height,
+                    Bitmap.Config.ARGB_8888
+                ).also { rootView.draw(Canvas(it)) }
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+        ThemeModeDialogFragment.newInstance(
+            title = getString(R.string.theme_mode),
+            labels = resources.getStringArray(R.array.theme_mode),
+            selectedIndex = themeModeIndex,
+            backdropBitmap = pageBitmap,
+            onSelect = { value -> handleThemeModeSelected(value) }
+        ).show(childFragmentManager, "theme_mode_dialog")
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu) {
@@ -72,112 +146,60 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
         }
     }
 
-    /**
-     * 配置
-     */
-    class MyPreferenceFragment : PreferenceFragment(),
-        SharedPreferences.OnSharedPreferenceChangeListener {
-
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            putPrefBoolean(PreferKey.webService, WebService.isRun)
-            addPreferencesFromResource(R.xml.pref_main)
-            findPreference<SwitchPreference>("webService")?.onLongClick {
-                if (!WebService.isRun) {
-                    return@onLongClick false
-                }
-                context?.selector(arrayListOf("复制地址", "浏览器打开")) { _, i ->
-                    when (i) {
-                        0 -> context?.sendToClip(it.summary.toString())
-                        1 -> context?.openUrl(it.summary.toString())
-                    }
-                }
-                true
+    private fun handleSettingAction(key: String) {
+        when (key) {
+            "bookSourceManage" -> startActivity<BookSourceActivity>()
+            "replaceManage" -> startActivity<ReplaceRuleActivity>()
+            "dictRuleManage" -> startActivity<DictRuleActivity>()
+            "txtTocRuleManage" -> startActivity<TxtTocRuleActivity>()
+            "bookmark" -> startActivity<AllBookmarkActivity>()
+            "setting" -> startActivity<ConfigActivity> {
+                putExtra("configTag", ConfigTag.OTHER_CONFIG)
             }
-            observeEventSticky<String>(EventBus.WEB_SERVICE) {
-                findPreference<SwitchPreference>(PreferKey.webService)?.let {
-                    it.isChecked = WebService.isRun
-                    it.summary = if (WebService.isRun) {
-                        WebService.hostAddress
-                    } else {
-                        getString(R.string.web_service_desc)
-                    }
-                }
+            "web_dav_setting" -> startActivity<ConfigActivity> {
+                putExtra("configTag", ConfigTag.BACKUP_CONFIG)
             }
-            findPreference<NameListPreference>(PreferKey.themeMode)?.let {
-                it.setOnPreferenceChangeListener { _, _ ->
-                    view?.post { ThemeConfig.applyDayNight(requireContext()) }
-                    true
-                }
+            "theme_setting" -> startActivity<ConfigActivity> {
+                putExtra("configTag", ConfigTag.THEME_CONFIG)
             }
+            "fileManage" -> startActivity<FileManageActivity>()
+            "readRecord" -> startActivity<ReadRecordActivity>()
+            "glassDemo" -> startActivity<GlassDemoActivity>()
+            "appVersion" -> showAppVersion()
+            "exit" -> activity?.finish()
         }
+    }
 
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            super.onViewCreated(view, savedInstanceState)
-            listView.setEdgeEffectColor(primaryColor)
+    private fun handleWebServiceToggle(checked: Boolean) {
+        val ctx = requireContext()
+        ctx.putPrefBoolean(PreferKey.webService, checked)
+        if (checked) {
+            WebService.start(ctx)
+        } else {
+            WebService.stop(ctx)
         }
-
-        override fun onResume() {
-            super.onResume()
-            preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
+        webServiceChecked = WebService.isRun
+        webServiceSummary = if (WebService.isRun) {
+            WebService.hostAddress
+        } else {
+            getString(R.string.web_service_desc)
         }
+    }
 
-        override fun onPause() {
-            preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
-            super.onPause()
+    private fun handleThemeModeSelected(value: Int) {
+        val ctx = requireContext()
+        themeModeIndex = value
+        ctx.putPrefString(PreferKey.themeMode, value.toString())
+        view?.post { ThemeConfig.applyDayNight(ctx) }
+    }
+
+    private fun showAppVersion() {
+        try {
+            val ctx = requireContext()
+            val packageInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+            toastOnUi("当前版本: ${packageInfo.versionName}")
+        } catch (e: Exception) {
+            toastOnUi("获取版本信息失败")
         }
-
-        override fun onSharedPreferenceChanged(
-            sharedPreferences: SharedPreferences?,
-            key: String?
-        ) {
-            when (key) {
-                PreferKey.webService -> {
-                    if (requireContext().getPrefBoolean("webService")) {
-                        WebService.start(requireContext())
-                    } else {
-                        WebService.stop(requireContext())
-                    }
-                }
-            }
-        }
-
-        override fun onPreferenceTreeClick(preference: Preference): Boolean {
-            when (preference.key) {
-                "bookSourceManage" -> startActivity<BookSourceActivity>()
-                "replaceManage" -> startActivity<ReplaceRuleActivity>()
-                "dictRuleManage" -> startActivity<DictRuleActivity>()
-                "txtTocRuleManage" -> startActivity<TxtTocRuleActivity>()
-                "bookmark" -> startActivity<AllBookmarkActivity>()
-                "setting" -> startActivity<ConfigActivity> {
-                    putExtra("configTag", ConfigTag.OTHER_CONFIG)
-                }
-
-                "web_dav_setting" -> startActivity<ConfigActivity> {
-                    putExtra("configTag", ConfigTag.BACKUP_CONFIG)
-                }
-
-                "theme_setting" -> startActivity<ConfigActivity> {
-                    putExtra("configTag", ConfigTag.THEME_CONFIG)
-                }
-
-                "fileManage" -> startActivity<FileManageActivity>()
-                "readRecord" -> startActivity<ReadRecordActivity>()
-                "glassDemo" -> startActivity<GlassDemoActivity>()
-                "appVersion" -> {
-                    // 显示版本详情
-                    try {
-                        val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
-                        val versionName = packageInfo.versionName
-                        toastOnUi("当前版本: $versionName")
-                    } catch (e: Exception) {
-                        toastOnUi("获取版本信息失败")
-                    }
-                }
-                "exit" -> activity?.finish()
-            }
-            return super.onPreferenceTreeClick(preference)
-        }
-
-
     }
 }

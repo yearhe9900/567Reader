@@ -53,7 +53,7 @@ import java.time.format.DateTimeFormatter
  * 阅读界面
  */
 abstract class BaseReadBookActivity :
-    VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>(imageBg = false) {
+    VMBaseActivity<ActivityBookReadBinding, ReadBookViewModel>() {
 
     override val binding by viewBinding(ActivityBookReadBinding::inflate)
     override val viewModel by viewModels<ReadBookViewModel>()

@@ -17,10 +17,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 import com.qreader.reader.R
 import com.qreader.reader.constant.AppConst
-import com.qreader.reader.constant.AppLog
 import com.qreader.reader.constant.Theme
 import com.qreader.reader.help.config.AppConfig
-import com.qreader.reader.help.config.ThemeConfig
 import com.qreader.reader.lib.theme.ThemeStore
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
@@ -35,15 +33,12 @@ import com.qreader.reader.utils.hideSoftInput
 import com.qreader.reader.utils.setLightStatusBar
 import com.qreader.reader.utils.setNavigationBarColorAuto
 import com.qreader.reader.utils.setStatusBarColorAuto
-import com.qreader.reader.utils.toastOnUi
-import com.qreader.reader.utils.windowSize
 
 abstract class BaseActivity<VB : ViewBinding>(
     val fullScreen: Boolean = true,
     private val theme: Theme = Theme.Auto,
     private val toolBarTheme: Theme = Theme.Auto,
     private val transparent: Boolean = false,
-    private val imageBg: Boolean = true,
     private val showOpenMenuIcon: Boolean = true
 ) : AppCompatActivity() {
 
@@ -82,7 +77,6 @@ abstract class BaseActivity<VB : ViewBinding>(
         super.onCreate(savedInstanceState)
         setupSystemBar()
         setContentView(binding.root)
-        upBackgroundImage()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             findViewById<TitleBar>(R.id.title_bar)
                 ?.onMultiWindowModeChanged(isInMultiWindowMode, fullScreen)
@@ -154,20 +148,6 @@ abstract class BaseActivity<VB : ViewBinding>(
                     setTheme(R.style.AppTheme_Dark)
                 }
                window.decorView.applyBackgroundTint(backgroundColor)
-            }
-        }
-    }
-
-    open fun upBackgroundImage() {
-        if (imageBg) {
-            try {
-                ThemeConfig.getBgImage(this, windowManager.windowSize)?.let { drawable ->
-                   window.decorView.background = drawable
-                }
-            } catch (_: OutOfMemoryError) {
-                toastOnUi("背景图片太大,内存溢出")
-            } catch (e: Exception) {
-                AppLog.put("加载背景出错\n${e.localizedMessage}", e)
             }
         }
     }

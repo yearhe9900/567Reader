@@ -2,8 +2,6 @@ package com.qreader.reader.help.config
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.Drawable
-import android.util.DisplayMetrics
 import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.graphics.toColorInt
@@ -15,34 +13,17 @@ import com.qreader.reader.constant.Theme
 import com.qreader.reader.help.DefaultData
 import com.qreader.reader.lib.theme.ThemeStore
 import com.qreader.reader.model.BookCover
-import com.qreader.reader.utils.BitmapUtils
-import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.FileUtils
 import com.qreader.reader.utils.GSON
-import com.qreader.reader.utils.externalFiles
 import com.qreader.reader.utils.fromJsonArray
 import com.qreader.reader.utils.fromJsonObject
 import com.qreader.reader.utils.getCompatColor
-import com.qreader.reader.utils.getFile
-import com.qreader.reader.utils.getPrefInt
 import com.qreader.reader.utils.getPrefString
 import com.qreader.reader.utils.hexString
 import com.qreader.reader.utils.postEvent
 import com.qreader.reader.utils.printOnDebug
-import com.qreader.reader.utils.putPrefInt
-import com.qreader.reader.utils.putPrefString
-import com.qreader.reader.utils.stackBlur
 import splitties.init.appCtx
 import java.io.File
-import androidx.core.graphics.drawable.toDrawable
-import com.qreader.reader.help.coroutine.Coroutine
-import com.qreader.reader.help.http.newCallResponse
-import com.qreader.reader.help.http.okHttpClient
-import com.qreader.reader.utils.MD5Utils
-import com.qreader.reader.utils.getPrefBoolean
-import com.qreader.reader.utils.putPrefBoolean
-import com.qreader.reader.utils.toastOnUi
-import java.io.FileOutputStream
 
 @Keep
 object ThemeConfig {
@@ -53,8 +34,6 @@ object ThemeConfig {
         val cList = getConfigs() ?: DefaultData.themeConfigs
         ArrayList(cList)
     }
-
-    private var needClearImg = true
 
     fun getTheme() = when {
         AppConfig.isEInkMode -> Theme.EInk
@@ -86,56 +65,6 @@ object ThemeConfig {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         AppCompatDelegate.setDefaultNightMode(targetMode)
-    }
-
-    /**
-     * 获取链接获取图片文件名
-     */
-    private fun getUrlToFile(url: String): String {
-        val suffix = when {
-            url.contains(".9.png", ignoreCase = true) -> ".9.png"
-            url.contains(".png", ignoreCase = true) -> ".png"
-            url.contains(".gif", ignoreCase = true) -> ".gif"
-            url.contains("webp", ignoreCase = true) -> ".webp"
-            else -> ".jpg"
-        }
-        return MD5Utils.md5Encode16(url) + suffix
-    }
-
-    fun getBgImage(context: Context, metrics: DisplayMetrics): Drawable? {
-        val themeMode = getTheme()
-        val preferenceKey = when (themeMode) {
-            Theme.Light -> PreferKey.bgImage
-            Theme.Dark -> PreferKey.bgImageN
-            else -> return  null
-        }
-        var path = context.getPrefString(preferenceKey)
-        if (path.isNullOrBlank()) return null
-        if (path.startsWith("http")) {
-            val name = getUrlToFile(path)
-            val fileRoot = context.externalFiles
-            val filePath = FileUtils.getPath(fileRoot, preferenceKey, name)
-            if (!FileUtils.exist(filePath)) {
-                appCtx.toastOnUi("未缓存在线背景图\n请重新应用主题")
-                return null
-            }
-            path = filePath
-        }
-        if (path.endsWith(".9.png")) {
-            val bgDrawable = BitmapUtils.decodeNinePatchDrawable(path)
-            return bgDrawable
-        }
-        val bgImgBlu = when (themeMode) {
-            Theme.Light -> context.getPrefInt(PreferKey.bgImageBlurring, 0)
-            Theme.Dark -> context.getPrefInt(PreferKey.bgImageNBlurring, 0)
-            else -> 0
-        }
-        val bgImage = BitmapUtils
-            .decodeBitmap(path, metrics.widthPixels, metrics.heightPixels)
-        if (bgImgBlu == 0) {
-            return bgImage?.toDrawable(context.resources)
-        }
-        return bgImage?.stackBlur(bgImgBlu)?.toDrawable(context.resources)
     }
 
     fun upConfig() {
@@ -227,72 +156,7 @@ object ThemeConfig {
 
     fun applyConfig(context: Context, config: Config) {
         try {
-            if (needClearImg) {
-                needClearImg = false
-                clearBg(context)
-            }
-            val primary = config.primaryColor.toColorInt()
-            val accent = config.accentColor.toColorInt()
-            val background = config.backgroundColor.toColorInt()
-            val bBackground = config.bottomBackground.toColorInt()
-            val isNightTheme = config.isNightTheme
-            val transparentNavBar = config.transparentNavBar
-            val backgroundPath = config.backgroundImgPath
-            if (backgroundPath != null && backgroundPath.startsWith("http")) {
-                val fileRoot = context.externalFiles
-                val preferenceKey = if (isNightTheme) {
-                    PreferKey.bgImageN
-                } else {
-                    PreferKey.bgImage
-                }
-                val name = getUrlToFile(backgroundPath)
-                val fileFold = File(fileRoot, preferenceKey)
-                if (!fileFold.exists()) {
-                    fileFold.mkdirs()
-                }
-                val fileImg = File(fileFold, name)
-                if (!fileImg.exists()) {
-                    appCtx.toastOnUi("下载背景图片中...")
-                    Coroutine.async {
-                        kotlin.runCatching {
-                            val res = okHttpClient.newCallResponse(0) {
-                                url(backgroundPath)
-                            }
-                            res.body.byteStream().use { inputStream ->
-                                FileOutputStream(fileImg).use { outputStream ->
-                                    inputStream.copyTo(outputStream)
-                                }
-                            }
-                        }.onSuccess {
-                            appCtx.toastOnUi("背景图下载成功\n请重新应用主题")
-                        }.onFailure {
-                            appCtx.toastOnUi(it.localizedMessage)
-                        }
-                    }
-                    return
-                }
-            }
-            val backgroundBlur = config.backgroundImgBlur
-            if (isNightTheme) {
-                context.putPrefString(PreferKey.dNThemeName, config.themeName)
-                context.putPrefInt(PreferKey.cNPrimary, primary)
-                context.putPrefInt(PreferKey.cNAccent, accent)
-                context.putPrefInt(PreferKey.cNBackground, background)
-                context.putPrefInt(PreferKey.cNBBackground, bBackground)
-                context.putPrefBoolean(PreferKey.tNavBarN, transparentNavBar)
-                context.putPrefString(PreferKey.bgImageN, backgroundPath)
-                context.putPrefInt(PreferKey.bgImageNBlurring, backgroundBlur)
-            } else {
-                context.putPrefString(PreferKey.dThemeName, config.themeName)
-                context.putPrefInt(PreferKey.cPrimary, primary)
-                context.putPrefInt(PreferKey.cAccent, accent)
-                context.putPrefInt(PreferKey.cBackground, background)
-                context.putPrefInt(PreferKey.cBBackground, bBackground)
-                context.putPrefBoolean(PreferKey.tNavBar, transparentNavBar)
-                context.putPrefString(PreferKey.bgImage, backgroundPath)
-                context.putPrefInt(PreferKey.bgImageBlurring, backgroundBlur)
-            }
-            AppConfig.isNightTheme = isNightTheme
+            AppConfig.isNightTheme = config.isNightTheme
             applyDayNight(context)
         } catch (e: Exception) {
             AppLog.put("设置主题出错\n$e", e, true)
@@ -307,92 +171,57 @@ object ThemeConfig {
             context.getPrefString(PreferKey.dThemeName) ?: ""
         }
         return if (isNight) {
-            getNightTheme(context, name)
+            getNightTheme(name)
         } else {
-            getDayTheme(context, name)
+            getDayTheme(name)
         }
     }
 
-    private fun getDayTheme(context: Context, name: String): Config {
-        val primary =
-            context.getPrefInt(PreferKey.cPrimary, context.getCompatColor(R.color.md_brown_500))
-        val accent =
-            context.getPrefInt(PreferKey.cAccent, context.getCompatColor(R.color.md_red_600))
-        val background =
-            context.getPrefInt(PreferKey.cBackground, context.getCompatColor(R.color.md_grey_100))
-        val bBackground =
-            context.getPrefInt(PreferKey.cBBackground, context.getCompatColor(R.color.md_grey_200))
-        val transparentNavBar =
-            context.getPrefBoolean(PreferKey.tNavBar, false)
-        val bgImgPath =
-            context.getPrefString(PreferKey.bgImage)
-        val bgImgBlur =
-            context.getPrefInt(PreferKey.bgImageBlurring, 0)
-
+    private fun getDayTheme(name: String): Config {
         return Config(
             themeName = name,
             isNightTheme = false,
-            primaryColor = "#${primary.hexString}",
-            accentColor = "#${accent.hexString}",
-            backgroundColor = "#${background.hexString}",
-            bottomBackground = "#${bBackground.hexString}",
-            transparentNavBar = transparentNavBar,
-            backgroundImgPath = bgImgPath,
-            backgroundImgBlur = bgImgBlur
+            primaryColor = "#${appCtx.getCompatColor(R.color.md_brown_500).hexString}",
+            accentColor = "#${appCtx.getCompatColor(R.color.md_red_600).hexString}",
+            backgroundColor = "#${appCtx.getCompatColor(R.color.md_grey_100).hexString}",
+            bottomBackground = "#${appCtx.getCompatColor(R.color.md_grey_200).hexString}",
+            transparentNavBar = false,
+            backgroundImgPath = null,
+            backgroundImgBlur = 0
         )
     }
 
     fun saveDayTheme(context: Context, name: String) {
-        val config = getDayTheme(context, name)
+        val config = getDayTheme(name)
         addConfig(config)
     }
 
-    private fun getNightTheme(context: Context, name: String): Config {
-        val primary =
-            context.getPrefInt(
-                PreferKey.cNPrimary,
-                context.getCompatColor(R.color.md_blue_grey_600)
-            )
-        val accent =
-            context.getPrefInt(
-                PreferKey.cNAccent,
-                context.getCompatColor(R.color.md_deep_orange_800)
-            )
-        val background =
-            context.getPrefInt(PreferKey.cNBackground, context.getCompatColor(R.color.md_grey_900))
-        val bBackground =
-            context.getPrefInt(PreferKey.cNBBackground, context.getCompatColor(R.color.md_grey_850))
-        val transparentNavBar =
-            context.getPrefBoolean(PreferKey.tNavBarN, false)
-        val bgImgPath =
-            context.getPrefString(PreferKey.bgImageN)
-        val bgImgBlur =
-            context.getPrefInt(PreferKey.bgImageNBlurring, 0)
+    private fun getNightTheme(name: String): Config {
         return Config(
             themeName = name,
             isNightTheme = true,
-            primaryColor = "#${primary.hexString}",
-            accentColor = "#${accent.hexString}",
-            backgroundColor = "#${background.hexString}",
-            bottomBackground = "#${bBackground.hexString}",
-            transparentNavBar = transparentNavBar,
-            backgroundImgPath = bgImgPath,
-            backgroundImgBlur = bgImgBlur
+            primaryColor = "#${appCtx.getCompatColor(R.color.md_blue_grey_600).hexString}",
+            accentColor = "#${appCtx.getCompatColor(R.color.md_deep_orange_800).hexString}",
+            backgroundColor = "#${appCtx.getCompatColor(R.color.md_grey_900).hexString}",
+            bottomBackground = "#${appCtx.getCompatColor(R.color.md_grey_850).hexString}",
+            transparentNavBar = false,
+            backgroundImgPath = null,
+            backgroundImgBlur = 0
         )
     }
 
     fun saveNightTheme(context: Context, name: String) {
-        val config = getNightTheme(context, name)
+        val config = getNightTheme(name)
         addConfig(config)
     }
 
     /**
-     * 更新主题
+     * 更新主题 — 固定使用默认配色
      */
-    fun applyTheme(context: Context) = with(context) {
+    fun applyTheme(context: Context) {
         when {
             AppConfig.isEInkMode -> {
-                ThemeStore.editTheme(this)
+                ThemeStore.editTheme(context)
                     .primaryColor(Color.WHITE)
                     .accentColor(Color.BLACK)
                     .backgroundColor(Color.WHITE)
@@ -402,84 +231,23 @@ object ThemeConfig {
             }
 
             AppConfig.isNightTheme -> {
-                val primary =
-                    getPrefInt(PreferKey.cNPrimary, getCompatColor(R.color.md_blue_grey_600))
-                val accent =
-                    getPrefInt(PreferKey.cNAccent, getCompatColor(R.color.md_deep_orange_800))
-                var background =
-                    getPrefInt(PreferKey.cNBackground, getCompatColor(R.color.md_grey_900))
-                if (ColorUtils.isColorLight(background)) {
-                    background = getCompatColor(R.color.md_grey_900)
-                    putPrefInt(PreferKey.cNBackground, background)
-                }
-                val bBackground =
-                    getPrefInt(PreferKey.cNBBackground, getCompatColor(R.color.md_grey_850))
-                val transparentNavBar =
-                    getPrefBoolean(PreferKey.tNavBarN, false)
-                ThemeStore.editTheme(this)
-                    .primaryColor(ColorUtils.withAlpha(primary, 1f))
-                    .accentColor(ColorUtils.withAlpha(accent, 1f))
-                    .backgroundColor(ColorUtils.withAlpha(background, 1f))
-                    .bottomBackground(ColorUtils.withAlpha(bBackground, 1f))
-                    .transparentNavBar(transparentNavBar)
+                ThemeStore.editTheme(context)
+                    .primaryColor(context.getCompatColor(R.color.md_blue_grey_600))
+                    .accentColor(context.getCompatColor(R.color.md_deep_orange_800))
+                    .backgroundColor(context.getCompatColor(R.color.md_grey_900))
+                    .bottomBackground(context.getCompatColor(R.color.md_grey_850))
+                    .transparentNavBar(false)
                     .apply()
             }
 
             else -> {
-                val primary =
-                    getPrefInt(PreferKey.cPrimary, getCompatColor(R.color.md_brown_500))
-                val accent =
-                    getPrefInt(PreferKey.cAccent, getCompatColor(R.color.md_red_600))
-                var background =
-                    getPrefInt(PreferKey.cBackground, getCompatColor(R.color.md_grey_100))
-                if (!ColorUtils.isColorLight(background)) {
-                    background = getCompatColor(R.color.md_grey_100)
-                    putPrefInt(PreferKey.cBackground, background)
-                }
-                val bBackground =
-                    getPrefInt(PreferKey.cBBackground, getCompatColor(R.color.md_grey_200))
-                val transparentNavBar =
-                    getPrefBoolean(PreferKey.tNavBar, false)
-                ThemeStore.editTheme(this)
-                    .primaryColor(ColorUtils.withAlpha(primary, 1f))
-                    .accentColor(ColorUtils.withAlpha(accent, 1f))
-                    .backgroundColor(ColorUtils.withAlpha(background, 1f))
-                    .bottomBackground(ColorUtils.withAlpha(bBackground, 1f))
-                    .transparentNavBar(transparentNavBar)
+                ThemeStore.editTheme(context)
+                    .primaryColor(context.getCompatColor(R.color.md_brown_500))
+                    .accentColor(context.getCompatColor(R.color.md_red_600))
+                    .backgroundColor(context.getCompatColor(R.color.md_grey_100))
+                    .bottomBackground(context.getCompatColor(R.color.md_grey_200))
+                    .transparentNavBar(false)
                     .apply()
-            }
-        }
-    }
-
-    fun clearBg(context: Context) {
-        val (nightConfigs, dayConfigs) = configList.partition { it.isNightTheme }
-        val fileRoot = context.externalFiles
-        val nightBackgroundImgPaths = nightConfigs.mapNotNull {
-            val path = it.backgroundImgPath ?: return@mapNotNull null
-            if (path.startsWith("http")) {
-                val name = getUrlToFile(path)
-                FileUtils.getPath(fileRoot, PreferKey.bgImageN, name)
-            } else {
-                path
-            }
-        }
-        val dayBackgroundImgPaths = dayConfigs.mapNotNull {
-            val path = it.backgroundImgPath ?: return@mapNotNull null
-            if (path.startsWith("http")) {
-                val name = getUrlToFile(path)
-                FileUtils.getPath(fileRoot, PreferKey.bgImage, name)
-            } else {
-                path
-            }
-        }
-        appCtx.externalFiles.getFile(PreferKey.bgImage).listFiles()?.forEach {
-            if (!dayBackgroundImgPaths.contains(it.absolutePath)) {
-                it.delete()
-            }
-        }
-        appCtx.externalFiles.getFile(PreferKey.bgImageN).listFiles()?.forEach {
-            if (!nightBackgroundImgPaths.contains(it.absolutePath)) {
-                it.delete()
             }
         }
     }
