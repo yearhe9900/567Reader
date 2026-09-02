@@ -11,7 +11,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +54,7 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.R
+import com.qreader.reader.help.config.AppConfig
 
 /**
  * Liquid Glass 风格的确认对话框（官方 drawBackdrop 实现，居中显示）
@@ -118,14 +118,12 @@ class GlassAlertDialog : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        // 让弹框窗口的系统栏（状态栏 / 手势栏）图标配色与底层页面主题一致，
-        // 避免弹框出现时系统按 Theme_Translucent_NoTitleBar 的默认暗色窗口
-        // 把图标翻成白色、弹框消失又翻回，造成"变色"观感。
-        val isLight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
+        // 玻璃态dialog不受主题模式影响，固定使用浅色主题风格（深色图标）
+        // 墨水屏模式下也保持一致
         dialog?.window?.let { window ->
             WindowCompat.getInsetsController(window, window.decorView).apply {
-                isAppearanceLightStatusBars = isLight
-                isAppearanceLightNavigationBars = isLight
+                isAppearanceLightStatusBars = true
+                isAppearanceLightNavigationBars = true
             }
         }
     }
@@ -140,16 +138,12 @@ class GlassAlertDialog : DialogFragment() {
         val backdrop = rememberLayerBackdrop()
         var checkBoxState by remember { mutableStateOf(checkBoxChecked) }
 
-        val isLightTheme = !isSystemInDarkTheme()
-        val contentColor = if (isLightTheme) Color.Black else Color.White
-        val accentColor =
-            if (isLightTheme) Color(0xFF0088FF) else Color(0xFF0091FF)
-        val containerColor =
-            if (isLightTheme) Color(0xFFFAFAFA).copy(0.6f)
-            else Color(0xFF121212).copy(0.4f)
-        val dimColor =
-            if (isLightTheme) Color(0xFF29293A).copy(0.23f)
-            else Color(0xFF121212).copy(0.56f)
+        // 玻璃态dialog不受主题模式影响，使用固定的浅色主题颜色（墨水屏模式除外）
+        val isEInkMode = AppConfig.isEInkMode
+        val contentColor = Color.Black
+        val accentColor = Color(0xFF0088FF)
+        val containerColor = if (isEInkMode) Color.White else Color(0xFFFAFAFA).copy(0.6f)
+        val dimColor = if (isEInkMode) Color.Transparent else Color(0xFF29293A).copy(0.23f)
 
         // 背景采样源：原页面截图优先，回退到 wallpaper_light
         val backdropPainter: Painter = if (backdropBitmap != null) {
@@ -204,12 +198,14 @@ class GlassAlertDialog : DialogFragment() {
                             backdrop = backdrop,
                             shape = { RoundedRectangle(48f.dp) },
                             effects = {
-                                colorControls(
-                                    brightness = if (isLightTheme) 0.2f else 0f,
-                                    saturation = 1.5f
-                                )
-                                blur(if (isLightTheme) 16f.dp.toPx() else 8f.dp.toPx())
-                                lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                                if (!isEInkMode) {
+                                    colorControls(
+                                        brightness = 0.2f,
+                                        saturation = 1.5f
+                                    )
+                                    blur(16f.dp.toPx())
+                                    lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                                }
                             },
                             highlight = { Highlight.Plain },
                             onDrawSurface = { drawRect(containerColor) }
@@ -251,17 +247,20 @@ class GlassAlertDialog : DialogFragment() {
                                         backdrop = backdrop,
                                         shape = { RoundedRectangle(6f.dp) },
                                         effects = {
-                                            colorControls(
-                                                brightness = if (isLightTheme) 0.2f else 0f,
-                                                saturation = 1.5f
-                                            )
-                                            blur(8f.dp.toPx())
-                                            lens(16f.dp.toPx(), 24f.dp.toPx(), depthEffect = true)
+                                            if (!isEInkMode) {
+                                                colorControls(
+                                                    brightness = 0.2f,
+                                                    saturation = 1.5f
+                                                )
+                                                blur(8f.dp.toPx())
+                                                lens(16f.dp.toPx(), 24f.dp.toPx(), depthEffect = true)
+                                            }
                                         },
                                         highlight = { Highlight.Plain },
                                         onDrawSurface = {
                                             drawRect(
                                                 if (checkBoxState) accentColor
+                                                else if (isEInkMode) containerColor
                                                 else containerColor.copy(0.3f)
                                             )
                                         }

@@ -127,6 +127,10 @@ fun LiquidBottomTabs(
                     val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
                     currentIndex = targetIndex
                     animateToValue(targetIndex.toFloat())
+                    // 用户主动拖动导航栏松手 → 回调切页。
+                    // 这是 onTabSelected 唯一应由「导航栏自身交互」发出的地方，
+                    // 切忌在下面的 currentIndex flow 里回调（会被 pager 滑动反向触发，形成回环）。
+                    onTabSelected(targetIndex)
                     animationScope.launch {
                         offsetAnimation.animateTo(
                             0f,
@@ -145,6 +149,8 @@ fun LiquidBottomTabs(
                 }
             )
         }
+
+
         LaunchedEffect(selectedTabIndex) {
             snapshotFlow { selectedTabIndex() }
                 .collectLatest { index ->
@@ -155,8 +161,14 @@ fun LiquidBottomTabs(
             snapshotFlow { currentIndex }
                 .drop(1)
                 .collectLatest { index ->
+                    // 只驱动滑块动画，**不要**在这里回调 onTabSelected。
+                    //
+                    // currentIndex 有两个来源：① 上面 selectedTabIndex 的外部同步（pager 滑动/切页）
+                    // ② onDragStopped 里用户拖动导航栏。若在此处回调，来源①会让
+                    // 「pager 滑动 → selectedTab 变化 → 程序化 animateScrollToPage」形成回环，
+                    // 在用户手势与 fling 惯性滚动中途抢走滚动控制权，表现为滑动的「段落感」。
+                    // 切页回调只保留在 onDragStopped（拖动导航栏）与 tab 点击两条真实用户交互路径上。
                     dampedDragAnimation.animateToValue(index.toFloat())
-                    onTabSelected(index)
                 }
         }
 

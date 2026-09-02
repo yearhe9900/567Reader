@@ -4,20 +4,16 @@ package com.qreader.reader.ui.main
 
 import android.os.Bundle
 import android.text.format.DateUtils
-import android.view.ViewGroup
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.postDelayed
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.lifecycle.lifecycleScope
-import androidx.viewpager.widget.ViewPager
 import com.qreader.reader.BuildConfig
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
@@ -30,25 +26,49 @@ import com.qreader.reader.help.LifecycleHelp
 import com.qreader.reader.help.book.BookHelp
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.LocalConfig
+import com.qreader.reader.help.config.ThemeConfig
 import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.help.storage.Backup
 import com.qreader.reader.lib.dialogs.alert
-import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.service.BaseReadAloudService
+import com.qreader.reader.service.WebService
 import com.qreader.reader.ui.about.CrashLogsDialog
 import com.qreader.reader.ui.association.ImportBookSourceDialog
+import com.qreader.reader.ui.association.ImportDictRuleDialog
+import com.qreader.reader.ui.association.ImportHttpTtsDialog
 import com.qreader.reader.ui.association.ImportReplaceRuleDialog
 import com.qreader.reader.ui.association.ImportRssSourceDialog
-import com.qreader.reader.ui.main.bookshelf.BaseBookshelfFragment
-import com.qreader.reader.ui.main.bookshelf.style1.BookshelfFragment1
-import com.qreader.reader.ui.main.bookshelf.style2.BookshelfFragment2
-import com.qreader.reader.ui.main.explore.ExploreFragment
-import com.qreader.reader.ui.main.my.MyFragment
+import com.qreader.reader.ui.association.ImportTxtTocRuleDialog
+import com.qreader.reader.ui.book.bookmark.AllBookmarkActivity
+import com.qreader.reader.ui.book.cache.CacheActivity
+import com.qreader.reader.ui.book.info.BookInfoActivity
+import com.qreader.reader.ui.book.search.SearchActivity
+import com.qreader.reader.ui.book.source.edit.BookSourceEditActivity
+import com.qreader.reader.ui.book.source.manage.BookSourceActivity
+import com.qreader.reader.ui.book.toc.rule.TxtTocRuleActivity
+import com.qreader.reader.ui.compose.GlassDemoActivity
+import com.qreader.reader.ui.compose.NavBarGlassSettingsActivity
+import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
+import com.qreader.reader.ui.config.ConfigActivity
+import com.qreader.reader.ui.config.ConfigTag
+import com.qreader.reader.ui.dict.rule.DictRuleActivity
+import com.qreader.reader.ui.file.FileManageActivity
+import com.qreader.reader.ui.book.explore.ExploreShowActivity
+import com.qreader.reader.ui.book.group.GroupEditDialog
+import com.qreader.reader.ui.about.ReadRecordActivity
+import com.qreader.reader.ui.replace.ReplaceRuleActivity
 import com.qreader.reader.ui.widget.dialog.TextDialog
-import com.qreader.reader.utils.isCreated
+import com.qreader.reader.utils.clearClip
+import com.qreader.reader.utils.getClipText
+import com.qreader.reader.utils.getPrefString
 import com.qreader.reader.utils.observeEvent
-import com.qreader.reader.utils.setEdgeEffectColor
+import com.qreader.reader.utils.observeEventSticky
+import com.qreader.reader.utils.putPrefBoolean
+import com.qreader.reader.utils.putPrefString
 import com.qreader.reader.utils.showDialogFragment
+import com.qreader.reader.utils.showHelp
+import com.qreader.reader.utils.startActivity
+import com.qreader.reader.utils.startActivityForBook
 import com.qreader.reader.utils.toastOnUi
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers.IO
@@ -56,20 +76,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
-import com.qreader.reader.ui.association.ImportDictRuleDialog
-import com.qreader.reader.ui.association.ImportHttpTtsDialog
-import com.qreader.reader.ui.association.ImportTxtTocRuleDialog
-import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
 import com.qreader.reader.utils.StringUtils
-import com.qreader.reader.utils.clearClip
-import com.qreader.reader.utils.getClipText
 
 /**
  * 主界面
  *
- * 整页迁移 Compose：Activity 保留 [VMBaseActivity] 继承（主题/系统栏/语言/返回键复用），
- * UI 层改为 [MainScreen]（Compose），内容区 ViewPager + 三个 Fragment 暂保留 View 体系，
- * 底部导航栏替换为 LiquidBottomTabs 玻璃态胶囊栏。
+ * 整页 Compose 迁移：Activity 保留 [VMBaseActivity] 继承（主题/系统栏/语言/返回键复用），
+ * UI 层改为 [MainScreen]（Compose + HorizontalPager），三个页面均为 Compose 函数，
+ * 底部导航栏为 LiquidBottomTabs 玻璃态胶囊栏。
  */
 @Suppress("PrivatePropertyName")
 class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
@@ -77,45 +91,42 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override val binding by viewBinding(ActivityMainBinding::inflate)
     override val viewModel by viewModels<MainViewModel>()
-    private val idBookshelf = 0
-    private val idBookshelf1 = 11
-    private val idBookshelf2 = 12
-    private val idExplore = 1
-    private val idMy = 2
     private var exitTime: Long = 0
-    private var bookshelfReselected: Long = 0
-    private var exploreReselected: Long = 0
-    private var pagePosition = 0
-    private val fragmentMap = hashMapOf<Int, Fragment>()
-    private var bottomMenuCount = 3
     private val EXIT_INTERVAL = 2000L
-    private val realPositions = arrayOf(idBookshelf, idExplore, idMy)
-    private val adapter by lazy {
-        TabFragmentPageAdapter(supportFragmentManager)
-    }
 
-    // Compose 状态（由 MainScreen 消费，ViewPager 联动驱动）
+    // ── Compose 状态 ──
     private var selectedTab by mutableIntStateOf(0)
     private var showDiscovery by mutableStateOf(false)
     private var badgeCount by mutableIntStateOf(0)
     private var glassConfig by mutableStateOf(NavBarGlassConfig())
-    private lateinit var viewPager: ViewPager
+
+    // ── 设置页状态（原 MyFragment）──
+    private var webServiceChecked by mutableStateOf(WebService.isRun)
+    private var webServiceSummary by mutableStateOf("")
+    private var themeModeIndex by mutableStateOf(0)
+
+    // ── 书架返回键回调（由 BookshelfPage 注册）──
+    private var bookshelfBack: (() -> Boolean)? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         // 延迟到 Activity attach 之后再读 SharedPreferences（字段初始化阶段 mBase 尚为 null 会 NPE）
         glassConfig = NavBarGlassConfig.load(this)
+        themeModeIndex = getPrefString(PreferKey.themeMode, "0")?.toIntOrNull() ?: 0
+        webServiceSummary = if (WebService.isRun) {
+            WebService.hostAddress
+        } else {
+            getString(R.string.web_service_desc)
+        }
         upBottomMenu()
-        initView()
         upHomePage()
+        initView()
         onBackPressedDispatcher.addCallback(this) {
-            if (pagePosition != 0) {
-                viewPager.currentItem = 0
+            if (selectedTab != 0) {
+                selectedTab = 0
                 return@addCallback
             }
-            (fragmentMap[getFragmentId(0)] as? BookshelfFragment2)?.let {
-                if (it.back()) {
-                    return@addCallback
-                }
+            if (bookshelfBack?.invoke() == true) {
+                return@addCallback
             }
             if (System.currentTimeMillis() - exitTime > EXIT_INTERVAL) {
                 toastOnUi(R.string.double_click_exit)
@@ -143,81 +154,223 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             //设置回调
             viewModel.setActivityCallback(this@MainActivity)
             //自动更新书源
-            viewPager.postDelayed(1000) {
+            binding.root.postDelayed(1000) {
                 viewModel.ruleSubsUp()
             }
             readShibboleth(1500)
             //自动更新书籍
             val isAutoRefreshedBook = savedInstanceState?.getBoolean("isAutoRefreshedBook") ?: false
             if (AppConfig.autoRefreshBook && !isAutoRefreshedBook) {
-                viewPager.postDelayed(2000) {
+                binding.root.postDelayed(2000) {
                     viewModel.upAllBookToc()
                 }
             }
-            viewPager.postDelayed(3000) {
+            binding.root.postDelayed(3000) {
                 viewModel.postLoad()
             }
         }
     }
 
     private fun initView() {
-        viewPager = ViewPager(this).apply {
-            id = R.id.view_pager_main
-            setEdgeEffectColor(primaryColor)
-            offscreenPageLimit = 3
-            adapter = this@MainActivity.adapter
-            addOnPageChangeListener(PageChangeCallback())
-        }
         binding.composeView.setViewCompositionStrategy(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
         )
         binding.composeView.setContent {
+            var themeDialogOpen by remember { mutableStateOf(false) }
             MainScreen(
-                viewPager = viewPager,
                 selectedTabIndex = { selectedTab },
-                onTabSelected = { position -> selectTab(position) },
-                onTabReselected = { position -> reselectTab(position) },
+                onTabSelected = { position -> selectedTab = position },
                 badgeCount = badgeCount,
                 showDiscovery = showDiscovery,
                 isEInkMode = AppConfig.isEInkMode,
                 glassConfig = glassConfig,
+                bookshelfPage = { registerGotoTop, registerBack ->
+                    BookshelfPage(
+                        registerGotoTop = registerGotoTop,
+                        registerBack = registerBack,
+                        onBookClick = { startActivityForBook(it) },
+                        onBookLongClick = {
+                            startActivity<BookInfoActivity> {
+                                putExtra("name", it.name)
+                                putExtra("author", it.author)
+                            }
+                        },
+                        onGroupLongClick = { showDialogFragment(GroupEditDialog(it)) },
+                        onRefresh = { books, onlyUpdateRead ->
+                            viewModel.upToc(books, onlyUpdateRead)
+                        },
+                        isUpdate = { viewModel.isUpdate(it) },
+                    )
+                },
+                explorePage = { registerCompress ->
+                    ExplorePage(
+                        registerCompress = registerCompress,
+                        onOpenExplore = { sourceUrl, title, exploreUrl ->
+                            if (exploreUrl.isNullOrBlank()) return@ExplorePage
+                            startActivity<ExploreShowActivity> {
+                                putExtra("exploreName", title)
+                                putExtra("sourceUrl", sourceUrl)
+                                putExtra("exploreUrl", exploreUrl)
+                            }
+                        },
+                        onEditSource = {
+                            startActivity<BookSourceEditActivity> {
+                                putExtra("sourceUrl", it)
+                            }
+                        },
+                        onSearchBook = { SearchActivity.start(this, it) },
+                    )
+                },
+                settingsPage = {
+                    SettingsPage(
+                        webServiceChecked = webServiceChecked,
+                        webServiceSummary = webServiceSummary,
+                        themeModeIndex = themeModeIndex,
+                        onActionClick = { handleSettingAction(it) },
+                        onWebServiceToggle = { handleWebServiceToggle(it) },
+                        onThemeModeSelected = { value -> handleThemeModeSelected(value) },
+                        themeDialogOpen = themeDialogOpen,
+                        onThemeDialogOpenChange = { themeDialogOpen = it },
+                    )
+                },
+                themeDialogOpen = themeDialogOpen,
+                onThemeDialogOpenChange = { themeDialogOpen = it },
+                registerBookshelfBack = { bookshelfBack = it },
             )
         }
     }
 
-    /**
-     * 切换 tab（对应原 onNavigationItemSelected）
-     */
-    private fun selectTab(position: Int) {
-        viewPager.setCurrentItem(position, false)
+    private fun upBottomMenu() {
+        showDiscovery = AppConfig.showDiscovery
     }
 
-    /**
-     * 重选当前 tab（对应原 onNavigationItemReselected）：书架回顶 / 发现压缩
-     */
-    private fun reselectTab(position: Int) {
-        when (getFragmentId(position)) {
-            idBookshelf1, idBookshelf2 -> {
-                if (System.currentTimeMillis() - bookshelfReselected > 300) {
-                    bookshelfReselected = System.currentTimeMillis()
-                } else {
-                    (fragmentMap[getFragmentId(0)] as? BaseBookshelfFragment)?.gotoTop()
-                }
+    private fun upHomePage() {
+        when (AppConfig.defaultHomePage) {
+            "bookshelf" -> {}
+            "explore" -> if (showDiscovery) {
+                selectedTab = 1
             }
+            "my" -> selectedTab = if (showDiscovery) 2 else 1
+        }
+    }
 
-            idExplore -> {
-                if (System.currentTimeMillis() - exploreReselected > 300) {
-                    exploreReselected = System.currentTimeMillis()
-                } else {
-                    (fragmentMap[idExplore] as? ExploreFragment)?.compressExplore()
-                }
+    // ── 设置页回调（原 MyFragment）──
+
+    private fun handleSettingAction(key: String) {
+        when (key) {
+            "bookSourceManage" -> startActivity<BookSourceActivity>()
+            "replaceManage" -> startActivity<ReplaceRuleActivity>()
+            "dictRuleManage" -> startActivity<DictRuleActivity>()
+            "txtTocRuleManage" -> startActivity<TxtTocRuleActivity>()
+            "bookmark" -> startActivity<AllBookmarkActivity>()
+            "setting" -> startActivity<ConfigActivity> {
+                putExtra("configTag", ConfigTag.OTHER_CONFIG)
+            }
+            "web_dav_setting" -> startActivity<ConfigActivity> {
+                putExtra("configTag", ConfigTag.BACKUP_CONFIG)
+            }
+            "theme_setting" -> startActivity<ConfigActivity> {
+                putExtra("configTag", ConfigTag.THEME_CONFIG)
+            }
+            "fileManage" -> startActivity<FileManageActivity>()
+            "readRecord" -> startActivity<ReadRecordActivity>()
+            "glassDemo" -> startActivity<GlassDemoActivity>()
+            "navBarGlass" -> startActivity<NavBarGlassSettingsActivity>()
+            "appVersion" -> showAppVersion()
+            "exit" -> finish()
+        }
+    }
+
+    private fun handleWebServiceToggle(checked: Boolean) {
+        putPrefBoolean(PreferKey.webService, checked)
+        if (checked) {
+            WebService.start(this)
+        } else {
+            WebService.stop(this)
+        }
+        webServiceChecked = WebService.isRun
+        webServiceSummary = if (WebService.isRun) {
+            WebService.hostAddress
+        } else {
+            getString(R.string.web_service_desc)
+        }
+    }
+
+    private fun handleThemeModeSelected(value: Int) {
+        themeModeIndex = value
+        putPrefString(PreferKey.themeMode, value.toString())
+        binding.root.post { ThemeConfig.applyDayNight(this) }
+    }
+
+    private fun showAppVersion() {
+        try {
+            val packageInfo = packageManager.getPackageInfo(packageName, 0)
+            toastOnUi("当前版本: ${packageInfo.versionName}")
+        } catch (e: Exception) {
+            toastOnUi("获取版本信息失败")
+        }
+    }
+
+    // ── 事件总线 ──
+
+    override fun observeLiveBus() {
+        viewModel.onUpBooksLiveData.observe(this) {
+            badgeCount = it ?: 0
+        }
+        observeEvent<String>(EventBus.RECREATE) {
+            recreate()
+        }
+        observeEvent<Boolean>(EventBus.NOTIFY_MAIN) {
+            upBottomMenu()
+            if (it) {
+                selectedTab = if (showDiscovery) 2 else 1
+            }
+        }
+        observeEvent<String>(PreferKey.threadCount) {
+            viewModel.upPool()
+        }
+        observeEventSticky<String>(EventBus.WEB_SERVICE) {
+            webServiceChecked = WebService.isRun
+            webServiceSummary = if (WebService.isRun) {
+                WebService.hostAddress
+            } else {
+                getString(R.string.web_service_desc)
             }
         }
     }
 
-    /**
-     * 用户隐私与协议
-     */
+    override fun onResume() {
+        super.onResume()
+        // 从设置页返回后刷新玻璃态配置，使底部导航栏即时生效
+        glassConfig = NavBarGlassConfig.load(this)
+        if (LifecycleHelp.activitySize() == 1) {
+            readShibboleth(500)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (AppConfig.autoRefreshBook) {
+            outState.putBoolean("isAutoRefreshedBook", true)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Coroutine.async {
+            BookHelp.clearInvalidCache()
+        }
+        if (!BuildConfig.DEBUG) {
+            Backup.autoBack(this)
+        }
+    }
+
+    override fun recreate() {
+        super.recreate()
+    }
+
+    // ── 隐私协议 ──
+
     private suspend fun privacyPolicy(): Boolean = suspendCancellableCoroutine sc@{ block ->
         if (LocalConfig.privacyPolicyOk) {
             block.resume(true)
@@ -236,9 +389,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         }
     }
 
-    /**
-     * 版本更新日志
-     */
+    // ── 版本更新日志 ──
+
     private suspend fun upVersion() = suspendCancellableCoroutine sc@{ block ->
         if (LocalConfig.versionCode == appInfo.versionCode) {
             block.resume(null)
@@ -277,9 +429,8 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         }
     }
 
-    /**
-     * 备份同步
-     */
+    // ── 备份同步 ──
+
     private fun backupSync() {
         if (!AppConfig.autoCheckNewBackup) {
             return
@@ -299,164 +450,26 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        if (AppConfig.autoRefreshBook) {
-            outState.putBoolean("isAutoRefreshedBook", true)
-        }
-    }
+    // ── 导入 ──
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Coroutine.async {
-            BookHelp.clearInvalidCache()
-        }
-        if (!BuildConfig.DEBUG) {
-            Backup.autoBack(this)
-        }
-    }
-
-    /**
-     * 如果重启太快fragment不会重建,这里更新一下书架的排序
-     */
-    override fun recreate() {
-        (fragmentMap[getFragmentId(0)] as? BaseBookshelfFragment)?.run {
-            upSort()
-        }
-        super.recreate()
-    }
-
-    override fun observeLiveBus() {
-        viewModel.onUpBooksLiveData.observe(this) {
-            badgeCount = it ?: 0
-        }
-        observeEvent<String>(EventBus.RECREATE) {
-            recreate()
-        }
-        observeEvent<Boolean>(EventBus.NOTIFY_MAIN) {
-            upBottomMenu()
-            if (it) {
-                viewPager.setCurrentItem(bottomMenuCount - 1, false)
-            }
-        }
-        observeEvent<String>(PreferKey.threadCount) {
-            viewModel.upPool()
-        }
-    }
-
-    private fun upBottomMenu() {
-        showDiscovery = AppConfig.showDiscovery
-        var index = 0
-        if (showDiscovery) {
-            index++
-            realPositions[index] = idExplore
-        }
-        index++
-        realPositions[index] = idMy
-        bottomMenuCount = index + 1
-        adapter.notifyDataSetChanged()
-    }
-
-    private fun upHomePage() {
-        when (AppConfig.defaultHomePage) {
-            "bookshelf" -> {}
-            "explore" -> if (AppConfig.showDiscovery) {
-                viewPager.setCurrentItem(realPositions.indexOf(idExplore), false)
-            }
-
-            "my" -> viewPager.setCurrentItem(realPositions.indexOf(idMy), false)
-        }
-    }
-
-    private fun getFragmentId(position: Int): Int {
-        val id = realPositions[position]
-        if (id == idBookshelf) {
-            return if (AppConfig.bookGroupStyle == 1) idBookshelf2 else idBookshelf1
-        }
-        return id
-    }
-
-    private inner class PageChangeCallback : ViewPager.SimpleOnPageChangeListener() {
-
-        override fun onPageSelected(position: Int) {
-            pagePosition = position
-            selectedTab = position
-        }
-
-    }
-
-    @Suppress("DEPRECATION")
-    private inner class TabFragmentPageAdapter(fm: FragmentManager) :
-        FragmentStatePagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-
-        private fun getId(position: Int): Int {
-            return getFragmentId(position)
-        }
-
-        override fun getItemPosition(any: Any): Int {
-            val position = (any as MainFragmentInterface).position
-                ?: return POSITION_NONE
-            val fragmentId = getId(position)
-            if ((fragmentId == idBookshelf1 && any is BookshelfFragment1)
-                || (fragmentId == idBookshelf2 && any is BookshelfFragment2)
-                || (fragmentId == idExplore && any is ExploreFragment)
-                || (fragmentId == idMy && any is MyFragment)
-            ) {
-                return POSITION_UNCHANGED
-            }
-            return POSITION_NONE
-        }
-
-        override fun getItem(position: Int): Fragment {
-            return when (getId(position)) {
-                idBookshelf1 -> BookshelfFragment1(position)
-                idBookshelf2 -> BookshelfFragment2(position)
-                idExplore -> ExploreFragment(position)
-                else -> MyFragment(position)
-            }
-        }
-
-        override fun getCount(): Int {
-            return bottomMenuCount
-        }
-
-        override fun instantiateItem(container: ViewGroup, position: Int): Any {
-            var fragment = super.instantiateItem(container, position) as Fragment
-            if (fragment.isCreated && getItemPosition(fragment) == POSITION_NONE) {
-                destroyItem(container, position, fragment)
-                fragment = super.instantiateItem(container, position) as Fragment
-            }
-            fragmentMap[getId(position)] = fragment
-            return fragment
-        }
-
-    }
-
-    override fun openImportUi(type:Int, source: String) {
+    override fun openImportUi(type: Int, source: String) {
         when (type) {
-            0 -> showDialogFragment(
-                ImportBookSourceDialog(source)
-            )
-            1 -> showDialogFragment(
-                ImportRssSourceDialog(source)
-            )
-            2 -> showDialogFragment(
-                ImportReplaceRuleDialog(source)
-            )
+            0 -> showDialogFragment(ImportBookSourceDialog(source))
+            1 -> showDialogFragment(ImportRssSourceDialog(source))
+            2 -> showDialogFragment(ImportReplaceRuleDialog(source))
         }
     }
 
-    /**
-     * 读取导入口令
-     */
+    // ── 读取导入口令 ──
+
     fun readShibboleth(delay: Long) {
-        viewPager.postDelayed(delay) {
+        binding.root.postDelayed(delay) {
             val text = this@MainActivity.getClipText()
             if (!text.isNullOrBlank()) {
                 if ("#L:" in text) {
                     this@MainActivity.clearClip() //清理一下防重复
                     val (url, type, customWord) = StringUtils.unShibboleth(text)
-                    when(type) {
+                    when (type) {
                         StringUtils.BOOK_SOURCE ->
                             showDialogFragment(ImportBookSourceDialog(url))
                         StringUtils.RSS_SOURCE ->
@@ -475,14 +488,4 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             }
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        // 从设置页返回后刷新玻璃态配置，使底部导航栏即时生效
-        glassConfig = NavBarGlassConfig.load(this)
-        if (LifecycleHelp.activitySize() == 1) {
-            readShibboleth(500)
-        }
-    }
-
 }

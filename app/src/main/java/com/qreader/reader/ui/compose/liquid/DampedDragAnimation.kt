@@ -63,6 +63,16 @@ class DampedDragAnimation(
     val scaleY: Float get() = scaleYAnimation.value
     val velocity: Float get() = velocityAnimation.value
 
+    /**
+     * 滑块位移动画或惯性动画是否正在运行。
+     *
+     * 动画期间 [value] 逐帧变化，会导致导航栏的三层玻璃逐帧重绘。
+     * 宿主据此在动画期间临时关闭 blur/lens/vibrancy 以保帧率。
+     * 直接读取 Animatable.isRunning（本身由 snapshot state 支持），无需额外维护标志位。
+     */
+    val isAnimating: Boolean
+        get() = valueAnimation.isRunning || velocityAnimation.isRunning
+
     val modifier: Modifier = Modifier.pointerInput(Unit) {
         inspectDragGestures(
             onDragStart = { down ->

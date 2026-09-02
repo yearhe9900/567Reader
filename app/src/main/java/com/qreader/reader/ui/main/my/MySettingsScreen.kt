@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import com.qreader.reader.lib.theme.backgroundColor
+import com.qreader.reader.utils.ColorUtils
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,13 +18,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,11 +40,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qreader.reader.R
 import com.qreader.reader.constant.PreferKey
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.shapes.Capsule
+import com.kyant.shapes.RoundedRectangle
 
 /**
  * 「我的」设置页 —— Compose 实现
@@ -48,17 +72,19 @@ import com.qreader.reader.constant.PreferKey
  * 本页为纯展示/交互层，不持有任何状态，所有数据均由上层传入，
  * 交互通过回调函数向上层通知，符合单向数据流的设计。
  *
- * 注意：「主题模式」弹框不在本页内部弹出（早期用 Compose Dialog / Popup 会导致
- * 截图与内容区坐标系不一致，出现页面下移、闪动），而是向上抛
- * [onShowThemeModeDialog]，由 MyFragment 以 [ThemeModeDialogFragment]
- * （DialogFragment，与删除图书弹框同一机制）显示。
+ * 注意：「主题模式」弹框在本页内以 Compose 覆盖层弹出（同 Compose surface，
+ * 不是独立 Window 的 DialogFragment），玻璃模糊源来自本页内容自身（页面 Column
+ * 包 `layerBackdrop`），因此玻璃采样的是真实设置页，无需截图、也不跨窗口。
+ * 蒙板与卡片均为真·毛玻璃。
  *
  * @param webServiceChecked  Web 服务开关的当前状态
  * @param webServiceSummary  Web 服务设置项的摘要文案（用于展示连接状态等说明）
  * @param themeModeIndex     当前主题模式索引（用于在设置项右侧展示当前值）
  * @param onActionClick      点击 Action 类设置项时的回调，参数为设置项 key
  * @param onWebServiceToggle Web 服务开关切换时的回调，参数为新的开关状态
- * @param onShowThemeModeDialog 点击「主题模式」条目时的回调，由上层弹出选择对话框
+ * @param onThemeModeSelected 点击「主题模式」条目选中并确认后的回调，参数为选中的模式索引
+ * @param themeDialogOpen    主题模式弹框是否打开（由上层持有，用于隐藏底部导航栏）
+ * @param onThemeDialogOpenChange 主题模式弹框打开状态变化回调（开/关时上抛）
  * @param modifier           外部传入的 Modifier
  */
 @Composable
@@ -68,7 +94,9 @@ fun MySettingsScreen(
     themeModeIndex: Int,
     onActionClick: (String) -> Unit,
     onWebServiceToggle: (Boolean) -> Unit,
-    onShowThemeModeDialog: () -> Unit,
+    onThemeModeSelected: (Int) -> Unit,
+    themeDialogOpen: Boolean,
+    onThemeDialogOpenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -83,9 +111,10 @@ fun MySettingsScreen(
     val iconTint = contentColor.copy(0.7f)
 
     // 主题模式的可选文案列表（从资源 R.array.theme_mode 读取，如"跟随系统/浅色/深色"）
-    // 仅用于在主题模式条目右侧展示当前值；弹框本身由上层 MyFragment 以
-    // ThemeModeDialogFragment 显示（与删除图书弹框同一机制）。
     val themeModeLabels = context.resources.getStringArray(R.array.theme_mode)
+
+    // 主题模式弹框（同 Compose surface 覆盖层，玻璃采样真实设置页，无截图）
+    val backdrop = rememberLayerBackdrop()
 
     // 根据传入的开关状态、摘要文案与主题索引构建分组数据；
     // 当任一依赖变化时自动重建，保证 UI 与数据同步。
@@ -103,65 +132,319 @@ fun MySettingsScreen(
         )
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(pageBackgroundColor)
-    ) {
-        // 可滚动内容容器（卡片之间 16dp 间距，靠卡片本身分组，无分类标题）
-        // 注意：不用 Arrangement.spacedBy —— 它默认 CenterVertically，
-        // 会在首个卡片之前也分配剩余空间，导致顶部多出一段空白。
-        // 顶部 12dp：给首卡片一点呼吸感，不再贴死标题栏下沿。
+    Box(modifier = modifier.fillMaxSize()) {
+        // 页面内容：包在 layerBackdrop 内，作为主题弹框玻璃的模糊源。
+        // 仅弹框打开时启用 layerBackdrop，避免常驻 GPU 离屏开销。
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                // 底部 88dp 为悬浮玻璃导航栏预留（导航栏 72dp + 16dp 余量），
-                // 保证滚到底时最后一项不被导航栏遮挡
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp)
+                .background(pageBackgroundColor)
+                .then(if (themeDialogOpen) Modifier.layerBackdrop(backdrop) else Modifier)
         ) {
-            categories.forEachIndexed { index, category ->
-                // 仅卡片之间加 16dp，第一个卡片之前由 Column top=12dp 给出呼吸感
-                if (index > 0) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+            // 顶栏：背景与书架内容区（页面主题背景 backgroundColor）保持一致，文字色随背景深浅反色
+            val barBg = Color(context.backgroundColor)
+            val barContentColor = if (ColorUtils.isColorLight(context.backgroundColor)) Color.Black else Color.White
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(barBg),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BasicText(
+                    text = stringResource(R.string.setting),
+                    style = TextStyle(barContentColor, 20.sp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp),
+                )
+            }
 
-                // 圆角卡片（大圆角、纯色背景、无边框）
-                GlassSettingsCard(containerColor = containerColor) {
-                    category.items.forEach { item ->
-                        when (item) {
-                            is SettingItem.Action -> ActionRow(
-                                item = item,
-                                contentColor = contentColor,
-                                iconTint = iconTint,
-                                onClick = {
-                                    if (item.key == PreferKey.themeMode) {
-                                        // 主题模式：交由上层 MyFragment 弹出
-                                        // ThemeModeDialogFragment（Activity 层截图 + 独立 Window）
-                                        onShowThemeModeDialog()
-                                    } else {
-                                        onActionClick(item.key)
-                                    }
-                                }
-                            )
+            // 可滚动内容容器（卡片之间 16dp 间距，靠卡片本身分组，无分类标题）
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    // 底部 88dp 为悬浮玻璃导航栏预留（导航栏 72dp + 16dp 余量），
+                    // 保证滚到底时最后一项不被导航栏遮挡
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp)
+            ) {
+                categories.forEachIndexed { index, category ->
+                    // 仅卡片之间加 16dp，第一个卡片之前由 Column top=12dp 给出呼吸感
+                    if (index > 0) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
-                            is SettingItem.Toggle -> ToggleRow(
-                                item = item,
-                                contentColor = contentColor,
-                                iconTint = iconTint,
-                                onCheckedChange = { checked ->
-                                    if (item.key == PreferKey.webService) {
-                                        onWebServiceToggle(checked)
+                    // 圆角卡片（大圆角、纯色背景、无边框）
+                    GlassSettingsCard(containerColor = containerColor) {
+                        category.items.forEach { item ->
+                            when (item) {
+                                is SettingItem.Action -> ActionRow(
+                                    item = item,
+                                    contentColor = contentColor,
+                                    iconTint = iconTint,
+                                    onClick = {
+                                        if (item.key == PreferKey.themeMode) {
+                                            // 主题模式：在本页内弹出玻璃覆盖层（采样真实设置页）
+                                            onThemeDialogOpenChange(true)
+                                        } else {
+                                            onActionClick(item.key)
+                                        }
                                     }
-                                }
-                            )
+                                )
+
+                                is SettingItem.Toggle -> ToggleRow(
+                                    item = item,
+                                    contentColor = contentColor,
+                                    iconTint = iconTint,
+                                    onCheckedChange = { checked ->
+                                        if (item.key == PreferKey.webService) {
+                                            onWebServiceToggle(checked)
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+
+        // 主题模式弹框覆盖层（真·毛玻璃：玻璃采样真实设置页，无截图）
+        AnimatedVisibility(
+            visible = themeDialogOpen,
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(120))
+        ) {
+            ThemeModeDialogOverlay(
+                backdrop = backdrop,
+                labels = themeModeLabels,
+                initialIndex = themeModeIndex,
+                onConfirm = { index ->
+                    onThemeModeSelected(index)
+                    onThemeDialogOpenChange(false)
+                },
+                onDismiss = { onThemeDialogOpenChange(false) }
+            )
+        }
     }
 
+}
+
+/**
+ * 「主题模式」选择弹框（同 surface 玻璃覆盖层）
+ *
+ * 由 [MySettingsScreen] 在本页内弹出：玻璃模糊源来自页面内容自身（[backdrop]，
+ * 由页面 Column 包 `layerBackdrop` 提供），因此玻璃采样的是真实设置页，
+ * 无需截图、也不跨窗口。蒙板与卡片均为真·毛玻璃。
+ *
+ * @param backdrop      玻璃模糊源（页面内容），由宿主传入同一 [Backdrop] 实例
+ * @param labels        主题模式候选文案（"跟随系统/浅色/深色"）
+ * @param initialIndex  当前选中索引
+ * @param onConfirm     点击「确定」回调，参数为选中的索引
+ * @param onDismiss     点击外部 / 「取消」关闭回调
+ */
+@Composable
+private fun ThemeModeDialogOverlay(
+    backdrop: Backdrop,
+    labels: Array<String>,
+    initialIndex: Int,
+    onConfirm: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var currentIndex by remember { mutableStateOf(initialIndex) }
+
+    // 主题弹框样式固定（不随明暗主题变化）：统一采用深色模式一套值
+    val contentColor = Color.White
+    val accentColor = Color(0xFF0091FF)
+    val containerColor = Color(0xFF121212).copy(0.4f)
+    val dimColor = Color(0xFF121212).copy(0.56f)
+    // 蒙板染色：用页面底色轻微染色，使毛玻璃更有"材质感"
+    val scrimColor = Color.Black.copy(0.5f)
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 1) 蒙板（真·毛玻璃）：模糊真实设置页 + 页面色染色 + dim 压暗
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RoundedRectangle(0.5f.dp) },
+                    effects = {
+                        colorControls(
+                            brightness = 0f,
+                            saturation = 1.4f
+                        )
+                        blur(12f.dp.toPx())
+                        lens(28f.dp.toPx(), 56f.dp.toPx(), depthEffect = true)
+                    },
+                    highlight = { Highlight.Plain },
+                    onDrawSurface = { drawRect(scrimColor) }
+                )
+                .drawWithContent {
+                    drawContent()
+                    drawRect(dimColor)
+                }
+        )
+
+        // 2) 居中玻璃卡片层（点外部区域 = 取消）
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(0.78f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { /* 点卡片内部不关闭 */ }
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedRectangle(48f.dp) },
+                        effects = {
+                            colorControls(
+                                brightness = 0f,
+                                saturation = 1.5f
+                            )
+                            blur(8f.dp.toPx())
+                            lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                        },
+                        highlight = { Highlight.Plain },
+                        onDrawSurface = { drawRect(containerColor) }
+                    )
+            ) {
+                // 标题
+                BasicText(
+                    text = stringResource(R.string.theme_mode),
+                    modifier = Modifier.padding(28f.dp, 24f.dp, 28f.dp, 12f.dp),
+                    style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
+                )
+
+                // 单选列表（玻璃态圆形单选圈）
+                labels.forEachIndexed { index, label ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { currentIndex = index }
+                            .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24f.dp)
+                                .drawBackdrop(
+                                    backdrop = backdrop,
+                                    shape = { Capsule() },
+                                    effects = {
+                                        colorControls(
+                                            brightness = 0f,
+                                            saturation = 1.5f
+                                        )
+                                        blur(8f.dp.toPx())
+                                        lens(16f.dp.toPx(), 24f.dp.toPx(), depthEffect = true)
+                                    },
+                                    highlight = { Highlight.Plain },
+                                    onDrawSurface = {
+                                        drawRect(
+                                            if (index == currentIndex) accentColor
+                                            else containerColor.copy(0.3f)
+                                        )
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (index == currentIndex) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(Capsule())
+                                        .background(Color.White)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Box(
+                            modifier = Modifier.height(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BasicText(
+                                text = label,
+                                style = TextStyle(contentColor.copy(0.9f), 16f.sp)
+                            )
+                        }
+                    }
+                }
+
+                // 按钮
+                Row(
+                    modifier = Modifier
+                        .padding(24f.dp, 16f.dp, 24f.dp, 24f.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16f.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 取消按钮
+                    Row(
+                        modifier = Modifier
+                            .clip(Capsule())
+                            .background(containerColor.copy(0.2f))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onDismiss() }
+                            .height(48f.dp)
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            4f.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BasicText(
+                            text = "取消",
+                            style = TextStyle(contentColor, 16f.sp)
+                        )
+                    }
+
+                    // 确定按钮
+                    Row(
+                        modifier = Modifier
+                            .clip(Capsule())
+                            .background(accentColor)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onConfirm(currentIndex) }
+                            .height(48f.dp)
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            4f.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BasicText(
+                            text = "确定",
+                            style = TextStyle(Color.White, 16f.sp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -426,7 +709,7 @@ private fun buildSettingCategories(
             )
         ),
 
-        // 分组二：外观与服务 —— 主题模式（点击弹窗选择）、底部导航栏、Web 服务（开关切换）
+        // 分组二：外观与服务 —— 主题模式（点击弹窗选择）、Web 服务（开关切换）
         SettingCategory(
             title = "外观与服务",
             items = listOf(
@@ -437,13 +720,6 @@ private fun buildSettingCategories(
                     title = context.getString(R.string.theme_mode),
                     summary = context.getString(R.string.theme_mode_desc),
                     value = themeModeLabels.getOrNull(themeModeIndex)
-                ),
-                // 底部导航栏：进入玻璃态样式调节页（模糊/折射/透明度/色差）
-                SettingItem.Action(
-                    key = "navBarGlass",
-                    icon = R.drawable.ic_cfg_theme,
-                    title = "底部导航栏",
-                    summary = "调节玻璃态样式（模糊、折射、透明度、色差）"
                 ),
                 // Web 服务：开关切换，摘要由上层根据连接状态动态提供
                 SettingItem.Toggle(
@@ -481,7 +757,7 @@ private fun buildSettingCategories(
             )
         ),
 
-        // 分组四：工具 —— 书签、阅读记录、文件管理、玻璃效果演示
+        // 分组四：工具 —— 书签、阅读记录、文件管理
         SettingCategory(
             title = "工具",
             items = listOf(
@@ -502,13 +778,6 @@ private fun buildSettingCategories(
                     icon = R.drawable.ic_folder_outline,
                     title = context.getString(R.string.file_manage),
                     summary = context.getString(R.string.file_manage_summary)
-                ),
-                // 开发期演示入口，展示 Liquid Glass 毛玻璃效果
-                SettingItem.Action(
-                    key = "glassDemo",
-                    icon = R.drawable.ic_cfg_about,
-                    title = "玻璃效果演示",
-                    summary = "查看 Liquid Glass 效果演示"
                 )
             )
         ),

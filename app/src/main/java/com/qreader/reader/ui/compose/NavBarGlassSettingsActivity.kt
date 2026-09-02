@@ -163,8 +163,8 @@ fun NavBarGlassSettingsScreen() {
                 accentColor = accentColor,
                 onReset = {
                     blurRadius = 8f
-                    refractionHeight = 24f
-                    refractionAmount = 24f
+                    refractionHeight = 32f
+                    refractionAmount = 32f
                     chromaticAberration = true
                 },
                 onSave = {

@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
+import android.graphics.Color
 import android.widget.FrameLayout
 import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
@@ -168,12 +169,11 @@ abstract class BaseActivity<VB : ViewBinding>(
     }
 
     open fun upNavigationBarColor() {
-        if (AppConfig.immNavigationBar) {
-            setNavigationBarColorAuto(ThemeStore.navigationBarColor(this))
-        } else {
-            val nbColor = ColorUtils.darkenColor(ThemeStore.navigationBarColor(this))
-            setNavigationBarColorAuto(nbColor)
-        }
+        // 导航栏 edge-to-edge：透明，内容延伸到导航栏后，玻璃导航栏融入内容。
+        // 手势条明暗仍按导航栏背景色判断，保证透明导航栏下手势区域可见。
+        val navBarBg = ThemeStore.navigationBarColor(this)
+        setNavigationBarColorAuto(navBarBg)
+        window.navigationBarColor = Color.TRANSPARENT
     }
 
     open fun observeLiveBus() {

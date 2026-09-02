@@ -76,13 +76,19 @@ val WindowManager.windowSize: DisplayMetrics
 @Suppress("DEPRECATION")
 fun Activity.fullScreen() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        window.setDecorFitsSystemWindows(true)
+        // 导航栏 edge-to-edge：内容延伸到导航栏后，玻璃导航栏融入背后内容。
+        // R+ 以 setDecorFitsSystemWindows 为准：false 表示系统不再自动给内容加系统栏内边距，
+        // 由 Compose（windowInsetsPadding(navigationBars)）/ 各 View（fitsSystemWindows）自行处理安全区。
+        window.setDecorFitsSystemWindows(false)
     }
     window.decorView.systemUiVisibility =
-        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+    // 仅清掉状态栏的半透明兜底（旧版），不再清 FLAG_TRANSLUCENT_NAVIGATION：
+    // 导航栏透明由 BaseActivity.upNavigationBarColor() 显式设为 TRANSPARENT 实现。
     window.clearFlags(
         WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
-                or WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
     )
     window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 }
