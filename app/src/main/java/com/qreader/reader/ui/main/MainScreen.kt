@@ -528,7 +528,7 @@ private fun GlassTitleBar(
                 },
                 onDrawSurface = { drawRect(containerColor) }
             )
-            .height(112.dp)
+            .height(100.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -552,7 +552,7 @@ private fun EInkTitleBar(
 ) {
     Box(
         modifier = modifier
-            .height(56.dp)
+            .height(100.dp)
             .fillMaxWidth()
             .background(bgColor, RoundedCornerShape(28.dp)),
         contentAlignment = Alignment.CenterStart
