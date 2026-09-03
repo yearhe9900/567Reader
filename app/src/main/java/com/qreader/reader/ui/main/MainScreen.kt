@@ -31,8 +31,14 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +64,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
+import com.qreader.reader.data.appDb
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
@@ -103,6 +111,8 @@ fun MainScreen(
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
+        searchQuery: String,
+        onSearchQueryChange: (String) -> Unit,
     ) -> Unit,
     settingsPage: @Composable () -> Unit,
     themeDialogOpen: Boolean,
@@ -129,6 +139,9 @@ fun MainScreen(
     var bookshelfGotoTop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var bookshelfBack by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var exploreCompress by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    // ── 发现页搜索状态（提升到 MainScreen 供玻璃标题栏使用）──
+    var exploreSearchQuery by remember { mutableStateOf("") }
 
     // ── 重选计时（双击触发 gotoTop / compressExplore）──
     var bookshelfReselected by remember { mutableLongStateOf(0L) }
@@ -241,6 +254,8 @@ fun MainScreen(
                     1 -> if (showDiscovery) {
                         explorePage(
                             { exploreCompress = it },
+                            exploreSearchQuery,
+                            { exploreSearchQuery = it },
                         )
                     } else {
                         settingsPage()
@@ -272,6 +287,15 @@ fun MainScreen(
                     EInkTitleBar(
                         title = title,
                         bgColor = bgColor,
+                        contentColor = contentColor,
+                    )
+                } else if (pagerState.currentPage == 1 && showDiscovery) {
+                    ExploreGlassTitleBar(
+                        backdrop = backdrop,
+                        title = title,
+                        searchQuery = exploreSearchQuery,
+                        onSearchQueryChange = { exploreSearchQuery = it },
+                        containerColor = containerColor,
                         contentColor = contentColor,
                     )
                 } else {
@@ -537,6 +561,118 @@ private fun GlassTitleBar(
             style = TextStyle(contentColor, 20.sp),
             modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
         )
+    }
+}
+
+/**
+ * 发现页玻璃态标题栏：搜索框 + 分组按钮 + 标题。
+ * 与 [GlassTitleBar] 共享同一个 [backdrop]，视觉风格统一。
+ */
+@Composable
+private fun ExploreGlassTitleBar(
+    backdrop: Backdrop,
+    title: String,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val groups by appDb.bookSourceDao.flowExploreGroups()
+        .collectAsState(initial = emptyList())
+    var showGroupMenu by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(0.dp) },
+                effects = {
+                    vibrancy()
+                    blur(8f.dp.toPx())
+                    lens(24f.dp.toPx(), 24f.dp.toPx())
+                },
+                onDrawSurface = { drawRect(containerColor) }
+            )
+            .height(100.dp)
+            .fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom,
+        ) {
+            // 搜索框（中间区域）
+            BasicTextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                textStyle = TextStyle(contentColor, 14.sp),
+                cursorBrush = SolidColor(Color(context.accentColor)),
+                singleLine = true,
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        if (searchQuery.isEmpty()) {
+                            BasicText(
+                                text = "搜索书源…",
+                                style = TextStyle(contentColor.copy(0.5f), 14.sp)
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+
+            // 标题 + 分组按钮（底部）
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BasicText(
+                    text = title,
+                    style = TextStyle(contentColor, 20.sp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp, bottom = 12.dp),
+                )
+                Box {
+                    IconButton(onClick = { showGroupMenu = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_groups),
+                            contentDescription = "分组",
+                            tint = contentColor,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showGroupMenu,
+                        onDismissRequest = { showGroupMenu = false },
+                    ) {
+                        if (groups.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { BasicText("无分组") },
+                                onClick = { showGroupMenu = false },
+                            )
+                        } else {
+                            groups.forEach { group ->
+                                DropdownMenuItem(
+                                    text = { BasicText(group) },
+                                    onClick = {
+                                        onSearchQueryChange("group:$group")
+                                        showGroupMenu = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

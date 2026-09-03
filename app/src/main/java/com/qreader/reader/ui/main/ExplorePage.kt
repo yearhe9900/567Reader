@@ -74,15 +74,14 @@ fun ExplorePage(
     onOpenExplore: (String, String, String?) -> Unit,
     onEditSource: (String) -> Unit,
     onSearchBook: (BookSourcePart) -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val composableScope = rememberCoroutineScope()
     val exploreViewModel: ExploreViewModel = ViewModelProvider(context as androidx.lifecycle.ViewModelStoreOwner)[ExploreViewModel::class.java]
-
-    // ── 搜索状态 ──
-    var searchQuery by remember { mutableStateOf("") }
 
     // ── 删除确认弹窗 ──
     var showDeleteDialog by remember { mutableStateOf<BookSourcePart?>(null) }
