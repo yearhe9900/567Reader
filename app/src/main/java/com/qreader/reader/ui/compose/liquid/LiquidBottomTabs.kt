@@ -48,27 +48,13 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sign
-
-/**
- * 底部导航栏玻璃态样式的可调参数。
- *
- * 与 AndroidLiquidGlass 官方 GlassPlayground 对齐（去掉对 Capsule 无效的 Corner radius）：
- * @param blurRadiusDp 背景模糊半径（dp），值越大背景越朦胧。
- * @param refractionHeightDp 折射高度（lens height），控制透镜凸起/凹陷程度。
- * @param refractionAmountDp 折射强度（lens amount），控制背景被拉伸/扭曲的幅度。
- * @param chromaticAberration 是否开启色差（镜头色散）效果。
- */
-data class LiquidGlassStyle(
-    val blurRadiusDp: Float = 8f,
-    val refractionHeightDp: Float = 24f,
-    val refractionAmountDp: Float = 24f,
-    val chromaticAberration: Boolean = true
-)
 
 @Composable
 fun LiquidBottomTabs(
@@ -80,13 +66,12 @@ fun LiquidBottomTabs(
     accentColor: Color? = null,
     containerColor: Color? = null,
     isLightTheme: Boolean = !isSystemInDarkTheme(),
-    glassStyle: LiquidGlassStyle = LiquidGlassStyle(),
     content: @Composable RowScope.() -> Unit
 ) {
     val effectiveAccentColor =
         accentColor ?: if (isLightTheme) Color(0xFF0088FF) else Color(0xFF0091FF)
     val effectiveContainerColor =
-        containerColor ?: if (isLightTheme) Color(0xFFFAFAFA).copy(0.4f) else Color(0xFF121212).copy(0.4f)
+        containerColor ?: GlassConfig.containerColor(isLightTheme)
 
     val tabsBackdrop = rememberLayerBackdrop()
 
@@ -195,10 +180,10 @@ fun LiquidBottomTabs(
                     shape = { Capsule() },
                     effects = {
                         vibrancy()
-                        blur(glassStyle.blurRadiusDp.dp.toPx())
+                        blur(GlassConfig.blur.toPx())
                         lens(
-                            glassStyle.refractionHeightDp.dp.toPx(),
-                            glassStyle.refractionAmountDp.dp.toPx()
+                            GlassConfig.lensX.toPx(),
+                            GlassConfig.lensY.toPx()
                         )
                     },
                     layerBlock = {
@@ -236,10 +221,10 @@ fun LiquidBottomTabs(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
-                            blur(glassStyle.blurRadiusDp.dp.toPx())
+                            blur(GlassConfig.blur.toPx())
                             lens(
-                                glassStyle.refractionHeightDp.dp.toPx() * progress,
-                                glassStyle.refractionAmountDp.dp.toPx() * progress
+                                GlassConfig.lensX.toPx() * progress,
+                                GlassConfig.lensY.toPx() * progress
                             )
                         },
                         highlight = {
@@ -276,7 +261,7 @@ fun LiquidBottomTabs(
                         lens(
                             10f.dp.toPx() * progress,
                             14f.dp.toPx() * progress,
-                            chromaticAberration = glassStyle.chromaticAberration
+                            chromaticAberration = GlassConfig.chromaticAberration
                         )
                     },
                     highlight = {

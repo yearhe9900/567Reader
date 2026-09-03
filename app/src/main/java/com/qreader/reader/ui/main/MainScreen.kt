@@ -71,9 +71,9 @@ import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTab
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTabs
-import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
 import com.qreader.reader.utils.ColorUtils
 import kotlin.math.abs
 
@@ -106,7 +106,6 @@ fun MainScreen(
     badgeCount: Int,
     showDiscovery: Boolean,
     isEInkMode: Boolean,
-    glassConfig: NavBarGlassConfig,
     bookshelfPage: @Composable (
         registerGotoTop: ((() -> Unit)?) -> Unit,
         registerBack: ((() -> Boolean)?) -> Unit,
@@ -130,7 +129,7 @@ fun MainScreen(
     val isLightTheme = ColorUtils.isColorLight(context.primaryColor)
     val accentColor = Color(context.accentColor)
     val contentColor = if (isLightTheme) Color.Black else Color.White
-    val containerColor = glassConfig.containerColor(isLightTheme)
+    val containerColor = GlassConfig.containerColor(isLightTheme)
     val bgColor = Color(context.backgroundColor)
 
     // 玻璃导航栏的 backdrop 捕获源（捕获真实页面内容，供 lens 折射 / blur 作用其上）
@@ -398,7 +397,6 @@ fun MainScreen(
                         accentColor = accentColor,
                         containerColor = containerColor,
                         isLightTheme = isLightTheme,
-                        glassStyle = glassConfig.toLiquidGlassStyle(),
                     ) {
                         tabItems.forEach { item ->
                             LiquidBottomTab(
@@ -619,8 +617,8 @@ private fun GlassTitleBar(
                 shape = { RoundedCornerShape(0.dp) },
                 effects = {
                     vibrancy()
-                    blur(8f.dp.toPx())
-                    lens(24f.dp.toPx(), 24f.dp.toPx())
+                    blur(GlassConfig.blur.toPx())
+                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                 },
                 onDrawSurface = { drawRect(containerColor) }
             )
@@ -663,8 +661,8 @@ private fun BookshelfGlassTitleBar(
                 shape = { RoundedCornerShape(0.dp) },
                 effects = {
                     vibrancy()
-                    blur(8f.dp.toPx())
-                    lens(24f.dp.toPx(), 24f.dp.toPx())
+                    blur(GlassConfig.blur.toPx())
+                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                 },
                 onDrawSurface = { drawRect(containerColor) }
             )
@@ -695,8 +693,8 @@ private fun BookshelfGlassTitleBar(
                         shape = { RoundedCornerShape(12.dp) },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
-                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                            blur(GlassConfig.blur.toPx())
+                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
                         onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
                     )
@@ -721,8 +719,8 @@ private fun BookshelfGlassTitleBar(
                         shape = { RoundedCornerShape(12.dp) },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
-                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                            blur(GlassConfig.blur.toPx())
+                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
                         onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
                     )
@@ -821,8 +819,8 @@ private fun GlassDropdownMenu(
                         shape = { RoundedCornerShape(16.dp) },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
-                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                            blur(GlassConfig.blur.toPx())
+                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
                         onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
                     )
@@ -858,8 +856,8 @@ private fun ExploreGlassTitleBar(
                 shape = { RoundedCornerShape(0.dp) },
                 effects = {
                     vibrancy()
-                    blur(8f.dp.toPx())
-                    lens(24f.dp.toPx(), 24f.dp.toPx())
+                    blur(GlassConfig.blur.toPx())
+                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                 },
                 onDrawSurface = { drawRect(containerColor) }
             )
@@ -881,8 +879,8 @@ private fun ExploreGlassTitleBar(
                         shape = { RoundedCornerShape(12.dp) },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
-                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                            blur(GlassConfig.blur.toPx())
+                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
                         onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
                     )
@@ -921,8 +919,8 @@ private fun ExploreGlassTitleBar(
                         shape = { RoundedCornerShape(12.dp) },
                         effects = {
                             vibrancy()
-                            blur(8f.dp.toPx())
-                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                            blur(GlassConfig.blur.toPx())
+                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
                         onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
                     )

@@ -20,7 +20,6 @@ import com.qreader.reader.ui.book.bookmark.AllBookmarkActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.ui.book.toc.rule.TxtTocRuleActivity
 import com.qreader.reader.ui.compose.GlassDemoActivity
-import com.qreader.reader.ui.compose.NavBarGlassSettingsActivity
 import com.qreader.reader.ui.config.ConfigActivity
 import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
@@ -130,7 +129,6 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
             "fileManage" -> startActivity<FileManageActivity>()
             "readRecord" -> startActivity<ReadRecordActivity>()
             "glassDemo" -> startActivity<GlassDemoActivity>()
-            "navBarGlass" -> startActivity<NavBarGlassSettingsActivity>()
             "appVersion" -> showAppVersion()
             "exit" -> activity?.finish()
         }

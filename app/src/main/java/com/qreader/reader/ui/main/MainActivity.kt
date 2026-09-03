@@ -47,8 +47,6 @@ import com.qreader.reader.ui.book.source.edit.BookSourceEditActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.ui.book.toc.rule.TxtTocRuleActivity
 import com.qreader.reader.ui.compose.GlassDemoActivity
-import com.qreader.reader.ui.compose.NavBarGlassSettingsActivity
-import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
 import com.qreader.reader.ui.config.ConfigActivity
 import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
@@ -97,7 +95,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     private var selectedTab by mutableIntStateOf(0)
     private var showDiscovery by mutableStateOf(false)
     private var badgeCount by mutableIntStateOf(0)
-    private var glassConfig by mutableStateOf(NavBarGlassConfig())
 
     // ── 设置页状态（原 MyFragment）──
     private var webServiceChecked by mutableStateOf(WebService.isRun)
@@ -109,7 +106,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         // 延迟到 Activity attach 之后再读 SharedPreferences（字段初始化阶段 mBase 尚为 null 会 NPE）
-        glassConfig = NavBarGlassConfig.load(this)
         themeModeIndex = getPrefString(PreferKey.themeMode, "0")?.toIntOrNull() ?: 0
         webServiceSummary = if (WebService.isRun) {
             WebService.hostAddress
@@ -182,7 +178,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 badgeCount = badgeCount,
                 showDiscovery = showDiscovery,
                 isEInkMode = AppConfig.isEInkMode,
-                glassConfig = glassConfig,
                 bookshelfPage = { registerGotoTop, registerBack, registerMenuAction, onRequestGroupEdit ->
                     BookshelfPage(
                         registerGotoTop = registerGotoTop,
@@ -278,7 +273,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             "fileManage" -> startActivity<FileManageActivity>()
             "readRecord" -> startActivity<ReadRecordActivity>()
             "glassDemo" -> startActivity<GlassDemoActivity>()
-            "navBarGlass" -> startActivity<NavBarGlassSettingsActivity>()
             "appVersion" -> showAppVersion()
             "exit" -> finish()
         }
@@ -344,8 +338,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
     override fun onResume() {
         super.onResume()
-        // 从设置页返回后刷新玻璃态配置，使底部导航栏即时生效
-        glassConfig = NavBarGlassConfig.load(this)
         if (LifecycleHelp.activitySize() == 1) {
             readShibboleth(500)
         }
