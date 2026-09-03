@@ -36,18 +36,16 @@
 * 主题弹框打开时隐藏底部导航栏（状态提升至 MainActivity）；玻璃 Dialog 固定浅色风格且 E-Ink 模式降级为纯白高对比。
 * 导航栏折射率默认值 24 → 32 → 48；主题弹框样式统一为深色套；导航栏折射真实化（backdrop 改挂到包裹 pager 的层，采样真实页面内容）。
 * 导航栏 edge-to-edge（全 App 生效，透明手势条）；对齐 AndroidLiquidGlass demo 效果（24/24 折射、三层玻璃常开）。
-* 标题栏玻璃态化尝试：新增玻璃标题栏 overlay，暂丢失搜索/菜单/分组 Tab 入口；随后在玻璃标题栏恢复书架搜索（玻璃按钮）+ 更多选项（DropdownMenu 11 项）。
+* 标题栏玻璃态化：新增玻璃标题栏 overlay（与底部导航栏共享 backdrop）；玻璃标题栏内恢复书架搜索（玻璃按钮）与更多选项菜单（DropdownMenu 11 项，还原 R.menu.main_bookshelf）。
 
 **2026/09/03**
 
 * 抽出通用玻璃弹框视觉令牌 GlassDialogTokens 供三处复用（深色固定配色 + E-Ink 回退）。
 * 三页默认进入 top padding 105dp → 110dp；书架下拉刷新圆环 top offset 110dp（避开玻璃标题栏）。
 * 玻璃态标题栏编译修复：registerMenuAction 类型括号不匹配、handleMenuAction 前向引用、清理未用导入；新增 .gitattributes 统一文本行尾为 CRLF 消除告警。
-* 书架分组文件夹封面：四格封面 + 横向滑动进组，经 3×3 九宫格 → 2×2 四格反复、按分组自身排序取前 4 本；定位到「只在 Folder 样式下渲染」后整页回滚封面功能（书架回到干净基线）。
-* 书架页副本 BookshelfPageNew 作实验沙箱（MainActivity 切到新页面，旧页留作兜底）。
 * 编辑分组弹框改为 Compose 玻璃态（仅书架长按入口，对标主题弹框、其余 XML 入口保持原样）。
 * 抽出通用 LiquidGlassDialog 组件；多次修复编辑分组蒙板不全屏——误判 AnimatedVisibility 的 wrapContentSize，真根因为 AnimatedVisibility 被嵌套进底部导航栏小 Box，移出为全屏外层 Box 直接子节点解决。
 * 修复编辑分组弹框「分组名称」label 黑色看不清（给 BasicText 显式上 contentColor）。
 * BookshelfPageNew 转正为正式 BookshelfPage，删除旧兜底页（迁移 BookshelfMenuAction 枚举，避免 Unresolved reference）。
-* 清理误入库的 .workbuddy/artifacts/overview.md 并加入 .gitignore；固化「禁止 git rm / git mv，重命名删除改用 rm/mv + git add -A」硬规则（记忆）。
+* 清理误入库的 .workbuddy/artifacts/overview.md 并加入 .gitignore。
 * 重写 README.md 反映 567Reader 真实项目。
