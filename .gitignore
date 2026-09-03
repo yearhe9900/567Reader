@@ -18,3 +18,5 @@ package-lock.json
 .kotlin/
 .cxx
 .vscode
+# WorkBuddy agent 生成的临时产物（overview 等），不进版本库
+.workbuddy/artifacts/
