@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -805,8 +805,7 @@ private fun GlassDropdownMenu(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 108.dp, end = 8.dp)
-                    // 内容自适应宽度（对齐原版 AppCompat PopupMenu：Material 规范 min 112dp / max 280dp）
-                    .widthIn(min = 112.dp, max = 280.dp)
+                    .width(200.dp)
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { RoundedCornerShape(16.dp) },
