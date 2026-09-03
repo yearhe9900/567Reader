@@ -55,6 +55,8 @@ import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.R
 import com.qreader.reader.help.config.AppConfig
+import com.qreader.reader.ui.compose.glass.GlassDialogTokens
+import com.qreader.reader.ui.compose.glass.glassDialogColors
 
 /**
  * Liquid Glass 风格的确认对话框（官方 drawBackdrop 实现，居中显示）
@@ -140,13 +142,14 @@ class GlassAlertDialog : DialogFragment() {
         var checkBoxState by remember { mutableStateOf(checkBoxChecked) }
 
         // 玻璃态 dialog 固定使用深色主题风格，与「主题模式」弹框保持一致
-        // E-Ink 模式下回退为黑白高对比
+        // 颜色统一走 GlassDialogTokens（含 E-Ink 回退），避免各弹框重复硬编码
         val isEInkMode = AppConfig.isEInkMode
-        val contentColor = if (isEInkMode) Color.Black else Color.White
-        val accentColor = Color(0xFF0091FF)
-        val containerColor = if (isEInkMode) Color.White else Color(0xFF121212).copy(0.4f)
-        val dimColor = if (isEInkMode) Color.Transparent else Color(0xFF121212).copy(0.56f)
-        val scrimColor = if (isEInkMode) Color.Transparent else Color.Black.copy(0.5f)
+        val colors = glassDialogColors(isEInkMode)
+        val contentColor = colors.contentColor
+        val accentColor = colors.accentColor
+        val containerColor = colors.containerColor
+        val dimColor = colors.dimColor
+        val scrimColor = colors.scrimColor
 
         // 背景采样源：原页面截图优先，回退到 wallpaper_light
         val backdropPainter: Painter = if (backdropBitmap != null) {
@@ -185,11 +188,15 @@ class GlassAlertDialog : DialogFragment() {
                         effects = {
                             if (!isEInkMode) {
                                 colorControls(
-                                    brightness = 0f,
-                                    saturation = 1.4f
+                                    brightness = GlassDialogTokens.scrimBrightness,
+                                    saturation = GlassDialogTokens.scrimSaturation
                                 )
-                                blur(12f.dp.toPx())
-                                lens(28f.dp.toPx(), 56f.dp.toPx(), depthEffect = true)
+                                blur(GlassDialogTokens.scrimBlur.toPx())
+                                lens(
+                                    GlassDialogTokens.scrimLensX.toPx(),
+                                    GlassDialogTokens.scrimLensY.toPx(),
+                                    depthEffect = true
+                                )
                             }
                         },
                         highlight = { Highlight.Plain },
@@ -224,11 +231,15 @@ class GlassAlertDialog : DialogFragment() {
                             effects = {
                                 if (!isEInkMode) {
                                     colorControls(
-                                        brightness = 0f,
-                                        saturation = 1.5f
+                                        brightness = GlassDialogTokens.cardBrightness,
+                                        saturation = GlassDialogTokens.cardSaturation
                                     )
-                                    blur(8f.dp.toPx())
-                                    lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                                    blur(GlassDialogTokens.cardBlur.toPx())
+                                    lens(
+                                        GlassDialogTokens.cardLensX.toPx(),
+                                        GlassDialogTokens.cardLensY.toPx(),
+                                        depthEffect = true
+                                    )
                                 }
                             },
                             highlight = { Highlight.Plain },
@@ -273,11 +284,15 @@ class GlassAlertDialog : DialogFragment() {
                                         effects = {
                                             if (!isEInkMode) {
                                                 colorControls(
-                                                    brightness = 0f,
-                                                    saturation = 1.5f
+                                                    brightness = GlassDialogTokens.cardBrightness,
+                                                    saturation = GlassDialogTokens.cardSaturation
                                                 )
-                                                blur(8f.dp.toPx())
-                                                lens(16f.dp.toPx(), 24f.dp.toPx(), depthEffect = true)
+                                                blur(GlassDialogTokens.widgetBlur.toPx())
+                                                lens(
+                                                    GlassDialogTokens.widgetLensX.toPx(),
+                                                    GlassDialogTokens.widgetLensY.toPx(),
+                                                    depthEffect = true
+                                                )
                                             }
                                         },
                                         highlight = { Highlight.Plain },

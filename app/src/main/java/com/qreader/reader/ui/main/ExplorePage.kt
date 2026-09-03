@@ -49,6 +49,8 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.RoundedRectangle
+import com.qreader.reader.ui.compose.glass.GlassDialogTokens
+import com.qreader.reader.ui.compose.glass.glassDialogColors
 import com.qreader.reader.R
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
@@ -222,11 +224,14 @@ fun ExplorePage(
 
     // ── 删除确认弹窗（玻璃态，与主题弹框风格一致）──
     showDeleteDialog?.let { source ->
-        val contentColor = Color.White
-        val accentColor = Color(0xFF0091FF)
-        val containerColor = Color(0xFF121212).copy(0.4f)
-        val dimColor = Color(0xFF121212).copy(0.56f)
-        val scrimColor = Color.Black.copy(0.5f)
+        // 颜色统一走 GlassDialogTokens（含 E-Ink 回退），与主题弹框/删除书籍弹框一致
+        val isEInkMode = AppConfig.isEInkMode
+        val colors = glassDialogColors(isEInkMode)
+        val contentColor = colors.contentColor
+        val accentColor = colors.accentColor
+        val containerColor = colors.containerColor
+        val dimColor = colors.dimColor
+        val scrimColor = colors.scrimColor
 
         Box(modifier = Modifier.fillMaxSize()) {
             // 蒙板（毛玻璃）
@@ -237,9 +242,18 @@ fun ExplorePage(
                         backdrop = backdrop,
                         shape = { RoundedRectangle(0.5f.dp) },
                         effects = {
-                            colorControls(brightness = 0f, saturation = 1.4f)
-                            blur(12f.dp.toPx())
-                            lens(28f.dp.toPx(), 56f.dp.toPx(), depthEffect = true)
+                            if (!isEInkMode) {
+                                colorControls(
+                                    brightness = GlassDialogTokens.scrimBrightness,
+                                    saturation = GlassDialogTokens.scrimSaturation
+                                )
+                                blur(GlassDialogTokens.scrimBlur.toPx())
+                                lens(
+                                    GlassDialogTokens.scrimLensX.toPx(),
+                                    GlassDialogTokens.scrimLensY.toPx(),
+                                    depthEffect = true
+                                )
+                            }
                         },
                         highlight = { Highlight.Plain },
                         onDrawSurface = { drawRect(scrimColor) }
@@ -271,9 +285,18 @@ fun ExplorePage(
                             backdrop = backdrop,
                             shape = { RoundedRectangle(48f.dp) },
                             effects = {
-                                colorControls(brightness = 0f, saturation = 1.5f)
-                                blur(8f.dp.toPx())
-                                lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                                if (!isEInkMode) {
+                                    colorControls(
+                                        brightness = GlassDialogTokens.cardBrightness,
+                                        saturation = GlassDialogTokens.cardSaturation
+                                    )
+                                    blur(GlassDialogTokens.cardBlur.toPx())
+                                    lens(
+                                        GlassDialogTokens.cardLensX.toPx(),
+                                        GlassDialogTokens.cardLensY.toPx(),
+                                        depthEffect = true
+                                    )
+                                }
                             },
                             highlight = { Highlight.Plain },
                             onDrawSurface = { drawRect(containerColor) }

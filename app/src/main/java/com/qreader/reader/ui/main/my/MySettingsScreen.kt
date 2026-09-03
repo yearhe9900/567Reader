@@ -59,6 +59,9 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
 import com.kyant.shapes.RoundedRectangle
+import com.qreader.reader.help.config.AppConfig
+import com.qreader.reader.ui.compose.glass.GlassDialogTokens
+import com.qreader.reader.ui.compose.glass.glassDialogColors
 
 /**
  * 「我的」设置页 —— Compose 实现
@@ -236,12 +239,15 @@ private fun ThemeModeDialogOverlay(
     var currentIndex by remember { mutableStateOf(initialIndex) }
 
     // 主题弹框样式固定（不随明暗主题变化）：统一采用深色模式一套值
-    val contentColor = Color.White
-    val accentColor = Color(0xFF0091FF)
-    val containerColor = Color(0xFF121212).copy(0.4f)
-    val dimColor = Color(0xFF121212).copy(0.56f)
+    // 颜色与效果统一走 GlassDialogTokens（含 E-Ink 回退），与删除书籍弹框/发现页删除框一致
+    val isEInkMode = AppConfig.isEInkMode
+    val colors = glassDialogColors(isEInkMode)
+    val contentColor = colors.contentColor
+    val accentColor = colors.accentColor
+    val containerColor = colors.containerColor
+    val dimColor = colors.dimColor
     // 蒙板染色：用页面底色轻微染色，使毛玻璃更有"材质感"
-    val scrimColor = Color.Black.copy(0.5f)
+    val scrimColor = colors.scrimColor
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 1) 蒙板（真·毛玻璃）：模糊真实设置页 + 页面色染色 + dim 压暗
@@ -252,12 +258,18 @@ private fun ThemeModeDialogOverlay(
                     backdrop = backdrop,
                     shape = { RoundedRectangle(0.5f.dp) },
                     effects = {
-                        colorControls(
-                            brightness = 0f,
-                            saturation = 1.4f
-                        )
-                        blur(12f.dp.toPx())
-                        lens(28f.dp.toPx(), 56f.dp.toPx(), depthEffect = true)
+                        if (!isEInkMode) {
+                            colorControls(
+                                brightness = GlassDialogTokens.scrimBrightness,
+                                saturation = GlassDialogTokens.scrimSaturation
+                            )
+                            blur(GlassDialogTokens.scrimBlur.toPx())
+                            lens(
+                                GlassDialogTokens.scrimLensX.toPx(),
+                                GlassDialogTokens.scrimLensY.toPx(),
+                                depthEffect = true
+                            )
+                        }
                     },
                     highlight = { Highlight.Plain },
                     onDrawSurface = { drawRect(scrimColor) }
@@ -289,12 +301,18 @@ private fun ThemeModeDialogOverlay(
                         backdrop = backdrop,
                         shape = { RoundedRectangle(48f.dp) },
                         effects = {
-                            colorControls(
-                                brightness = 0f,
-                                saturation = 1.5f
-                            )
-                            blur(8f.dp.toPx())
-                            lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                            if (!isEInkMode) {
+                                colorControls(
+                                    brightness = GlassDialogTokens.cardBrightness,
+                                    saturation = GlassDialogTokens.cardSaturation
+                                )
+                                blur(GlassDialogTokens.cardBlur.toPx())
+                                lens(
+                                    GlassDialogTokens.cardLensX.toPx(),
+                                    GlassDialogTokens.cardLensY.toPx(),
+                                    depthEffect = true
+                                )
+                            }
                         },
                         highlight = { Highlight.Plain },
                         onDrawSurface = { drawRect(containerColor) }
@@ -326,12 +344,18 @@ private fun ThemeModeDialogOverlay(
                                     backdrop = backdrop,
                                     shape = { Capsule() },
                                     effects = {
-                                        colorControls(
-                                            brightness = 0f,
-                                            saturation = 1.5f
-                                        )
-                                        blur(8f.dp.toPx())
-                                        lens(16f.dp.toPx(), 24f.dp.toPx(), depthEffect = true)
+                                        if (!isEInkMode) {
+                                            colorControls(
+                                                brightness = GlassDialogTokens.cardBrightness,
+                                                saturation = GlassDialogTokens.cardSaturation
+                                            )
+                                            blur(GlassDialogTokens.widgetBlur.toPx())
+                                            lens(
+                                                GlassDialogTokens.widgetLensX.toPx(),
+                                                GlassDialogTokens.widgetLensY.toPx(),
+                                                depthEffect = true
+                                            )
+                                        }
                                     },
                                     highlight = { Highlight.Plain },
                                     onDrawSurface = {
