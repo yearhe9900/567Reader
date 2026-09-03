@@ -148,7 +148,7 @@ fun MySettingsScreen(
                     .verticalScroll(rememberScrollState())
                     // 底部 88dp 为悬浮玻璃导航栏预留（导航栏 72dp + 16dp 余量），
                     // 保证滚到底时最后一项不被导航栏遮挡
-                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp)
+                    .padding(start = 16.dp, top = 105.dp, end = 16.dp, bottom = 88.dp)
             ) {
                 categories.forEachIndexed { index, category ->
                     // 仅卡片之间加 16dp，第一个卡片之前由 Column top=12dp 给出呼吸感

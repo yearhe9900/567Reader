@@ -188,6 +188,8 @@ fun ExplorePage(
                         setEdgeEffectColor(ctx.primaryColor)
                         layoutManager = LinearLayoutManager(ctx)
                         this.adapter = adapter
+                        clipToPadding = false
+                        setPadding(0, 105.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
                         adapter.registerAdapterDataObserver(object :
                             RecyclerView.AdapterDataObserver() {
                             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
