@@ -202,7 +202,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         isUpdate = { viewModel.isUpdate(it) },
                     )
                 },
-                explorePage = { registerCompress, searchQuery, onSearchQueryChange ->
+                explorePage = { registerCompress, searchQuery, onSearchQueryChange, backdrop ->
                     ExplorePage(
                         registerCompress = registerCompress,
                         onOpenExplore = { sourceUrl, title, exploreUrl ->
@@ -221,6 +221,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         onSearchBook = { SearchActivity.start(this, it) },
                         searchQuery = searchQuery,
                         onSearchQueryChange = onSearchQueryChange,
+                        backdrop = backdrop,
                     )
                 },
                 settingsPage = {

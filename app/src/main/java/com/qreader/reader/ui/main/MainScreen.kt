@@ -113,6 +113,7 @@ fun MainScreen(
         registerCompress: ((() -> Unit)?) -> Unit,
         searchQuery: String,
         onSearchQueryChange: (String) -> Unit,
+        backdrop: Backdrop,
     ) -> Unit,
     settingsPage: @Composable () -> Unit,
     themeDialogOpen: Boolean,
@@ -256,6 +257,7 @@ fun MainScreen(
                             { exploreCompress = it },
                             exploreSearchQuery,
                             { exploreSearchQuery = it },
+                            backdrop,
                         )
                     } else {
                         settingsPage()

@@ -1,6 +1,8 @@
 package com.qreader.reader.ui.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,13 +10,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,11 +26,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.drawRect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -35,6 +42,14 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.R
 import com.qreader.reader.data.AppDatabase
 import com.qreader.reader.data.appDb
@@ -76,6 +91,7 @@ fun ExplorePage(
     onSearchBook: (BookSourcePart) -> Unit,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    backdrop: com.kyant.backdrop.Backdrop,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -205,30 +221,110 @@ fun ExplorePage(
         }
     }
 
-    // ── 删除确认弹窗 ──
+    // ── 删除确认弹窗（玻璃态，与主题弹框风格一致）──
     showDeleteDialog?.let { source ->
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = null },
-            title = { Text(context.getString(R.string.draw)) },
-            text = {
-                Text(
-                    "${context.getString(R.string.sure_del)}\n${source.bookSourceName}"
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    exploreViewModel.deleteSource(source)
-                    showDeleteDialog = null
-                }) {
-                    Text(context.getString(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) {
-                    Text(context.getString(android.R.string.cancel))
+        val contentColor = Color.White
+        val accentColor = Color(0xFF0091FF)
+        val containerColor = Color(0xFF121212).copy(0.4f)
+        val dimColor = Color(0xFF121212).copy(0.56f)
+        val scrimColor = Color.Black.copy(0.5f)
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            // 蒙板（毛玻璃）
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedRectangle(0.5f.dp) },
+                        effects = {
+                            colorControls(brightness = 0f, saturation = 1.4f)
+                            blur(12f.dp.toPx())
+                            lens(28f.dp.toPx(), 56f.dp.toPx(), depthEffect = true)
+                        },
+                        highlight = { Highlight.Plain },
+                        onDrawSurface = { drawRect(scrimColor) }
+                    )
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(dimColor)
+                    }
+            )
+
+            // 居中玻璃卡片
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { showDeleteDialog = null },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(0.78f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { /* 点卡片内部不关闭 */ }
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { RoundedRectangle(48f.dp) },
+                            effects = {
+                                colorControls(brightness = 0f, saturation = 1.5f)
+                                blur(8f.dp.toPx())
+                                lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
+                            },
+                            highlight = { Highlight.Plain },
+                            onDrawSurface = { drawRect(containerColor) }
+                        )
+                ) {
+                    // 标题
+                    BasicText(
+                        text = context.getString(R.string.draw),
+                        modifier = Modifier.padding(28f.dp, 24f.dp, 28f.dp, 12f.dp),
+                        style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
+                    )
+
+                    // 内容
+                    BasicText(
+                        text = "${context.getString(R.string.sure_del)}\n${source.bookSourceName}",
+                        modifier = Modifier.padding(28f.dp, 0.dp, 28f.dp, 24f.dp),
+                        style = TextStyle(contentColor, 16f.sp)
+                    )
+
+                    // 按钮行
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 28f.dp, vertical = 16f.dp),
+                    ) {
+                        TextButton(
+                            onClick = { showDeleteDialog = null },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            BasicText(
+                                context.getString(android.R.string.cancel),
+                                style = TextStyle(contentColor.copy(0.7f), 16f.sp)
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                exploreViewModel.deleteSource(source)
+                                showDeleteDialog = null
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            BasicText(
+                                context.getString(android.R.string.ok),
+                                style = TextStyle(accentColor, 16f.sp, FontWeight.Medium)
+                            )
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 }
 
