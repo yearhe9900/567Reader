@@ -128,9 +128,8 @@ fun BookshelfPage(
     // 书架分组展示样式：0=Tab，1=Folder（与 R.array.group_style 对应）
     val bookGroupStyle = remember { AppConfig.bookGroupStyle }
     val isFolderStyle = bookGroupStyle == 1
-    // Folder 样式下强制使用 3 列宫格，普通模式沿用用户设置的布局
+    // Folder 样式下强制使用宫格布局，普通模式沿用用户设置的布局
     val isGridLayout = bookshelfLayout >= 2 || isFolderStyle
-    val gridSpanCount = if (isFolderStyle) 3 else bookshelfLayout
 
     // Tab 样式：根据 tabs 选择当前 groupId
     // 还原上次选中的分组（与 legado-E BookshelfFragment1.selectLastTab() 一致）
@@ -364,8 +363,8 @@ fun BookshelfPage(
                             setEdgeEffectColor(ctx.primaryColor)
                             clipToPadding = false
                             setPadding(0, 110.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
-                            layoutManager = if (isGridLayout) {
-                                GridLayoutManager(ctx, gridSpanCount)
+                            layoutManager = if (bookshelfLayout >= 2) {
+                                GridLayoutManager(ctx, bookshelfLayout)
                             } else {
                                 LinearLayoutManager(ctx)
                             }
