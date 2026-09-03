@@ -390,11 +390,12 @@ fun BookshelfPage(
                                     direction: Int
                                 ) {
                                     val pos = viewHolder.bindingAdapterPosition
-                                    val item = (recyclerView.adapter as? BaseBooksAdapter<*>)?.getItem(pos)
+                                    val rv = viewHolder.itemView.parent as? RecyclerView
+                                    val item = (rv?.adapter as? BaseBooksAdapter<*>)?.getItem(pos)
                                     if (item is BookGroup) {
                                         callBack.onItemClick(item)
                                     } else {
-                                        recyclerView.adapter?.notifyItemChanged(pos)
+                                        rv?.adapter?.notifyItemChanged(pos)
                                     }
                                 }
                             }).attachToRecyclerView(this)

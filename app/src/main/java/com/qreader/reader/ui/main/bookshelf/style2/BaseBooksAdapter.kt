@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookGroup
 import com.qreader.reader.ui.widget.image.CoverImageView
+import com.qreader.reader.utils.invisible
+import com.qreader.reader.utils.visible
 
 abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
     val context: Context,
