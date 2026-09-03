@@ -340,6 +340,13 @@ fun BookshelfPage(
                     SwipeRefreshLayout(ctx).apply {
                         swipeRefreshRef.value = this
                         setColorSchemeColors(ctx.accentColor)
+                        // 下拉刷新圆环置于标题栏下方（110dp），与内容区 top padding 对齐
+                        val refreshTopPx = 110.dpToPx(ctx).toInt()
+                        setProgressViewOffset(
+                            false,
+                            refreshTopPx,
+                            (110 + 40).dpToPx(ctx).toInt()
+                        )
                         setOnRefreshListener {
                             isRefreshing = false
                             onRefresh(books, onlyUpdateRead)
