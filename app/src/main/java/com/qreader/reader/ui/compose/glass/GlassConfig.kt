@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 object GlassConfig {
 
     // ── bar 类玻璃效果（导航栏 / 标题栏 / 玻璃按钮 / 下拉菜单）──
-    val blur = 8.dp
+    val blur = 12.dp
     val lensX = 24.dp
-    val lensY = 24.dp
+    val lensY = 48.dp
     val chromaticAberration = true
 
     // 容器半透明底色（透明度固定 0.4f，与官方 LiquidBottomTabs 一致）
