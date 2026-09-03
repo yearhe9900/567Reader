@@ -222,12 +222,11 @@ fun MainScreen(
                 .background(bgColor)
                 .layerBackdrop(backdrop)
         ) {
-            // 内容区：HorizontalPager 全屏，延伸到悬浮导航栏背后
+            // 内容区：HorizontalPager 全屏，延伸到状态栏和导航栏背后
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars)
                     .graphicsLayer { alpha = pageFade.value },
                 beyondViewportPageCount = 2, // 预组合全部 3 页，避免跳页时中间页组合卡顿
             ) { page ->
