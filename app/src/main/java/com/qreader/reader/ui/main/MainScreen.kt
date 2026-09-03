@@ -642,8 +642,23 @@ private fun ExploreGlassTitleBar(
                 )
             }
 
-            // 分组按钮（右下角）
-            Box {
+            // 分组按钮（右下角，液态玻璃）
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(12.dp) },
+                        effects = {
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                        },
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                    )
+                    .size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
                 IconButton(onClick = { showGroupMenu = true }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_groups),
