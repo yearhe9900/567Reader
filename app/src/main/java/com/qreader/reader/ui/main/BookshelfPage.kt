@@ -9,21 +9,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -86,7 +77,7 @@ import kotlin.math.max
 /**
  * 书架页顶栏「更多选项」菜单项（与原版 R.menu.main_bookshelf 的溢出菜单一致）
  */
-private enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
+enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
     UpdateToc(R.string.update_toc, R.drawable.ic_refresh_black_24dp),
     AddLocal(R.string.book_local, R.drawable.ic_add),
     Remote(R.string.add_remote_book, R.drawable.ic_add),
@@ -112,6 +103,7 @@ private enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
 fun BookshelfPage(
     registerGotoTop: ((() -> Unit)?) -> Unit,
     registerBack: ((() -> Boolean)?) -> Unit,
+    registerMenuAction: ((BookshelfMenuAction) -> Unit)?) -> Unit,
     onBookClick: (Book) -> Unit,
     onBookLongClick: (Book) -> Unit,
     onGroupLongClick: (BookGroup) -> Unit,
@@ -232,9 +224,11 @@ fun BookshelfPage(
                 true
             } else false
         }
+        registerMenuAction { handleMenuAction(it) }
         onDispose {
             registerGotoTop(null)
             registerBack(null)
+            registerMenuAction(null)
         }
     }
 
@@ -521,117 +515,6 @@ fun BookshelfPage(
                     }
                 },
             )
-        }
-    }
-}
-
-/**
- * 书架页顶栏：Tab/标题（左） + 搜索（常驻） + 更多选项（⋮ 溢出菜单，右）
- * 与原版 legado-E 的 TitleBar + R.menu.main_bookshelf 一致。
- */
-@Composable
-private fun BookshelfTopBar(
-    bookGroupStyle: Int,
-    bookGroups: List<BookGroup>,
-    selectedTabIndex: Int,
-    onTabSelected: (Int) -> Unit,
-    onSearch: () -> Unit,
-    onMenuAction: (BookshelfMenuAction) -> Unit,
-    backgroundColor: Color,
-    backgroundInt: Int,
-    contentColor: Color,
-    accentColor: Color,
-) {
-    val menuExpanded = remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(backgroundColor),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (bookGroupStyle == 0) {
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier
-                    .weight(1f)
-                    .background(backgroundColor),
-                containerColor = backgroundColor,
-                contentColor = contentColor,
-                indicator = { tabPositions ->
-                    if (selectedTabIndex < tabPositions.size) {
-                        TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                            color = accentColor
-                        )
-                    }
-                },
-                divider = {},
-            ) {
-                bookGroups.forEachIndexed { index, group ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { onTabSelected(index) },
-                        text = {
-                            BasicText(
-                                text = group.groupName,
-                                style = TextStyle(
-                                    color = if (selectedTabIndex == index) accentColor else contentColor,
-                                    fontSize = 15.sp,
-                                ),
-                            )
-                        },
-                    )
-                }
-            }
-        } else {
-            BasicText(
-                text = stringResource(R.string.bookshelf),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp),
-                style = TextStyle(color = contentColor, fontSize = 20.sp),
-            )
-        }
-
-        // 搜索（常驻，对应 menu_search）
-        IconButton(onClick = onSearch) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = stringResource(R.string.search),
-                tint = contentColor,
-            )
-        }
-
-        // 更多选项（对应 R.menu.main_bookshelf 溢出菜单）
-        IconButton(onClick = { menuExpanded.value = true }) {
-            Icon(
-                painter = painterResource(R.drawable.ic_more_vert),
-                contentDescription = "more",
-                tint = contentColor,
-            )
-        }
-
-        DropdownMenu(
-            expanded = menuExpanded.value,
-            onDismissRequest = { menuExpanded.value = false },
-        ) {
-            enumValues<BookshelfMenuAction>().forEach { action ->
-                DropdownMenuItem(
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(action.iconRes),
-                            contentDescription = null,
-                            tint = contentColor,
-                        )
-                    },
-                    text = { BasicText(stringResource(action.titleRes)) },
-                    onClick = {
-                        menuExpanded.value = false
-                        onMenuAction(action)
-                    },
-                )
-            }
         }
     }
 }

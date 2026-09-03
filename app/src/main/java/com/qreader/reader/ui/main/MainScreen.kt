@@ -65,6 +65,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
+import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
@@ -108,6 +109,7 @@ fun MainScreen(
     bookshelfPage: @Composable (
         registerGotoTop: ((() -> Unit)?) -> Unit,
         registerBack: ((() -> Boolean)?) -> Unit,
+        registerMenuAction: ((BookshelfMenuAction) -> Unit)?) -> Unit,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
@@ -139,6 +141,7 @@ fun MainScreen(
     // ── 页面动作（由各页面 composable 注册）──
     var bookshelfGotoTop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var bookshelfBack by remember { mutableStateOf<(() -> Boolean)?>(null) }
+    var bookshelfMenuAction by remember { mutableStateOf<((BookshelfMenuAction) -> Unit)?>(null) }
     var exploreCompress by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // ── 发现页搜索状态（提升到 MainScreen 供玻璃标题栏使用）──
@@ -250,6 +253,7 @@ fun MainScreen(
                             bookshelfBack = back
                             registerBookshelfBack(back)
                         },
+                        { bookshelfMenuAction = it },
                     )
 
                     1 -> if (showDiscovery) {
@@ -290,6 +294,15 @@ fun MainScreen(
                         title = title,
                         bgColor = bgColor,
                         contentColor = contentColor,
+                    )
+                } else if (pagerState.currentPage == 0) {
+                    BookshelfGlassTitleBar(
+                        backdrop = backdrop,
+                        title = title,
+                        containerColor = containerColor,
+                        contentColor = contentColor,
+                        onSearch = { SearchActivity.start(context, "") },
+                        onMenuAction = { bookshelfMenuAction?.invoke(it) },
                     )
                 } else if (pagerState.currentPage == 1 && showDiscovery) {
                     ExploreGlassTitleBar(
@@ -562,6 +575,132 @@ private fun GlassTitleBar(
             style = TextStyle(contentColor, 20.sp),
             modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
         )
+    }
+}
+
+/**
+ * 书架页玻璃态标题栏：标题（左） + 玻璃态搜索按钮 + 玻璃态「更多」溢出菜单（右）。
+ *
+ * 复用与 [ExploreGlassTitleBar] 相同的 drawBackdrop 玻璃按钮 + DropdownMenu 模式，
+ * 菜单项对应原版 R.menu.main_bookshelf 的溢出菜单（BookshelfMenuAction）。
+ * 不渲染分组切换 Tab（按需求不需要分组 tab 功能），仅保留功能入口。
+ */
+@Composable
+private fun BookshelfGlassTitleBar(
+    backdrop: Backdrop,
+    title: String,
+    containerColor: Color,
+    contentColor: Color,
+    onSearch: () -> Unit,
+    onMenuAction: (BookshelfMenuAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(0.dp) },
+                effects = {
+                    vibrancy()
+                    blur(8f.dp.toPx())
+                    lens(24f.dp.toPx(), 24f.dp.toPx())
+                },
+                onDrawSurface = { drawRect(containerColor) }
+            )
+            .height(100.dp)
+            .fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 16.dp, end = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            // 标题
+            BasicText(
+                text = title,
+                style = TextStyle(contentColor, 20.sp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+            )
+
+            // 搜索按钮（玻璃态）
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(12.dp) },
+                        effects = {
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                        },
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                    )
+                    .size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                IconButton(onClick = onSearch) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = context.getString(R.string.search),
+                        tint = contentColor,
+                    )
+                }
+            }
+
+            // 更多选项按钮（玻璃态）
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(12.dp) },
+                        effects = {
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                        },
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                    )
+                    .size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_more_vert),
+                        contentDescription = "more",
+                        tint = contentColor,
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                ) {
+                    enumValues<BookshelfMenuAction>().forEach { action ->
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(action.iconRes),
+                                    contentDescription = null,
+                                    tint = contentColor,
+                                )
+                            },
+                            text = { BasicText(context.getString(action.titleRes)) },
+                            onClick = {
+                                showMenu = false
+                                onMenuAction(action)
+                            },
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

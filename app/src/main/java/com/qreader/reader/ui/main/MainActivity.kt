@@ -184,10 +184,11 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 showDiscovery = showDiscovery,
                 isEInkMode = AppConfig.isEInkMode,
                 glassConfig = glassConfig,
-                bookshelfPage = { registerGotoTop, registerBack ->
+                bookshelfPage = { registerGotoTop, registerBack, registerMenuAction ->
                     BookshelfPage(
                         registerGotoTop = registerGotoTop,
                         registerBack = registerBack,
+                        registerMenuAction = registerMenuAction,
                         onBookClick = { startActivityForBook(it) },
                         onBookLongClick = {
                             startActivity<BookInfoActivity> {
