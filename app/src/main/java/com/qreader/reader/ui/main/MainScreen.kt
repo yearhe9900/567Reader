@@ -528,7 +528,7 @@ private fun GlassTitleBar(
                 },
                 onDrawSurface = { drawRect(containerColor) }
             )
-            .height(56.dp)
+            .height(112.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.CenterStart
     ) {
