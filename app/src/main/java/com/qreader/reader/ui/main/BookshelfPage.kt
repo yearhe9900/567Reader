@@ -67,6 +67,7 @@ import com.qreader.reader.utils.showDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -126,6 +127,10 @@ fun BookshelfPage(
 
     // 书架分组展示样式：0=Tab，1=Folder（与 R.array.group_style 对应）
     val bookGroupStyle = remember { AppConfig.bookGroupStyle }
+    val isFolderStyle = bookGroupStyle == 1
+    // Folder 样式下强制使用 3 列宫格，普通模式沿用用户设置的布局
+    val isGridLayout = bookshelfLayout >= 2 || isFolderStyle
+    val gridSpanCount = if (isFolderStyle) 3 else bookshelfLayout
 
     // Tab 样式：根据 tabs 选择当前 groupId
     // 还原上次选中的分组（与 legado-E BookshelfFragment1.selectLastTab() 一致）
@@ -187,9 +192,9 @@ fun BookshelfPage(
         }
     }
 
-    // ── 创建 Adapter（只在 bookshelfLayout 变化时重建）──
-    val adapter = remember(bookshelfLayout) {
-        if (bookshelfLayout >= 2) {
+    // ── 创建 Adapter（在 bookshelfLayout / 分组样式变化时重建）──
+    val adapter = remember(bookshelfLayout, bookGroupStyle) {
+        if (isGridLayout) {
             BooksAdapterGrid(context, callBack)
         } else {
             BooksAdapterList(context, callBack)
@@ -302,11 +307,14 @@ fun BookshelfPage(
         }
         currentItems.addAll(books)
         itemCount = currentItems.size
-        // Folder 样式下，预计算各分组前 4 本书封面（离线线程查询 Room），供文件夹四格封面使用
+        // Folder 样式下，预计算各分组前 4 本书封面（离线线程查询 Room），供文件夹宫格封面使用
         if (bookGroupStyle == 1 && groupId == BookGroup.IdRoot) {
             adapter.groupCoverBooks = withContext(Dispatchers.IO) {
                 bookGroups.associate { group ->
-                    group.groupId to appDb.bookDao.getBooksByGroup(group.groupId).take(4)
+                    group.groupId to appDb.bookDao.flowByGroup(group.groupId)
+                        .map { sortBooksByGroup(it, group) }
+                        .first()
+                        .take(4)
                 }
             }
         }
@@ -558,6 +566,19 @@ fun BookshelfPage(
                 },
             )
         }
+    }
+}
+
+/**
+ * 按分组自身的排序规则（与书架内显示顺序一致）对书籍排序，用于选取文件夹宫格封面。
+ */
+private fun sortBooksByGroup(books: List<Book>, group: BookGroup): List<Book> {
+    return when (group.getRealBookSort()) {
+        1 -> books.sortedByDescending { it.latestChapterTime }
+        2 -> books.sortedWith { o1, o2 -> o1.name.cnCompare(o2.name) }
+        3 -> books.sortedBy { it.order }
+        4 -> books.sortedByDescending { max(it.latestChapterTime, it.durChapterTime) }
+        else -> books.sortedByDescending { it.durChapterTime }
     }
 }
 

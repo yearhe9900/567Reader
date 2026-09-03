@@ -194,7 +194,11 @@ class BooksAdapterList(context: Context, callBack: CallBack) :
         fun onBind(item: BookGroup, position: Int) = binding.run {
             tvName.text = item.groupName
             bindGroupCoverCells(
-                arrayOf(binding.ivCover1, binding.ivCover2, binding.ivCover3, binding.ivCover4),
+                arrayOf(
+                    binding.ivCover1, binding.ivCover2, binding.ivCover3,
+                    binding.ivCover4, binding.ivCover5, binding.ivCover6,
+                    binding.ivCover7, binding.ivCover8, binding.ivCover9
+                ),
                 item.groupId
             )
             flHasNew.gone()
@@ -216,7 +220,11 @@ class BooksAdapterList(context: Context, callBack: CallBack) :
                         when (it) {
                             "groupName" -> tvName.text = item.groupName
                             "cover" -> bindGroupCoverCells(
-                                arrayOf(binding.ivCover1, binding.ivCover2, binding.ivCover3, binding.ivCover4),
+                                arrayOf(
+                                    binding.ivCover1, binding.ivCover2, binding.ivCover3,
+                                    binding.ivCover4, binding.ivCover5, binding.ivCover6,
+                                    binding.ivCover7, binding.ivCover8, binding.ivCover9
+                                ),
                                 item.groupId
                             )
                         }
