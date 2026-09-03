@@ -48,7 +48,6 @@ import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
-import com.qreader.reader.ui.about.AppLogDialog
 import com.qreader.reader.ui.book.cache.CacheActivity
 import com.qreader.reader.ui.book.group.GroupManageDialog
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
@@ -221,8 +220,6 @@ fun BookshelfPage(
                 }
             BookshelfMenuAction.Import ->
                 showImportDialog = true
-            BookshelfMenuAction.Log ->
-                activity.showDialogFragment<AppLogDialog>()
         }
     }
 
@@ -522,5 +519,4 @@ enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
     Layout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
     Export(R.string.export_bookshelf, R.drawable.ic_export),
     Import(R.string.import_bookshelf, R.drawable.ic_import),
-    Log(R.string.log, R.drawable.ic_cfg_about),
 }
