@@ -189,7 +189,8 @@ fun ExplorePage(
                         layoutManager = LinearLayoutManager(ctx)
                         this.adapter = adapter
                         clipToPadding = false
-                        setPadding(0, 105.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
+                        val density = ctx.resources.displayMetrics.density
+                        setPadding(0, (105 * density).toInt(), 0, (72 * density).toInt())
                         adapter.registerAdapterDataObserver(object :
                             RecyclerView.AdapterDataObserver() {
                             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
