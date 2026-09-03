@@ -49,14 +49,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.shapes.Capsule
 import com.qreader.reader.R
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTab
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTabs
+import com.qreader.reader.ui.compose.liquid.LiquidGlassStyle
 import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
 import com.qreader.reader.utils.ColorUtils
 import kotlin.math.abs
@@ -242,6 +249,43 @@ fun MainScreen(
                     }
 
                     2 -> settingsPage()
+                }
+            }
+        }
+
+        // 玻璃标题栏：悬浮在顶部（overlay，不占内容流）
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp)
+        ) {
+            AnimatedVisibility(
+                visible = !themeDialogOpen,
+                enter = fadeIn(tween(160)),
+                exit = fadeOut(tween(120))
+            ) {
+                val title = when (pagerState.currentPage) {
+                    0 -> context.getString(R.string.bookshelf)
+                    1 -> if (showDiscovery) context.getString(R.string.discovery) else context.getString(R.string.setting)
+                    2 -> context.getString(R.string.setting)
+                    else -> ""
+                }
+                if (isEInkMode) {
+                    EInkTitleBar(
+                        title = title,
+                        bgColor = bgColor,
+                        contentColor = contentColor,
+                    )
+                } else {
+                    GlassTitleBar(
+                        backdrop = backdrop,
+                        title = title,
+                        containerColor = containerColor,
+                        contentColor = contentColor,
+                    )
                 }
             }
         }
@@ -461,4 +505,67 @@ private fun buildTabItems(context: Context, showDiscovery: Boolean): List<Bottom
         )
     )
     return items
+}
+
+/**
+ * 玻璃态标题栏：使用 Liquid Glass 效果（vibrancy + blur + lens）模糊背后页面内容。
+ *
+ * 与底部导航栏（LiquidBottomTabs）共享同一个 [backdrop]，视觉风格统一。
+ * 形状为 Capsule（胶囊），高度 56dp，与原标题栏一致。
+ */
+@Composable
+private fun GlassTitleBar(
+    backdrop: com.kyant.backdrop.Backdrop,
+    title: String,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { Capsule() },
+                effects = {
+                    vibrancy()
+                    blur(8f.dp.toPx())
+                    lens(24f.dp.toPx(), 24f.dp.toPx())
+                },
+                onDrawSurface = { drawRect(containerColor) }
+            )
+            .height(56.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        BasicText(
+            text = title,
+            style = TextStyle(contentColor, 20.sp),
+            modifier = Modifier.padding(start = 16.dp)
+        )
+    }
+}
+
+/**
+ * EInk 墨水屏模式的降级标题栏：纯色背景 + 标题文字，不使用玻璃效果。
+ */
+@Composable
+private fun EInkTitleBar(
+    title: String,
+    bgColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .fillMaxWidth()
+            .background(bgColor, RoundedCornerShape(28.dp)),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        BasicText(
+            text = title,
+            style = TextStyle(contentColor, 20.sp),
+            modifier = Modifier.padding(start = 16.dp)
+        )
+    }
 }

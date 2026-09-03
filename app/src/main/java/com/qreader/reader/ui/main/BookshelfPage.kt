@@ -333,26 +333,6 @@ fun BookshelfPage(
     val barContentColor = if (ColorUtils.isColorLight(context.backgroundColor)) Color.Black else Color.White
     val barAccentColor = Color(context.accentColor)
     Column(modifier = modifier.fillMaxSize()) {
-        BookshelfTopBar(
-            bookGroupStyle = bookGroupStyle,
-            bookGroups = bookGroups,
-            selectedTabIndex = selectedTabIndex,
-            onTabSelected = { index ->
-                selectedTabIndex = index
-                AppConfig.saveTabPosition = index
-                val group = bookGroups.getOrNull(index)
-                groupId = group?.groupId ?: BookGroup.IdRoot
-                enableRefresh = group?.enableRefresh ?: true
-                onlyUpdateRead = group?.onlyUpdateRead ?: false
-            },
-            onSearch = { activity.startActivity(Intent(activity, SearchActivity::class.java)) },
-            onMenuAction = ::handleMenuAction,
-            backgroundColor = barBgColor,
-            backgroundInt = context.backgroundColor,
-            contentColor = barContentColor,
-            accentColor = barAccentColor,
-        )
-
         Box(modifier = Modifier.weight(1f)) {
             AndroidView(
                 factory = { ctx ->

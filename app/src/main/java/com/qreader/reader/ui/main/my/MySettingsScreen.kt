@@ -141,25 +141,6 @@ fun MySettingsScreen(
                 .background(pageBackgroundColor)
                 .then(if (themeDialogOpen) Modifier.layerBackdrop(backdrop) else Modifier)
         ) {
-            // 顶栏：背景与书架内容区（页面主题背景 backgroundColor）保持一致，文字色随背景深浅反色
-            val barBg = Color(context.backgroundColor)
-            val barContentColor = if (ColorUtils.isColorLight(context.backgroundColor)) Color.Black else Color.White
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(barBg),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                BasicText(
-                    text = stringResource(R.string.setting),
-                    style = TextStyle(barContentColor, 20.sp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp),
-                )
-            }
-
             // 可滚动内容容器（卡片之间 16dp 间距，靠卡片本身分组，无分类标题）
             Column(
                 modifier = Modifier

@@ -180,24 +180,6 @@ fun ExplorePage(
 
     // ── UI ──
     Column(modifier = modifier.fillMaxSize()) {
-        // 搜索栏（包在状态栏颜色背景中，与系统状态栏/书架/设置标题栏统一）
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(barBg),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                contentColor = barContentColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-        }
-
         Box(modifier = Modifier.fillMaxSize()) {
             AndroidView(
                 factory = { ctx ->
