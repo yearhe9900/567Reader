@@ -364,8 +364,8 @@ fun BookshelfPage(
                             setEdgeEffectColor(ctx.primaryColor)
                             clipToPadding = false
                             setPadding(0, 110.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
-                            layoutManager = if (bookshelfLayout >= 2) {
-                                GridLayoutManager(ctx, bookshelfLayout)
+                            layoutManager = if (isGridLayout) {
+                                GridLayoutManager(ctx, gridSpanCount)
                             } else {
                                 LinearLayoutManager(ctx)
                             }

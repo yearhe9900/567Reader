@@ -195,9 +195,8 @@ class BooksAdapterList(context: Context, callBack: CallBack) :
             tvName.text = item.groupName
             bindGroupCoverCells(
                 arrayOf(
-                    binding.ivCover1, binding.ivCover2, binding.ivCover3,
-                    binding.ivCover4, binding.ivCover5, binding.ivCover6,
-                    binding.ivCover7, binding.ivCover8, binding.ivCover9
+                    binding.ivCover1, binding.ivCover2,
+                    binding.ivCover3, binding.ivCover4
                 ),
                 item.groupId
             )
@@ -221,9 +220,8 @@ class BooksAdapterList(context: Context, callBack: CallBack) :
                             "groupName" -> tvName.text = item.groupName
                             "cover" -> bindGroupCoverCells(
                                 arrayOf(
-                                    binding.ivCover1, binding.ivCover2, binding.ivCover3,
-                                    binding.ivCover4, binding.ivCover5, binding.ivCover6,
-                                    binding.ivCover7, binding.ivCover8, binding.ivCover9
+                                    binding.ivCover1, binding.ivCover2,
+                                    binding.ivCover3, binding.ivCover4
                                 ),
                                 item.groupId
                             )
