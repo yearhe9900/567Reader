@@ -206,7 +206,7 @@ fun ExplorePage(
                         this.adapter = adapter
                         clipToPadding = false
                         val density = ctx.resources.displayMetrics.density
-                        setPadding(0, (105 * density).toInt(), 0, (72 * density).toInt())
+                        setPadding(0, (110 * density).toInt(), 0, (72 * density).toInt())
                         adapter.registerAdapterDataObserver(object :
                             RecyclerView.AdapterDataObserver() {
                             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {

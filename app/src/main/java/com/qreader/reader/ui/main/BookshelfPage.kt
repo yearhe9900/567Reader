@@ -348,7 +348,7 @@ fun BookshelfPage(
                             recyclerViewRef.value = this
                             setEdgeEffectColor(ctx.primaryColor)
                             clipToPadding = false
-                            setPadding(0, 105.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
+                            setPadding(0, 110.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
                             layoutManager = if (bookshelfLayout >= 2) {
                                 GridLayoutManager(ctx, bookshelfLayout)
                             } else {
