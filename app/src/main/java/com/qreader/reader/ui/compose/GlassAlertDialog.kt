@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -56,7 +56,7 @@ import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.R
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
-import com.qreader.reader.ui.compose.glass.glassDialogColors
+import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 
 /**
  * Liquid Glass 风格的确认对话框（官方 drawBackdrop 实现，居中显示）
@@ -137,19 +137,11 @@ class GlassAlertDialog : DialogFragment() {
     }
 
     @Composable
-    private fun GlassAlertDialogContent() {
+        private fun GlassAlertDialogContent() {
         val backdrop = rememberLayerBackdrop()
         var checkBoxState by remember { mutableStateOf(checkBoxChecked) }
 
-        // 玻璃态 dialog 固定使用深色主题风格，与「主题模式」弹框保持一致
-        // 颜色统一走 GlassDialogTokens（含 E-Ink 回退），避免各弹框重复硬编码
         val isEInkMode = AppConfig.isEInkMode
-        val colors = glassDialogColors(isEInkMode)
-        val contentColor = colors.contentColor
-        val accentColor = colors.accentColor
-        val containerColor = colors.containerColor
-        val dimColor = colors.dimColor
-        val scrimColor = colors.scrimColor
 
         // 背景采样源：原页面截图优先，回退到 wallpaper_light
         val backdropPainter: Painter = if (backdropBitmap != null) {
@@ -168,7 +160,7 @@ class GlassAlertDialog : DialogFragment() {
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // 1) backdrop 捕获源（与官方 demo 一致：全屏壁纸/截图）
+            // 玻璃采样源（截图/壁纸），与官方 demo 一致
             Image(
                 painter = backdropPainter,
                 contentDescription = null,
@@ -178,214 +170,158 @@ class GlassAlertDialog : DialogFragment() {
                 contentScale = ContentScale.Crop
             )
 
-            // 2) 玻璃蒙板：与「主题模式」弹框一致，blur+lens+scrim+dim
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedRectangle(0.5f.dp) },
-                        effects = {
-                            if (!isEInkMode) {
-                                colorControls(
-                                    brightness = GlassDialogTokens.scrimBrightness,
-                                    saturation = GlassDialogTokens.scrimSaturation
-                                )
-                                blur(GlassDialogTokens.scrimBlur.toPx())
-                                lens(
-                                    GlassDialogTokens.scrimLensX.toPx(),
-                                    GlassDialogTokens.scrimLensY.toPx(),
-                                    depthEffect = true
-                                )
-                            }
-                        },
-                        highlight = { Highlight.Plain },
-                        onDrawSurface = { drawRect(scrimColor) }
-                    )
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(dimColor)
-                    }
-            )
+            // 复用通用液态玻璃弹框 LiquidGlassDialog（蒙板 + 圆角 48dp 玻璃卡片）
+            LiquidGlassDialog(
+                backdrop = backdrop,
+                onDismiss = handleCancel,
+                modifier = Modifier.fillMaxWidth(0.78f),
+                cardRadius = 48.dp,
+                contentPadding = PaddingValues(0.dp)
+            ) { colors ->
+                val contentColor = colors.contentColor
+                val accentColor = colors.accentColor
+                val containerColor = colors.containerColor
 
-            // 3) 居中玻璃卡片层（点外部区域 = 取消）
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { handleCancel() },
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(0.78f)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { /* 点卡片内部不关闭 */ }
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedRectangle(48f.dp) },
-                            effects = {
-                                if (!isEInkMode) {
-                                    colorControls(
-                                        brightness = GlassDialogTokens.cardBrightness,
-                                        saturation = GlassDialogTokens.cardSaturation
-                                    )
-                                    blur(GlassDialogTokens.cardBlur.toPx())
-                                    lens(
-                                        GlassDialogTokens.cardLensX.toPx(),
-                                        GlassDialogTokens.cardLensY.toPx(),
-                                        depthEffect = true
-                                    )
-                                }
-                            },
-                            highlight = { Highlight.Plain },
-                            onDrawSurface = { drawRect(containerColor) }
-                        )
-                ) {
-                    // 标题
-                    BasicText(
-                        text = title,
-                        modifier = Modifier.padding(28f.dp, 24f.dp, 28f.dp, 12f.dp),
-                        style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
-                    )
+                // 标题
+                BasicText(
+                    text = title,
+                    modifier = Modifier.padding(28f.dp, 24f.dp, 28f.dp, 12f.dp),
+                    style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
+                )
 
-                    // 消息
-                    BasicText(
-                        text = message,
-                        modifier = Modifier.padding(24f.dp, 12f.dp, 24f.dp, 12f.dp),
-                        style = TextStyle(contentColor.copy(0.68f), 15f.sp),
-                        maxLines = 5
-                    )
+                // 消息
+                BasicText(
+                    text = message,
+                    modifier = Modifier.padding(24f.dp, 12f.dp, 24f.dp, 12f.dp),
+                    style = TextStyle(contentColor.copy(0.68f), 15f.sp),
+                    maxLines = 5
+                )
 
-                    // 复选框（保留本地文件）
-                    if (showCheckBox && checkBoxText.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { checkBoxState = !checkBoxState }
-                                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // 玻璃态复选框
-                            Box(
-                                modifier = Modifier
-                                    .size(24f.dp)
-                                    .drawBackdrop(
-                                        backdrop = backdrop,
-                                        shape = { RoundedRectangle(6f.dp) },
-                                        effects = {
-                                            if (!isEInkMode) {
-                                                colorControls(
-                                                    brightness = GlassDialogTokens.cardBrightness,
-                                                    saturation = GlassDialogTokens.cardSaturation
-                                                )
-                                                blur(GlassDialogTokens.widgetBlur.toPx())
-                                                lens(
-                                                    GlassDialogTokens.widgetLensX.toPx(),
-                                                    GlassDialogTokens.widgetLensY.toPx(),
-                                                    depthEffect = true
-                                                )
-                                            }
-                                        },
-                                        highlight = { Highlight.Plain },
-                                        onDrawSurface = {
-                                            drawRect(
-                                                if (checkBoxState) accentColor
-                                                else if (isEInkMode) containerColor
-                                                else containerColor.copy(0.3f)
-                                            )
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (checkBoxState) {
-                                    BasicText(
-                                        text = "✓",
-                                        style = TextStyle(Color.White, 16f.sp, FontWeight.Bold)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Box(
-                                modifier = Modifier.height(24.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                BasicText(
-                                    text = checkBoxText,
-                                    style = TextStyle(contentColor.copy(0.9f), 16f.sp)
-                                )
-                            }
-                        }
-                    }
-
-                    // 按钮
+                // 复选框（保留本地文件）
+                if (showCheckBox && checkBoxText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier
-                            .padding(24f.dp, 16f.dp, 24f.dp, 24f.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16f.dp),
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { checkBoxState = !checkBoxState }
+                            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 取消按钮
-                        Row(
+                        // 玻璃态复选框
+                        Box(
                             modifier = Modifier
-                                .clip(Capsule())
-                                .background(containerColor.copy(0.2f))
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { handleCancel() }
-                                .height(48f.dp)
-                                .weight(1f)
-                                .padding(horizontal = 16f.dp),
-                            horizontalArrangement = Arrangement.spacedBy(
-                                4f.dp,
-                                Alignment.CenterHorizontally
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
+                                .size(24f.dp)
+                                .drawBackdrop(
+                                    backdrop = backdrop,
+                                    shape = { RoundedRectangle(6f.dp) },
+                                    effects = {
+                                        if (!isEInkMode) {
+                                            colorControls(
+                                                brightness = GlassDialogTokens.cardBrightness,
+                                                saturation = GlassDialogTokens.cardSaturation
+                                            )
+                                            blur(GlassDialogTokens.widgetBlur.toPx())
+                                            lens(
+                                                GlassDialogTokens.widgetLensX.toPx(),
+                                                GlassDialogTokens.widgetLensY.toPx(),
+                                                depthEffect = true
+                                            )
+                                        }
+                                    },
+                                    highlight = { Highlight.Plain },
+                                    onDrawSurface = {
+                                        drawRect(
+                                            if (checkBoxState) accentColor
+                                            else if (isEInkMode) containerColor
+                                            else containerColor.copy(0.3f)
+                                        )
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
-                            BasicText(
-                                text = cancelText,
-                                style = TextStyle(contentColor, 16f.sp)
-                            )
+                            if (checkBoxState) {
+                                BasicText(
+                                    text = "✓",
+                                    style = TextStyle(Color.White, 16f.sp, FontWeight.Bold)
+                                )
+                            }
                         }
 
-                        // 确认按钮
-                        Row(
-                            modifier = Modifier
-                                .clip(Capsule())
-                                .background(accentColor)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { handleConfirm() }
-                                .height(48f.dp)
-                                .weight(1f)
-                                .padding(horizontal = 16f.dp),
-                            horizontalArrangement = Arrangement.spacedBy(
-                                4f.dp,
-                                Alignment.CenterHorizontally
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Box(
+                            modifier = Modifier.height(24.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             BasicText(
-                                text = confirmText,
-                                style = TextStyle(Color.White, 16f.sp)
+                                text = checkBoxText,
+                                style = TextStyle(contentColor.copy(0.9f), 16f.sp)
                             )
                         }
+                    }
+                }
+
+                // 按钮
+                Row(
+                    modifier = Modifier
+                        .padding(24f.dp, 16f.dp, 24f.dp, 24f.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16f.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 取消按钮
+                    Row(
+                        modifier = Modifier
+                            .clip(Capsule())
+                            .background(containerColor.copy(0.2f))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { handleCancel() }
+                            .height(48f.dp)
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            4f.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BasicText(
+                            text = cancelText,
+                            style = TextStyle(contentColor, 16f.sp)
+                        )
+                    }
+
+                    // 确认按钮
+                    Row(
+                        modifier = Modifier
+                            .clip(Capsule())
+                            .background(accentColor)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { handleConfirm() }
+                            .height(48f.dp)
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            4f.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BasicText(
+                            text = confirmText,
+                            style = TextStyle(Color.White, 16f.sp)
+                        )
                     }
                 }
             }
         }
     }
+
 }

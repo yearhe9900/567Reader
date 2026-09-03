@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,10 +58,9 @@ import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
-import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
-import com.qreader.reader.ui.compose.glass.glassDialogColors
+import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 
 /**
  * 「我的」设置页 —— Compose 实现
@@ -238,219 +237,150 @@ private fun ThemeModeDialogOverlay(
 ) {
     var currentIndex by remember { mutableStateOf(initialIndex) }
 
-    // 主题弹框样式固定（不随明暗主题变化）：统一采用深色模式一套值
-    // 颜色与效果统一走 GlassDialogTokens（含 E-Ink 回退），与删除书籍弹框/发现页删除框一致
-    val isEInkMode = AppConfig.isEInkMode
-    val colors = glassDialogColors(isEInkMode)
-    val contentColor = colors.contentColor
-    val accentColor = colors.accentColor
-    val containerColor = colors.containerColor
-    val dimColor = colors.dimColor
-    // 蒙板染色：用页面底色轻微染色，使毛玻璃更有"材质感"
-    val scrimColor = colors.scrimColor
+    // 复用通用液态玻璃弹框 LiquidGlassDialog（蒙板 + 圆角 48dp 玻璃卡片）
+    LiquidGlassDialog(
+        backdrop = backdrop,
+        onDismiss = onDismiss,
+        modifier = Modifier.fillMaxWidth(0.78f),
+        cardRadius = 48.dp,
+        contentPadding = PaddingValues(0.dp)
+    ) { colors ->
+        val contentColor = colors.contentColor
+        val accentColor = colors.accentColor
+        val containerColor = colors.containerColor
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 1) 蒙板（真·毛玻璃）：模糊真实设置页 + 页面色染色 + dim 压暗
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedRectangle(0.5f.dp) },
-                    effects = {
-                        if (!isEInkMode) {
-                            colorControls(
-                                brightness = GlassDialogTokens.scrimBrightness,
-                                saturation = GlassDialogTokens.scrimSaturation
-                            )
-                            blur(GlassDialogTokens.scrimBlur.toPx())
-                            lens(
-                                GlassDialogTokens.scrimLensX.toPx(),
-                                GlassDialogTokens.scrimLensY.toPx(),
-                                depthEffect = true
-                            )
-                        }
-                    },
-                    highlight = { Highlight.Plain },
-                    onDrawSurface = { drawRect(scrimColor) }
-                )
-                .drawWithContent {
-                    drawContent()
-                    drawRect(dimColor)
-                }
+        // 标题
+        BasicText(
+            text = stringResource(R.string.theme_mode),
+            modifier = Modifier.padding(28f.dp, 24f.dp, 28f.dp, 12f.dp),
+            style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
         )
 
-        // 2) 居中玻璃卡片层（点外部区域 = 取消）
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onDismiss() },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
+        // 单选列表（玻璃态圆形单选圈）
+        labels.forEachIndexed { index, label ->
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth(0.78f)
+                    .fillMaxWidth()
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { /* 点卡片内部不关闭 */ }
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedRectangle(48f.dp) },
-                        effects = {
-                            if (!isEInkMode) {
-                                colorControls(
-                                    brightness = GlassDialogTokens.cardBrightness,
-                                    saturation = GlassDialogTokens.cardSaturation
-                                )
-                                blur(GlassDialogTokens.cardBlur.toPx())
-                                lens(
-                                    GlassDialogTokens.cardLensX.toPx(),
-                                    GlassDialogTokens.cardLensY.toPx(),
-                                    depthEffect = true
+                    ) { currentIndex = index }
+                    .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(24f.dp)
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { Capsule() },
+                            effects = {
+                                if (!AppConfig.isEInkMode) {
+                                    colorControls(
+                                        brightness = GlassDialogTokens.cardBrightness,
+                                        saturation = GlassDialogTokens.cardSaturation
+                                    )
+                                    blur(GlassDialogTokens.widgetBlur.toPx())
+                                    lens(
+                                        GlassDialogTokens.widgetLensX.toPx(),
+                                        GlassDialogTokens.widgetLensY.toPx(),
+                                        depthEffect = true
+                                    )
+                                }
+                            },
+                            highlight = { Highlight.Plain },
+                            onDrawSurface = {
+                                drawRect(
+                                    if (index == currentIndex) accentColor
+                                    else containerColor.copy(0.3f)
                                 )
                             }
-                        },
-                        highlight = { Highlight.Plain },
-                        onDrawSurface = { drawRect(containerColor) }
-                    )
-            ) {
-                // 标题
-                BasicText(
-                    text = stringResource(R.string.theme_mode),
-                    modifier = Modifier.padding(28f.dp, 24f.dp, 28f.dp, 12f.dp),
-                    style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
-                )
-
-                // 单选列表（玻璃态圆形单选圈）
-                labels.forEachIndexed { index, label ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { currentIndex = index }
-                            .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (index == currentIndex) {
                         Box(
                             modifier = Modifier
-                                .size(24f.dp)
-                                .drawBackdrop(
-                                    backdrop = backdrop,
-                                    shape = { Capsule() },
-                                    effects = {
-                                        if (!isEInkMode) {
-                                            colorControls(
-                                                brightness = GlassDialogTokens.cardBrightness,
-                                                saturation = GlassDialogTokens.cardSaturation
-                                            )
-                                            blur(GlassDialogTokens.widgetBlur.toPx())
-                                            lens(
-                                                GlassDialogTokens.widgetLensX.toPx(),
-                                                GlassDialogTokens.widgetLensY.toPx(),
-                                                depthEffect = true
-                                            )
-                                        }
-                                    },
-                                    highlight = { Highlight.Plain },
-                                    onDrawSurface = {
-                                        drawRect(
-                                            if (index == currentIndex) accentColor
-                                            else containerColor.copy(0.3f)
-                                        )
-                                    }
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (index == currentIndex) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(Capsule())
-                                        .background(Color.White)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Box(
-                            modifier = Modifier.height(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            BasicText(
-                                text = label,
-                                style = TextStyle(contentColor.copy(0.9f), 16f.sp)
-                            )
-                        }
+                                .size(8.dp)
+                                .clip(Capsule())
+                                .background(Color.White)
+                        )
                     }
                 }
 
-                // 按钮
-                Row(
-                    modifier = Modifier
-                        .padding(24f.dp, 16f.dp, 24f.dp, 24f.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16f.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Box(
+                    modifier = Modifier.height(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // 取消按钮
-                    Row(
-                        modifier = Modifier
-                            .clip(Capsule())
-                            .background(containerColor.copy(0.2f))
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { onDismiss() }
-                            .height(48f.dp)
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            4f.dp,
-                            Alignment.CenterHorizontally
-                        ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        BasicText(
-                            text = "取消",
-                            style = TextStyle(contentColor, 16f.sp)
-                        )
-                    }
-
-                    // 确定按钮
-                    Row(
-                        modifier = Modifier
-                            .clip(Capsule())
-                            .background(accentColor)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { onConfirm(currentIndex) }
-                            .height(48f.dp)
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            4f.dp,
-                            Alignment.CenterHorizontally
-                        ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        BasicText(
-                            text = "确定",
-                            style = TextStyle(Color.White, 16f.sp)
-                        )
-                    }
+                    BasicText(
+                        text = label,
+                        style = TextStyle(contentColor.copy(0.9f), 16f.sp)
+                    )
                 }
+            }
+        }
+
+        // 按钮
+        Row(
+            modifier = Modifier
+                .padding(24f.dp, 16f.dp, 24f.dp, 24f.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16f.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 取消按钮
+            Row(
+                modifier = Modifier
+                    .clip(Capsule())
+                    .background(containerColor.copy(0.2f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onDismiss() }
+                    .height(48f.dp)
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    4f.dp,
+                    Alignment.CenterHorizontally
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BasicText(
+                    text = "取消",
+                    style = TextStyle(contentColor, 16f.sp)
+                )
+            }
+
+            // 确认按钮
+            Row(
+                modifier = Modifier
+                    .clip(Capsule())
+                    .background(accentColor)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onConfirm(currentIndex) }
+                    .height(48f.dp)
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    4f.dp,
+                    Alignment.CenterHorizontally
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BasicText(
+                    text = "确定",
+                    style = TextStyle(Color.White, 16f.sp)
+                )
             }
         }
     }
 }
+
 
 /**
  * 圆角分组卡片容器
