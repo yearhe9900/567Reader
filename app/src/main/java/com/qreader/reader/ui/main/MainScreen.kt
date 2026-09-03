@@ -279,7 +279,7 @@ fun MainScreen(
                     GlassTitleBar(
                         backdrop = backdrop,
                         title = title,
-                        containerColor = containerColor,
+                        containerColor = containerColor.copy(alpha = 1f),
                         contentColor = contentColor,
                     )
                 }
