@@ -756,11 +756,11 @@ private fun GlassDropdownMenuItem(
             painter = painterResource(iconRes),
             contentDescription = null,
             tint = contentColor.copy(alpha = 0.75f),
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(24.dp),
         )
         BasicText(
             text = text,
-            style = TextStyle(contentColor, 14.sp),
+            style = TextStyle(contentColor, 16.sp),
             modifier = Modifier.padding(start = 12.dp),
         )
     }
@@ -805,7 +805,8 @@ private fun GlassDropdownMenu(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 108.dp, end = 8.dp)
-                    .widthIn(min = 180.dp)
+                    // 内容自适应宽度（对齐原版 AppCompat PopupMenu：Material 规范 min 112dp / max 280dp）
+                    .widthIn(min = 112.dp, max = 280.dp)
                     .drawBackdrop(
                         backdrop = backdrop,
                         shape = { RoundedCornerShape(16.dp) },
