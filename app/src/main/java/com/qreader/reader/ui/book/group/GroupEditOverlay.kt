@@ -222,7 +222,12 @@ fun GroupEditOverlay(
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { BasicText(stringResource(R.string.group_name)) },
+                    label = {
+                        BasicText(
+                            stringResource(R.string.group_name),
+                            style = TextStyle(contentColor.copy(alpha = 0.7f), 14.sp)
+                        )
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = TextStyle(contentColor, 16.sp),
