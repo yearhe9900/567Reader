@@ -256,9 +256,6 @@ fun MainScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 16.dp)
-                .padding(top = 8.dp)
         ) {
             AnimatedVisibility(
                 visible = !themeDialogOpen,
