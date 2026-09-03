@@ -292,7 +292,6 @@ fun MainScreen(
                 } else if (pagerState.currentPage == 1 && showDiscovery) {
                     ExploreGlassTitleBar(
                         backdrop = backdrop,
-                        title = title,
                         searchQuery = exploreSearchQuery,
                         onSearchQueryChange = { exploreSearchQuery = it },
                         containerColor = containerColor,
@@ -565,13 +564,12 @@ private fun GlassTitleBar(
 }
 
 /**
- * 发现页玻璃态标题栏：搜索框 + 分组按钮 + 标题。
- * 与 [GlassTitleBar] 共享同一个 [backdrop]，视觉风格统一。
+ * 发现页玻璃态标题栏：液态玻璃搜索栏 + 分组按钮。
+ * 搜索栏替代"发现"文字位于左下角，自带 drawBackdrop 玻璃效果。
  */
 @Composable
 private fun ExploreGlassTitleBar(
     backdrop: Backdrop,
-    title: String,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     containerColor: Color,
@@ -598,76 +596,79 @@ private fun ExploreGlassTitleBar(
             .height(100.dp)
             .fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Bottom,
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 16.dp, end = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.Bottom,
         ) {
-            // 搜索框（中间区域）
-            BasicTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
+            // 液态玻璃搜索栏（左下角）
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                textStyle = TextStyle(contentColor, 14.sp),
-                cursorBrush = SolidColor(Color(context.accentColor)),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        if (searchQuery.isEmpty()) {
-                            BasicText(
-                                text = "搜索书源…",
-                                style = TextStyle(contentColor.copy(0.5f), 14.sp)
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-
-            // 标题 + 分组按钮（底部）
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                    .weight(1f)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(12.dp) },
+                        effects = {
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                        },
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                    )
+                    .height(40.dp),
+                contentAlignment = Alignment.CenterStart,
             ) {
-                BasicText(
-                    text = title,
-                    style = TextStyle(contentColor, 20.sp),
+                BasicTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 16.dp, bottom = 12.dp),
-                )
-                Box {
-                    IconButton(onClick = { showGroupMenu = true }) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_groups),
-                            contentDescription = "分组",
-                            tint = contentColor,
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = showGroupMenu,
-                        onDismissRequest = { showGroupMenu = false },
-                    ) {
-                        if (groups.isEmpty()) {
-                            DropdownMenuItem(
-                                text = { BasicText("无分组") },
-                                onClick = { showGroupMenu = false },
-                            )
-                        } else {
-                            groups.forEach { group ->
-                                DropdownMenuItem(
-                                    text = { BasicText(group) },
-                                    onClick = {
-                                        onSearchQueryChange("group:$group")
-                                        showGroupMenu = false
-                                    },
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    textStyle = TextStyle(contentColor, 14.sp),
+                    cursorBrush = SolidColor(Color(context.accentColor)),
+                    singleLine = true,
+                    decorationBox = { innerTextField ->
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            if (searchQuery.isEmpty()) {
+                                BasicText(
+                                    text = "搜索书源…",
+                                    style = TextStyle(contentColor.copy(0.5f), 14.sp)
                                 )
                             }
+                            innerTextField()
+                        }
+                    }
+                )
+            }
+
+            // 分组按钮（右下角）
+            Box {
+                IconButton(onClick = { showGroupMenu = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_groups),
+                        contentDescription = "分组",
+                        tint = contentColor,
+                    )
+                }
+                DropdownMenu(
+                    expanded = showGroupMenu,
+                    onDismissRequest = { showGroupMenu = false },
+                ) {
+                    if (groups.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { BasicText("无分组") },
+                            onClick = { showGroupMenu = false },
+                        )
+                    } else {
+                        groups.forEach { group ->
+                            DropdownMenuItem(
+                                text = { BasicText(group) },
+                                onClick = {
+                                    onSearchQueryChange("group:$group")
+                                    showGroupMenu = false
+                                },
+                            )
                         }
                     }
                 }
