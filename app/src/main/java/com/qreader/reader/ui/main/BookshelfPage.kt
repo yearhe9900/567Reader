@@ -198,6 +198,45 @@ fun BookshelfPage(
     val recyclerViewRef = remember { mutableStateOf<RecyclerView?>(null) }
     val swipeRefreshRef = remember { mutableStateOf<SwipeRefreshLayout?>(null) }
 
+    // ── 顶栏「更多选项」菜单项处理（与原版 onCompatOptionsItemSelected 对应）──
+    fun handleMenuAction(action: BookshelfMenuAction) {
+        when (action) {
+            BookshelfMenuAction.UpdateToc ->
+                onRefresh(books, onlyUpdateRead)
+            BookshelfMenuAction.AddLocal ->
+                activity.startActivity(Intent(activity, ImportBookActivity::class.java))
+            BookshelfMenuAction.Remote ->
+                activity.startActivity(Intent(activity, RemoteBookActivity::class.java))
+            BookshelfMenuAction.AddUrl ->
+                showAddUrlDialog = true
+            BookshelfMenuAction.BookshelfManage ->
+                activity.startActivity(
+                    Intent(activity, BookshelfManageActivity::class.java).apply {
+                        putExtra("groupId", groupId)
+                    }
+                )
+            BookshelfMenuAction.Download ->
+                activity.startActivity(
+                    Intent(activity, CacheActivity::class.java).apply {
+                        putExtra("groupId", groupId)
+                    }
+                )
+            BookshelfMenuAction.GroupManage ->
+                activity.showDialogFragment<GroupManageDialog>()
+            BookshelfMenuAction.Layout ->
+                activity.showDialogFragment<BookshelfConfigDialog>()
+            BookshelfMenuAction.Export ->
+                bookshelfViewModel.exportBookshelf(books) { file ->
+                    exportTempFile = file
+                    exportFileLauncher.launch("bookshelf.json")
+                }
+            BookshelfMenuAction.Import ->
+                showImportDialog = true
+            BookshelfMenuAction.Log ->
+                activity.showDialogFragment<AppLogDialog>()
+        }
+    }
+
     // ── 注册 gotoTop / back ──
     DisposableEffect(Unit) {
         registerGotoTop {
@@ -275,45 +314,6 @@ fun BookshelfPage(
             groupId = group.groupId
             enableRefresh = group.enableRefresh
             onlyUpdateRead = group.onlyUpdateRead
-        }
-    }
-
-    // ── 顶栏「更多选项」菜单项处理（与原版 onCompatOptionsItemSelected 对应）──
-    fun handleMenuAction(action: BookshelfMenuAction) {
-        when (action) {
-            BookshelfMenuAction.UpdateToc ->
-                onRefresh(books, onlyUpdateRead)
-            BookshelfMenuAction.AddLocal ->
-                activity.startActivity(Intent(activity, ImportBookActivity::class.java))
-            BookshelfMenuAction.Remote ->
-                activity.startActivity(Intent(activity, RemoteBookActivity::class.java))
-            BookshelfMenuAction.AddUrl ->
-                showAddUrlDialog = true
-            BookshelfMenuAction.BookshelfManage ->
-                activity.startActivity(
-                    Intent(activity, BookshelfManageActivity::class.java).apply {
-                        putExtra("groupId", groupId)
-                    }
-                )
-            BookshelfMenuAction.Download ->
-                activity.startActivity(
-                    Intent(activity, CacheActivity::class.java).apply {
-                        putExtra("groupId", groupId)
-                    }
-                )
-            BookshelfMenuAction.GroupManage ->
-                activity.showDialogFragment<GroupManageDialog>()
-            BookshelfMenuAction.Layout ->
-                activity.showDialogFragment<BookshelfConfigDialog>()
-            BookshelfMenuAction.Export ->
-                bookshelfViewModel.exportBookshelf(books) { file ->
-                    exportTempFile = file
-                    exportFileLauncher.launch("bookshelf.json")
-                }
-            BookshelfMenuAction.Import ->
-                showImportDialog = true
-            BookshelfMenuAction.Log ->
-                activity.showDialogFragment<AppLogDialog>()
         }
     }
 
