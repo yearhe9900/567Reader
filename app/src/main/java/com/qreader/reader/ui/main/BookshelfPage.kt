@@ -37,6 +37,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -64,6 +65,7 @@ import com.qreader.reader.utils.cnCompare
 import com.qreader.reader.utils.setEdgeEffectColor
 import com.qreader.reader.utils.showDialogFragment
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -300,6 +302,14 @@ fun BookshelfPage(
         }
         currentItems.addAll(books)
         itemCount = currentItems.size
+        // Folder 样式下，预计算各分组前 4 本书封面（离线线程查询 Room），供文件夹四格封面使用
+        if (bookGroupStyle == 1 && groupId == BookGroup.IdRoot) {
+            adapter.groupCoverBooks = withContext(Dispatchers.IO) {
+                bookGroups.associate { group ->
+                    group.groupId to appDb.bookDao.getBooksByGroup(group.groupId).take(4)
+                }
+            }
+        }
         adapter.updateItems(groupId)
         // 更新空状态 & 下拉刷新开关
         swipeRefreshRef.value?.isEnabled = enableRefresh && itemCount > 0
@@ -353,6 +363,41 @@ fun BookshelfPage(
                             }
                             this.adapter = adapter
                             itemAnimator = null
+                            // 横向滑动分组项进入分组页（与点击进入同逻辑）
+                            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+                                0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                            ) {
+                                override fun getMovementFlags(
+                                    recyclerView: RecyclerView,
+                                    viewHolder: RecyclerView.ViewHolder
+                                ): Int {
+                                    val pos = viewHolder.bindingAdapterPosition
+                                    val item = (recyclerView.adapter as? BaseBooksAdapter<*>)?.getItem(pos)
+                                    val swipeFlags = if (item is BookGroup) {
+                                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                                    } else 0
+                                    return makeMovementFlags(0, swipeFlags)
+                                }
+
+                                override fun onMove(
+                                    recyclerView: RecyclerView,
+                                    viewHolder: RecyclerView.ViewHolder,
+                                    target: RecyclerView.ViewHolder
+                                ): Boolean = false
+
+                                override fun onSwiped(
+                                    viewHolder: RecyclerView.ViewHolder,
+                                    direction: Int
+                                ) {
+                                    val pos = viewHolder.bindingAdapterPosition
+                                    val item = (recyclerView.adapter as? BaseBooksAdapter<*>)?.getItem(pos)
+                                    if (item is BookGroup) {
+                                        callBack.onItemClick(item)
+                                    } else {
+                                        recyclerView.adapter?.notifyItemChanged(pos)
+                                    }
+                                }
+                            }).attachToRecyclerView(this)
                             // 与原 BookshelfFragment2 一致的 itemDecoration
                             addItemDecoration(object : RecyclerView.ItemDecoration() {
                                 override fun getItemOffsets(

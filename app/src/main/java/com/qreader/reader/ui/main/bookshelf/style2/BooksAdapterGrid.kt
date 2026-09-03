@@ -197,7 +197,10 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
                 tvName.visible()
                 tvName.text = item.groupName
             }
-            ivCover.load(item.cover)
+            bindGroupCoverCells(
+                arrayOf(binding.ivCover1, binding.ivCover2, binding.ivCover3, binding.ivCover4),
+                item.groupId
+            )
         }
 
         fun onBind(item: BookGroup, position: Int, payloads: MutableList<Any>) = binding.run {
@@ -209,7 +212,10 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
                     bundle.keySet().forEach {
                         when (it) {
                             "groupName" -> tvName.text = item.groupName
-                            "cover" -> ivCover.load(item.cover)
+                            "cover" -> bindGroupCoverCells(
+                                arrayOf(binding.ivCover1, binding.ivCover2, binding.ivCover3, binding.ivCover4),
+                                item.groupId
+                            )
                         }
                     }
                 }
@@ -239,7 +245,10 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
                     tvName.text = it
                 }
             }
-            ivCover.load(item.cover)
+            bindGroupCoverCells(
+                arrayOf(binding.ivCover1, binding.ivCover2, binding.ivCover3, binding.ivCover4),
+                item.groupId
+            )
         }
 
         fun onBind(item: BookGroup, position: Int, payloads: MutableList<Any>) = binding.run {
@@ -258,7 +267,10 @@ class BooksAdapterGrid(context: Context, callBack: CallBack) :
                                     tvName.text = it
                                 }
                             }
-                            "cover" -> ivCover.load(item.cover)
+                            "cover" -> bindGroupCoverCells(
+                                arrayOf(binding.ivCover1, binding.ivCover2, binding.ivCover3, binding.ivCover4),
+                                item.groupId
+                            )
                         }
                     }
                 }
