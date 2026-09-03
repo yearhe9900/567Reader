@@ -24,7 +24,7 @@ abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
 
     /**
      * 分组文件夹封面：groupId → 该分组前 4 本书（由 BookshelfPage 在离线线程预计算后写入）。
-     * GroupViewHolder.onBind 据此把文件夹图标的宫格（当前为 3×3，取前 4 本）填上各书封面，
+     * GroupViewHolder.onBind 据此把文件夹图标的宫格（当前为 2×2，取前 4 本）填上各书封面，
      * 不足 4 本则对应格透明。
      */
     var groupCoverBooks: Map<Long, List<Book>> = emptyMap()
@@ -35,7 +35,6 @@ abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
      */
     protected fun bindGroupCoverCells(cells: Array<CoverImageView>, groupId: Long) {
         val covers = groupCoverBooks[groupId].orEmpty().take(4)
-        android.util.Log.d("BaseBooksAdapter", "bindGroupCoverCells groupId=$groupId covers=${covers.size} mapSize=${groupCoverBooks.size} mapKeys=${groupCoverBooks.keys}")
         for (i in cells.indices) {
             val book = covers.getOrNull(i)
             if (book != null) {

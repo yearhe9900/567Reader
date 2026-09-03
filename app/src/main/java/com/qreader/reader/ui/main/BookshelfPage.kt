@@ -277,7 +277,6 @@ fun BookshelfPage(
     val groupsLiveData = remember { appDb.bookGroupDao.show }
     DisposableEffect(lifecycleOwner) {
         val observer = Observer<List<BookGroup>> { groups ->
-            android.util.Log.d("BookshelfPage", "bookGroups observer fired size=${groups.size} ids=${groups.map { it.groupId }}")
             bookGroups = groups
         }
         groupsLiveData.observe(lifecycleOwner, observer)
@@ -303,7 +302,6 @@ fun BookshelfPage(
 
     // ── 数据变化 → 更新 adapter ──
     LaunchedEffect(bookGroups, books, groupId) {
-        android.util.Log.d("BookshelfPage", "LaunchedEffect triggered bookGroups=${bookGroups.size} books=${books.size} groupId=$groupId bookGroupStyle=$bookGroupStyle")
         currentItems.clear()
         if (groupId == BookGroup.IdRoot) {
             currentItems.addAll(bookGroups)
@@ -312,21 +310,16 @@ fun BookshelfPage(
         itemCount = currentItems.size
         // Folder 样式下，预计算各分组前 4 本书封面（离线线程查询 Room），供文件夹宫格封面使用
         if (bookGroupStyle == 1 && groupId == BookGroup.IdRoot) {
-            android.util.Log.d("BookshelfPage", "precompute group covers for ids=${bookGroups.map { it.groupId }}")
             adapter.groupCoverBooks = withContext(Dispatchers.IO) {
                 bookGroups.associate { group ->
                     group.groupId to appDb.bookDao.flowByGroup(group.groupId)
                         .map { sortBooksByGroup(it, group) }
                         .first()
                         .take(4)
-                }.also { map ->
-                    android.util.Log.d("BookshelfPage", "precompute result: ${map.mapValues { (_, list) -> list.size }}")
                 }
             }
-            android.util.Log.d("BookshelfPage", "groupCoverBooks assigned size=${adapter.groupCoverBooks.size}")
         }
         adapter.updateItems(groupId)
-        android.util.Log.d("BookshelfPage", "updateItems done itemCount=$itemCount")
         // 更新空状态 & 下拉刷新开关
         swipeRefreshRef.value?.isEnabled = enableRefresh && itemCount > 0
     }
