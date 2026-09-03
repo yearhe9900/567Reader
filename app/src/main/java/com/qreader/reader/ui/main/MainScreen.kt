@@ -530,12 +530,12 @@ private fun GlassTitleBar(
             )
             .height(100.dp)
             .fillMaxWidth(),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = Alignment.BottomStart
     ) {
         BasicText(
             text = title,
             style = TextStyle(contentColor, 20.sp),
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
         )
     }
 }
@@ -555,12 +555,12 @@ private fun EInkTitleBar(
             .height(100.dp)
             .fillMaxWidth()
             .background(bgColor, RoundedCornerShape(28.dp)),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = Alignment.BottomStart
     ) {
         BasicText(
             text = title,
             style = TextStyle(contentColor, 20.sp),
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
         )
     }
 }
