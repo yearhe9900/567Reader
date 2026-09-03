@@ -35,6 +35,7 @@ abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
      */
     protected fun bindGroupCoverCells(cells: Array<CoverImageView>, groupId: Long) {
         val covers = groupCoverBooks[groupId].orEmpty().take(4)
+        android.util.Log.d("BaseBooksAdapter", "bindGroupCoverCells groupId=$groupId covers=${covers.size} mapSize=${groupCoverBooks.size} mapKeys=${groupCoverBooks.keys}")
         for (i in cells.indices) {
             val book = covers.getOrNull(i)
             if (book != null) {
