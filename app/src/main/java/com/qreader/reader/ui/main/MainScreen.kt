@@ -56,7 +56,6 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
-import androidx.compose.foundation.shape.RectangleShape
 import com.qreader.reader.R
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
@@ -524,7 +523,7 @@ private fun GlassTitleBar(
         modifier = modifier
             .drawBackdrop(
                 backdrop = backdrop,
-                shape = { RectangleShape },
+                shape = { RoundedCornerShape(0.dp) },
                 effects = {
                     vibrancy()
                     blur(8f.dp.toPx())
