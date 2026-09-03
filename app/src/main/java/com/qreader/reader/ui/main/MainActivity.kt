@@ -54,7 +54,6 @@ import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
 import com.qreader.reader.ui.file.FileManageActivity
 import com.qreader.reader.ui.book.explore.ExploreShowActivity
-import com.qreader.reader.ui.book.group.GroupEditDialog
 import com.qreader.reader.ui.about.ReadRecordActivity
 import com.qreader.reader.ui.replace.ReplaceRuleActivity
 import com.qreader.reader.ui.widget.dialog.TextDialog
@@ -184,7 +183,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 showDiscovery = showDiscovery,
                 isEInkMode = AppConfig.isEInkMode,
                 glassConfig = glassConfig,
-                bookshelfPage = { registerGotoTop, registerBack, registerMenuAction ->
+                bookshelfPage = { registerGotoTop, registerBack, registerMenuAction, onRequestGroupEdit ->
                     BookshelfPageNew(
                         registerGotoTop = registerGotoTop,
                         registerBack = registerBack,
@@ -196,7 +195,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                                 putExtra("author", it.author)
                             }
                         },
-                        onGroupLongClick = { showDialogFragment(GroupEditDialog(it)) },
+                        onGroupLongClick = onRequestGroupEdit,
                         onRefresh = { books, onlyUpdateRead ->
                             viewModel.upToc(books, onlyUpdateRead)
                         },

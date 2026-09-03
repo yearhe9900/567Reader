@@ -62,6 +62,8 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
+import com.qreader.reader.data.entities.BookGroup
+import com.qreader.reader.ui.book.group.GroupEditOverlay
 import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
@@ -106,6 +108,7 @@ fun MainScreen(
         registerGotoTop: ((() -> Unit)?) -> Unit,
         registerBack: ((() -> Boolean)?) -> Unit,
         registerMenuAction: (((BookshelfMenuAction) -> Unit)?) -> Unit,
+        onRequestGroupEdit: (BookGroup) -> Unit,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
@@ -129,6 +132,10 @@ fun MainScreen(
 
     // 玻璃导航栏的 backdrop 捕获源（捕获真实页面内容，供 lens 折射 / blur 作用其上）
     val backdrop = rememberLayerBackdrop()
+
+    // 编辑分组玻璃弹框状态（仅书架页长按入口触发；其余 XML 入口仍用原 GroupEditDialog）
+    var groupEditTarget by remember { mutableStateOf<BookGroup?>(null) }
+    var groupEditOpen by remember { mutableStateOf(false) }
 
     val tabItems = remember(showDiscovery, context) {
         buildTabItems(context, showDiscovery)
@@ -250,6 +257,7 @@ fun MainScreen(
                             registerBookshelfBack(back)
                         },
                         { bookshelfMenuAction = it },
+                        { group -> groupEditTarget = group; groupEditOpen = true },
                     )
 
                     1 -> if (showDiscovery) {
@@ -379,6 +387,18 @@ fun MainScreen(
                         }
                     }
                 }
+            }
+            // 编辑分组玻璃弹框覆盖层（真·毛玻璃，采样真实书架页）
+            AnimatedVisibility(
+                visible = groupEditOpen,
+                enter = fadeIn(tween(160)),
+                exit = fadeOut(tween(120))
+            ) {
+                GroupEditOverlay(
+                    backdrop = backdrop,
+                    target = groupEditTarget,
+                    onDismiss = { groupEditOpen = false }
+                )
             }
         }
     }
