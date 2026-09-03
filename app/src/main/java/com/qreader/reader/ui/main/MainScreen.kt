@@ -388,20 +388,22 @@ fun MainScreen(
                     }
                 }
             }
-            // 编辑分组玻璃弹框覆盖层（真·毛玻璃，采样真实书架页）
-            AnimatedVisibility(
-                visible = groupEditOpen,
-                modifier = Modifier.fillMaxSize(),
-                enter = fadeIn(tween(160)),
-                exit = fadeOut(tween(120))
-            ) {
-                GroupEditOverlay(
-                    backdrop = backdrop,
-                    target = groupEditTarget,
-                    onDismiss = { groupEditOpen = false }
-                )
-            }
         }
+    // 编辑分组玻璃弹框覆盖层（真·毛玻璃，采样真实书架页）
+    // 注意：必须作为「全屏外层 Box」的直接子节点，不能嵌套进底部导航栏那种 align+fillMaxWidth 的小 Box，
+    // 否则 fillMaxSize 至多只填满底部条，蒙板只会盖住一小块区域。
+    AnimatedVisibility(
+        visible = groupEditOpen,
+        modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(tween(160)),
+        exit = fadeOut(tween(120))
+    ) {
+        GroupEditOverlay(
+            backdrop = backdrop,
+            target = groupEditTarget,
+            onDismiss = { groupEditOpen = false }
+        )
+    }
     }
 }
 

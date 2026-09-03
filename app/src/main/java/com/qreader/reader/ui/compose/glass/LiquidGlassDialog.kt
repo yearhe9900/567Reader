@@ -35,9 +35,10 @@ import com.qreader.reader.help.config.AppConfig
  * 背景采样源 [backdrop] 由调用方传入同一 Backdrop 实例（如 MainScreen 的 layerBackdrop），
  * 因此卡片采样的是其下方真实页面，而非弹框自身。
  *
- * 注意：本组件根节点为 [Box]([Modifier.fillMaxSize])，但其父容器必须也撑满全屏，
- * 否则（如被 [androidx.compose.animation.AnimatedVisibility] 默认 wrapContentSize 约束）
- * 蒙板只会覆盖到卡片大小 —— 调用处在 [AnimatedVisibility] 上需加 [Modifier.fillMaxSize]。
+ * 注意：本组件根节点为 [Box]([Modifier.fillMaxSize])，但蒙板是否全屏取决于「父容器」是否撑满全屏。
+ * 典型坑：不要把本弹框的 [androidx.compose.animation.AnimatedVisibility] 嵌套进某个
+ * 使用 align/fillMaxWidth、自身只有内容高的 Box（例如底部导航栏 Box）里——那样 fillMaxSize 至多只填满该小 Box，
+ * 蒙板只会盖住一小块区域。应让该 AnimatedVisibility 直接作为全屏外层容器的子节点（与 backdrop 捕获 Box 平级）。
  *
  * @param backdrop             玻璃模糊源（调用方传入的 Backdrop 实例）
  * @param onDismiss           关闭回调（点蒙板区域触发，受 [dismissOnScrimClick] 控制）
