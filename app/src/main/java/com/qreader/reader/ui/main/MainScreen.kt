@@ -226,6 +226,7 @@ fun MainScreen(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(top = 100.dp)
                     .graphicsLayer { alpha = pageFade.value },
                 beyondViewportPageCount = 2, // 预组合全部 3 页，避免跳页时中间页组合卡顿
             ) { page ->
