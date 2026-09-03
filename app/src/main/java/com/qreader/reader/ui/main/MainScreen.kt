@@ -391,6 +391,7 @@ fun MainScreen(
             // 编辑分组玻璃弹框覆盖层（真·毛玻璃，采样真实书架页）
             AnimatedVisibility(
                 visible = groupEditOpen,
+                modifier = Modifier.fillMaxSize(),
                 enter = fadeIn(tween(160)),
                 exit = fadeOut(tween(120))
             ) {
