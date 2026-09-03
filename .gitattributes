@@ -1,0 +1,9 @@
+# 统一文本文件行尾，消除 "LF will be replaced by CRLF" 警告。
+# 仓库在 Windows + core.autocrlf=true 下开发，工作区文本文件统一使用 CRLF；
+# 显式声明后 git 在提交/检出时静默规范化，不再产生行尾警告。
+* text=auto eol=crlf
+
+# 脚本类文件保持 LF，避免破坏 Unix shebang（gradlew 等在 Linux/macOS 上执行）
+*.sh text eol=lf
+gradlew text eol=lf
+gradlew.bat text eol=crlf
