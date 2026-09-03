@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--App-->
-    <string name="app_name">567Reader</string>
-    <string name="app_name_a">567Reader·A</string>
+    <string name="app_name">阅读567</string>
+    <string name="app_name_a">阅读567·A</string>
     <string name="receiving_shared_label">Legado·search</string>
     <string name="tip_perm_request_storage">Legado needs storage access to find and read books. please go "App Settings" to allow "Storage permission".</string>
 
