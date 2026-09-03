@@ -167,6 +167,16 @@ fun MainScreen(
         onTabSelected(pagerState.settledPage)
     }
 
+    // 兜底：翻页后强制复位主题弹框开关。
+    //
+    // 「主题模式」弹框由设置页（Pager 内的某一页）承载，而 themeDialogOpen 状态由上层持有，
+    // 且标题栏/导航栏的显隐是 AnimatedVisibility(visible = !themeDialogOpen)。
+    // 一旦在弹框打开时发生翻页，该页会被 HorizontalPager 销毁 → 弹框随之消失，
+    // 但开关状态不会自动复位，标题栏与导航栏就会被永久隐藏。此处确保任何翻页都复位开关。
+    LaunchedEffect(pagerState.currentPage) {
+        if (themeDialogOpen) onThemeDialogOpenChange(false)
+    }
+
     // 用户是否正在用手指拖动 pager。
     // 兜底保护：确保任何程序化滚动都不会在用户手势进行中插手。
     // （真正的回环已在 LiquidBottomTabs 侧切断，此处防止其他时序下的边界情况。）

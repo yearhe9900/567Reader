@@ -1,5 +1,7 @@
 package com.qreader.reader.ui.compose.glass
 
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,10 @@ import com.qreader.reader.help.config.AppConfig
  * 背景采样源 [backdrop] 由调用方传入同一 Backdrop 实例（如 MainScreen 的 layerBackdrop），
  * 因此卡片采样的是其下方真实页面，而非弹框自身。
  *
+ * 系统返回键 / 侧滑返回手势由本组件内部接管并回调 [onDismiss]（受 [dismissOnScrimClick] 控制）。
+ * 这一点很关键：本弹框是 in-tree overlay，不是 Dialog，返回事件不会自动被它拦下；
+ * 若不接管，事件会穿透到 Activity 的返回处理，造成「弹框还在、宿主页面却被换掉」的状态错乱。
+ *
  * 注意：本组件根节点为 [Box]([Modifier.fillMaxSize])，但蒙板是否全屏取决于「父容器」是否撑满全屏。
  * 典型坑：不要把本弹框的 [androidx.compose.animation.AnimatedVisibility] 嵌套进某个
  * 使用 align/fillMaxWidth、自身只有内容高的 Box（例如底部导航栏 Box）里——那样 fillMaxSize 至多只填满该小 Box，
@@ -64,6 +70,19 @@ fun LiquidGlassDialog(
     val containerColor = colors.containerColor
     val dimColor = colors.dimColor
     val scrimColor = colors.scrimColor
+
+    // 接管系统返回键 / 侧滑返回手势：先关闭弹框，避免事件穿透到 Activity。
+    //
+    // 坑（已踩）：本弹框是 in-tree overlay 而非 Dialog，返回事件不会自动被它吃掉。
+    // 「主题模式」弹框场景下，穿透后 MainActivity 的返回处理会把 tab 切回书架，
+    // 设置页被 HorizontalPager 销毁 → 弹框消失，但宿主持有的 themeDialogOpen 仍是 true
+    // → 标题栏/导航栏的 AnimatedVisibility(!themeDialogOpen) 永久隐藏。
+    //
+    // LocalOnBackPressedDispatcherOwner 可能为空（例如宿主是 DialogFragment 内的 ComposeView，
+    // 该窗口的 decorView 上没有挂 owner），此时不注册，交由外层窗口自行处理，避免 BackHandler 抛异常。
+    if (dismissOnScrimClick && LocalOnBackPressedDispatcherOwner.current != null) {
+        BackHandler { onDismiss() }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // 1) 全屏玻璃蒙板
