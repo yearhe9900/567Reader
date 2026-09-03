@@ -10,10 +10,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -145,6 +148,7 @@ fun MainScreen(
     var bookshelfGotoTop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var bookshelfBack by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var bookshelfMenuAction by remember { mutableStateOf<((BookshelfMenuAction) -> Unit)?>(null) }
+    var bookshelfMenuOpen by remember { mutableStateOf(false) }
     var exploreCompress by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // ── 发现页搜索状态（提升到 MainScreen 供玻璃标题栏使用）──
@@ -276,6 +280,30 @@ fun MainScreen(
             }
         }
 
+        // 书架更多选项玻璃下拉：放在标题栏 Box 之前，使其位于标题栏之下，
+        // 标题栏点击不被 tap-outside 拦截，菜单按钮可正常切换开关。
+        if (pagerState.currentPage == 0) {
+            GlassDropdownMenu(
+                expanded = bookshelfMenuOpen,
+                onDismissRequest = { bookshelfMenuOpen = false },
+                backdrop = backdrop,
+                containerColor = containerColor,
+                contentColor = contentColor,
+            ) {
+                enumValues<BookshelfMenuAction>().forEach { action ->
+                    GlassDropdownMenuItem(
+                        text = context.getString(action.titleRes),
+                        iconRes = action.iconRes,
+                        contentColor = contentColor,
+                        onClick = {
+                            bookshelfMenuOpen = false
+                            bookshelfMenuAction?.invoke(action)
+                        },
+                    )
+                }
+            }
+        }
+
         // 玻璃标题栏：悬浮在顶部（overlay，不占内容流）
         Box(
             modifier = Modifier
@@ -307,6 +335,7 @@ fun MainScreen(
                         contentColor = contentColor,
                         onSearch = { SearchActivity.start(context, "") },
                         onMenuAction = { bookshelfMenuAction?.invoke(it) },
+                        onMenuOpenChange = { bookshelfMenuOpen = it },
                     )
                 } else if (pagerState.currentPage == 1 && showDiscovery) {
                     ExploreGlassTitleBar(
@@ -612,10 +641,10 @@ private fun BookshelfGlassTitleBar(
     contentColor: Color,
     onSearch: () -> Unit,
     onMenuAction: (BookshelfMenuAction) -> Unit,
+    onMenuOpenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var showMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -690,35 +719,106 @@ private fun BookshelfGlassTitleBar(
                     .size(40.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                IconButton(onClick = { showMenu = true }) {
+                IconButton(onClick = { onMenuOpenChange(true) }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_more_vert),
                         contentDescription = "more",
                         tint = contentColor,
                     )
                 }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
-                ) {
-                    enumValues<BookshelfMenuAction>().forEach { action ->
-                        DropdownMenuItem(
-                            leadingIcon = {
-                                Icon(
-                                    painter = painterResource(action.iconRes),
-                                    contentDescription = null,
-                                    tint = contentColor,
-                                )
-                            },
-                            text = { BasicText(context.getString(action.titleRes)) },
-                            onClick = {
-                                showMenu = false
-                                onMenuAction(action)
-                            },
-                        )
-                    }
-                }
             }
+        }
+    }
+}
+
+/**
+ * 玻璃态下拉菜单项：图标 + 文字，整行可点。
+ *
+ * 不使用 Material3 DropdownMenuItem（其 background/shape 不可玻璃化），
+ * 整行通过 [Modifier.clickable] 触发 [onClick]。
+ */
+@Composable
+private fun GlassDropdownMenuItem(
+    text: String,
+    iconRes: Int,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = contentColor.copy(alpha = 0.75f),
+            modifier = Modifier.size(20.dp),
+        )
+        BasicText(
+            text = text,
+            style = TextStyle(contentColor, 14.sp),
+            modifier = Modifier.padding(start = 12.dp),
+        )
+    }
+}
+
+/**
+ * 通用玻璃态下拉菜单 overlay。
+ *
+ * 必须由调用方放在**全屏外层 Box**（与 backdrop 捕获源同 surface），否则 fillMaxSize/tap-outside 会失效。
+ * 结构：透明全屏 tap-outside 层（indication=null 无波纹）+ 顶部右对齐玻璃面板（距顶 108dp 避开标题栏）。
+ * 面板内容由 [content] 槽位提供（通常传入若干 [GlassDropdownMenuItem]）。
+ */
+@Composable
+private fun GlassDropdownMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    backdrop: Backdrop,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    AnimatedVisibility(
+        visible = expanded,
+        modifier = modifier.fillMaxSize(),
+        enter = fadeIn(tween(160)),
+        exit = fadeOut(tween(120))
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // 透明全屏 tap-outside 层：点击面板外区域触发关闭
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onDismissRequest
+                    )
+            )
+            // 玻璃面板：顶部右对齐，距顶 108dp 避开 100dp 标题栏
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 108.dp, end = 8.dp)
+                    .widthIn(min = 180.dp)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(16.dp) },
+                        effects = {
+                            vibrancy()
+                            blur(8f.dp.toPx())
+                            lens(24f.dp.toPx(), 24f.dp.toPx())
+                        },
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                    )
+                    .padding(vertical = 8.dp),
+                content = content,
+            )
         }
     }
 }
