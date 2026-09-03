@@ -184,7 +184,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 isEInkMode = AppConfig.isEInkMode,
                 glassConfig = glassConfig,
                 bookshelfPage = { registerGotoTop, registerBack, registerMenuAction, onRequestGroupEdit ->
-                    BookshelfPageNew(
+                    BookshelfPage(
                         registerGotoTop = registerGotoTop,
                         registerBack = registerBack,
                         registerMenuAction = registerMenuAction,

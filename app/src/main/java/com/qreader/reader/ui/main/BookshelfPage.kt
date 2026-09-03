@@ -71,21 +71,10 @@ import java.io.File
 import kotlin.math.max
 
 /**
- * 书架页顶栏「更多选项」菜单项（与原版 R.menu.main_bookshelf 的溢出菜单一致）
+ * 书架页（实验副本 BookshelfPage）—— 由 BookshelfPage 复制而来，原页面保留作兜底。
+ * 后续所有分组/封面相关改动只动本文件；若改坏，删除本文件并把 MainActivity 的调用切回 BookshelfPage 即可。
+ * 注意：BookshelfMenuAction 枚举沿用原 BookshelfPage.kt 中的定义（同 package，不在此重复声明）。
  */
-enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
-    UpdateToc(R.string.update_toc, R.drawable.ic_refresh_black_24dp),
-    AddLocal(R.string.book_local, R.drawable.ic_add),
-    Remote(R.string.add_remote_book, R.drawable.ic_add),
-    AddUrl(R.string.add_url, R.drawable.ic_add_online),
-    BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
-    Download(R.string.cache_export, R.drawable.ic_download_line),
-    GroupManage(R.string.group_manage, R.drawable.ic_groups),
-    Layout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
-    Export(R.string.export_bookshelf, R.drawable.ic_export),
-    Import(R.string.import_bookshelf, R.drawable.ic_import),
-    Log(R.string.log, R.drawable.ic_cfg_about),
-}
 
 /**
  * 书架页 —— Compose 页面（供 HorizontalPager 使用）。
@@ -517,4 +506,21 @@ fun BookshelfPage(
 
 private fun Int.dpToPx(context: android.content.Context): Float {
     return this * context.resources.displayMetrics.density
+}
+
+/**
+ * 书架页顶栏「更多选项」菜单项（与原版 R.menu.main_bookshelf 的溢出菜单一致）
+ */
+enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
+    UpdateToc(R.string.update_toc, R.drawable.ic_refresh_black_24dp),
+    AddLocal(R.string.book_local, R.drawable.ic_add),
+    Remote(R.string.add_remote_book, R.drawable.ic_add),
+    AddUrl(R.string.add_url, R.drawable.ic_add_online),
+    BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
+    Download(R.string.cache_export, R.drawable.ic_download_line),
+    GroupManage(R.string.group_manage, R.drawable.ic_groups),
+    Layout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
+    Export(R.string.export_bookshelf, R.drawable.ic_export),
+    Import(R.string.import_bookshelf, R.drawable.ic_import),
+    Log(R.string.log, R.drawable.ic_cfg_about),
 }
