@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,8 +23,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -71,7 +68,6 @@ import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTab
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTabs
-import com.qreader.reader.ui.compose.liquid.LiquidGlassStyle
 import com.qreader.reader.ui.compose.liquid.NavBarGlassConfig
 import com.qreader.reader.utils.ColorUtils
 import kotlin.math.abs
@@ -109,7 +105,7 @@ fun MainScreen(
     bookshelfPage: @Composable (
         registerGotoTop: ((() -> Unit)?) -> Unit,
         registerBack: ((() -> Boolean)?) -> Unit,
-        registerMenuAction: ((BookshelfMenuAction) -> Unit)?) -> Unit,
+        registerMenuAction: (((BookshelfMenuAction) -> Unit)?) -> Unit,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,

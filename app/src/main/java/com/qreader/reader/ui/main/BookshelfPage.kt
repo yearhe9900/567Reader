@@ -6,12 +6,10 @@ import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
@@ -31,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -57,7 +54,6 @@ import com.qreader.reader.ui.book.group.GroupManageDialog
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
-import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.ui.main.bookshelf.BookshelfConfigDialog
 import com.qreader.reader.ui.main.bookshelf.BookshelfViewModel
 import com.qreader.reader.ui.main.bookshelf.style2.BaseBooksAdapter
@@ -103,7 +99,7 @@ enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
 fun BookshelfPage(
     registerGotoTop: ((() -> Unit)?) -> Unit,
     registerBack: ((() -> Boolean)?) -> Unit,
-    registerMenuAction: ((BookshelfMenuAction) -> Unit)?) -> Unit,
+    registerMenuAction: (((BookshelfMenuAction) -> Unit)?) -> Unit,
     onBookClick: (Book) -> Unit,
     onBookLongClick: (Book) -> Unit,
     onGroupLongClick: (BookGroup) -> Unit,
