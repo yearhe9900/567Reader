@@ -118,12 +118,13 @@ class GlassAlertDialog : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        // 玻璃态dialog不受主题模式影响，固定使用浅色主题风格（深色图标）
-        // 墨水屏模式下也保持一致
+        // 玻璃态 dialog 固定深色风格，状态栏/导航栏图标使用浅色；
+        // E-Ink 模式下背景为白色，图标改为深色。
+        val isEInkMode = AppConfig.isEInkMode
         dialog?.window?.let { window ->
             WindowCompat.getInsetsController(window, window.decorView).apply {
-                isAppearanceLightStatusBars = true
-                isAppearanceLightNavigationBars = true
+                isAppearanceLightStatusBars = isEInkMode
+                isAppearanceLightNavigationBars = isEInkMode
             }
         }
     }
@@ -138,12 +139,14 @@ class GlassAlertDialog : DialogFragment() {
         val backdrop = rememberLayerBackdrop()
         var checkBoxState by remember { mutableStateOf(checkBoxChecked) }
 
-        // 玻璃态dialog不受主题模式影响，使用固定的浅色主题颜色（墨水屏模式除外）
+        // 玻璃态 dialog 固定使用深色主题风格，与「主题模式」弹框保持一致
+        // E-Ink 模式下回退为黑白高对比
         val isEInkMode = AppConfig.isEInkMode
-        val contentColor = Color.Black
-        val accentColor = Color(0xFF0088FF)
-        val containerColor = if (isEInkMode) Color.White else Color(0xFFFAFAFA).copy(0.6f)
-        val dimColor = if (isEInkMode) Color.Transparent else Color(0xFF29293A).copy(0.23f)
+        val contentColor = if (isEInkMode) Color.Black else Color.White
+        val accentColor = Color(0xFF0091FF)
+        val containerColor = if (isEInkMode) Color.White else Color(0xFF121212).copy(0.4f)
+        val dimColor = if (isEInkMode) Color.Transparent else Color(0xFF121212).copy(0.56f)
+        val scrimColor = if (isEInkMode) Color.Transparent else Color.Black.copy(0.5f)
 
         // 背景采样源：原页面截图优先，回退到 wallpaper_light
         val backdropPainter: Painter = if (backdropBitmap != null) {
@@ -162,22 +165,43 @@ class GlassAlertDialog : DialogFragment() {
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // 1) backdrop 捕获源（与官方 demo 一致：全屏壁纸/截图）+ dim 遮罩
-            //    dim 只盖在背景层，卡片作为独立兄弟节点画在其上，不会被压暗
+            // 1) backdrop 捕获源（与官方 demo 一致：全屏壁纸/截图）
             Image(
                 painter = backdropPainter,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .layerBackdrop(backdrop)
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(dimColor)
-                    },
+                    .layerBackdrop(backdrop),
                 contentScale = ContentScale.Crop
             )
 
-            // 2) 居中玻璃卡片层（点外部区域 = 取消）
+            // 2) 玻璃蒙板：与「主题模式」弹框一致，blur+lens+scrim+dim
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedRectangle(0.5f.dp) },
+                        effects = {
+                            if (!isEInkMode) {
+                                colorControls(
+                                    brightness = 0f,
+                                    saturation = 1.4f
+                                )
+                                blur(12f.dp.toPx())
+                                lens(28f.dp.toPx(), 56f.dp.toPx(), depthEffect = true)
+                            }
+                        },
+                        highlight = { Highlight.Plain },
+                        onDrawSurface = { drawRect(scrimColor) }
+                    )
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(dimColor)
+                    }
+            )
+
+            // 3) 居中玻璃卡片层（点外部区域 = 取消）
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -200,10 +224,10 @@ class GlassAlertDialog : DialogFragment() {
                             effects = {
                                 if (!isEInkMode) {
                                     colorControls(
-                                        brightness = 0.2f,
+                                        brightness = 0f,
                                         saturation = 1.5f
                                     )
-                                    blur(16f.dp.toPx())
+                                    blur(8f.dp.toPx())
                                     lens(24f.dp.toPx(), 48f.dp.toPx(), depthEffect = true)
                                 }
                             },
@@ -249,7 +273,7 @@ class GlassAlertDialog : DialogFragment() {
                                         effects = {
                                             if (!isEInkMode) {
                                                 colorControls(
-                                                    brightness = 0.2f,
+                                                    brightness = 0f,
                                                     saturation = 1.5f
                                                 )
                                                 blur(8f.dp.toPx())
