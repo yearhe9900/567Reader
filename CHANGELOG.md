@@ -49,3 +49,7 @@
 * BookshelfPageNew 转正为正式 BookshelfPage，删除旧兜底页（迁移 BookshelfMenuAction 枚举，避免 Unresolved reference）。
 * 清理误入库的 .workbuddy/artifacts/overview.md 并加入 .gitignore。
 * 重写 README.md 反映 567Reader 真实项目。
+* 应用显示名改为「阅读567」（覆盖全部多语言 app_name 及 _a/_s 变体）；重写 CHANGELOG.md 按天提炼 fork 后改动。
+* 书架「更多选项」菜单玻璃态化：Material3 DropdownMenu 走独立 Popup 窗口、无法被 drawBackdrop 采样，改为自绘 GlassDropdownMenu（全屏点击关闭层 + 顶部右对齐玻璃面板，距顶 108dp 避开标题栏）；菜单状态提升至 MainScreen，渲染在全屏外层 Box 内且位于标题栏之下（避免点击关闭层吞掉「更多」按钮点击）。菜单项图标 24dp、文字 16sp 对齐原版 PopupMenu，宽度固定 200dp。
+* 移除书架菜单中的「日志」项（菜单由 11 项 → 10 项）。
+* 修复：主题模式弹框打开时不点按钮、侧滑返回退出，标题栏与底部导航栏永久消失。根因为 in-tree overlay 不是 Dialog、返回事件穿透到 MainActivity 把 tab 切回书架，设置页被 Pager 销毁而 themeDialogOpen 状态未复位。改为 LiquidGlassDialog 内置 BackHandler 接管返回键与侧滑手势（三处玻璃弹框统一生效，DialogFragment 场景判空跳过），并在 MainScreen 增加翻页兜底复位开关。
