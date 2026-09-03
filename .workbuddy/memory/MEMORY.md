@@ -14,6 +14,8 @@
 ## 架构关键事实
 - 玻璃态是 Compose-only（kyant `drawBackdrop` / `layerBackdrop`）：overlay 必须是 backdrop 捕获的「兄弟节点」才能采样真实页。编辑分组/主题弹框均用全屏外层 Box 直接子节点的 `AnimatedVisibility` + `LiquidGlassDialog`。
 - 「蒙板不全屏」优先查：外层容器是否全屏、弹框是否被塞进 align/fillMaxWidth 的小 Box（如底部导航栏）。
+- **in-tree overlay 必须自己挂 `BackHandler`**：它不是 Dialog，返回键/侧滑返回不会自动被它吃掉，会穿透到 `MainActivity.onBackPressedDispatcher`（其首条逻辑是 `selectedTab != 0 → 切回书架`）。`LiquidGlassDialog` 已内置；判空用 `LocalOnBackPressedDispatcherOwner.current != null`（DialogFragment 内可能为 null，直接调 BackHandler 会抛异常）。
+- 弹框开关状态若由比宿主页面更上层持有（如 `themeDialogOpen` 在 MainActivity、弹框在 Pager 的设置页里），宿主页被 Pager 销毁时**状态不会复位**，会出现「UI 没了但状态还开着」的幽灵状态（曾导致标题栏/导航栏永久隐藏）。此类状态要么随宿主销毁复位，要么加兜底复位副作用。
 - 分组文件夹宫格仅在 Folder 样式（`AppConfig.bookGroupStyle == 1`）下渲染；Tab 样式不显示分组卡片。
 
 ## 目录约定
