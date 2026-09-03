@@ -9,9 +9,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookGroup
-import com.qreader.reader.ui.widget.image.CoverImageView
-import com.qreader.reader.utils.invisible
-import com.qreader.reader.utils.visible
 
 abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
     val context: Context,
@@ -21,31 +18,6 @@ abstract class BaseBooksAdapter<VH : RecyclerView.ViewHolder>(
     private var currentGroupId: Long? = null
     private var layoutManager: RecyclerView.LayoutManager? = null
     protected val inflater: LayoutInflater = LayoutInflater.from(context)
-
-    /**
-     * 分组文件夹封面：groupId → 该分组前 4 本书（由 BookshelfPage 在离线线程预计算后写入）。
-     * GroupViewHolder.onBind 据此把文件夹图标的宫格（当前为 2×2，取前 4 本）填上各书封面，
-     * 不足 4 本则对应格透明。
-     */
-    var groupCoverBooks: Map<Long, List<Book>> = emptyMap()
-
-    /**
-     * 按顺序把封面格填入分组的前 4 本书；书不足 4 本时，剩余格设为透明（INVISIBLE 且不加载图片）。
-     * 网格总格数由布局 XML 决定，此方法只负责按 cells 数组长度遍历。
-     */
-    protected fun bindGroupCoverCells(cells: Array<CoverImageView>, groupId: Long) {
-        val covers = groupCoverBooks[groupId].orEmpty().take(4)
-        for (i in cells.indices) {
-            val book = covers.getOrNull(i)
-            if (book != null) {
-                cells[i].visible()
-                cells[i].load(book, false)
-            } else {
-                cells[i].invisible()
-                cells[i].setImageDrawable(null)
-            }
-        }
-    }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)

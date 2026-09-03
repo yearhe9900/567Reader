@@ -37,7 +37,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -65,9 +64,7 @@ import com.qreader.reader.utils.cnCompare
 import com.qreader.reader.utils.setEdgeEffectColor
 import com.qreader.reader.utils.showDialogFragment
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -127,9 +124,6 @@ fun BookshelfPage(
 
     // 书架分组展示样式：0=Tab，1=Folder（与 R.array.group_style 对应）
     val bookGroupStyle = remember { AppConfig.bookGroupStyle }
-    val isFolderStyle = bookGroupStyle == 1
-    // Folder 样式下强制使用宫格布局，普通模式沿用用户设置的布局
-    val isGridLayout = bookshelfLayout >= 2 || isFolderStyle
 
     // Tab 样式：根据 tabs 选择当前 groupId
     // 还原上次选中的分组（与 legado-E BookshelfFragment1.selectLastTab() 一致）
@@ -191,9 +185,9 @@ fun BookshelfPage(
         }
     }
 
-    // ── 创建 Adapter（在 bookshelfLayout / 分组样式变化时重建）──
-    val adapter = remember(bookshelfLayout, bookGroupStyle) {
-        if (isGridLayout) {
+    // ── 创建 Adapter（只在 bookshelfLayout 变化时重建）──
+    val adapter = remember(bookshelfLayout) {
+        if (bookshelfLayout >= 2) {
             BooksAdapterGrid(context, callBack)
         } else {
             BooksAdapterList(context, callBack)
@@ -276,9 +270,7 @@ fun BookshelfPage(
     // ── 观察 BookGroups（LiveData）──
     val groupsLiveData = remember { appDb.bookGroupDao.show }
     DisposableEffect(lifecycleOwner) {
-        val observer = Observer<List<BookGroup>> { groups ->
-            bookGroups = groups
-        }
+        val observer = Observer<List<BookGroup>> { groups -> bookGroups = groups }
         groupsLiveData.observe(lifecycleOwner, observer)
         onDispose { groupsLiveData.removeObserver(observer) }
     }
@@ -308,17 +300,6 @@ fun BookshelfPage(
         }
         currentItems.addAll(books)
         itemCount = currentItems.size
-        // Folder 样式下，预计算各分组前 4 本书封面（离线线程查询 Room），供文件夹宫格封面使用
-        if (bookGroupStyle == 1 && groupId == BookGroup.IdRoot) {
-            adapter.groupCoverBooks = withContext(Dispatchers.IO) {
-                bookGroups.associate { group ->
-                    group.groupId to appDb.bookDao.flowByGroup(group.groupId)
-                        .map { sortBooksByGroup(it, group) }
-                        .first()
-                        .take(4)
-                }
-            }
-        }
         adapter.updateItems(groupId)
         // 更新空状态 & 下拉刷新开关
         swipeRefreshRef.value?.isEnabled = enableRefresh && itemCount > 0
@@ -372,42 +353,6 @@ fun BookshelfPage(
                             }
                             this.adapter = adapter
                             itemAnimator = null
-                            // 横向滑动分组项进入分组页（与点击进入同逻辑）
-                            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-                                0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-                            ) {
-                                override fun getMovementFlags(
-                                    recyclerView: RecyclerView,
-                                    viewHolder: RecyclerView.ViewHolder
-                                ): Int {
-                                    val pos = viewHolder.bindingAdapterPosition
-                                    val item = (recyclerView.adapter as? BaseBooksAdapter<*>)?.getItem(pos)
-                                    val swipeFlags = if (item is BookGroup) {
-                                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-                                    } else 0
-                                    return makeMovementFlags(0, swipeFlags)
-                                }
-
-                                override fun onMove(
-                                    recyclerView: RecyclerView,
-                                    viewHolder: RecyclerView.ViewHolder,
-                                    target: RecyclerView.ViewHolder
-                                ): Boolean = false
-
-                                override fun onSwiped(
-                                    viewHolder: RecyclerView.ViewHolder,
-                                    direction: Int
-                                ) {
-                                    val pos = viewHolder.bindingAdapterPosition
-                                    val rv = viewHolder.itemView.parent as? RecyclerView
-                                    val item = (rv?.adapter as? BaseBooksAdapter<*>)?.getItem(pos)
-                                    if (item is BookGroup) {
-                                        callBack.onItemClick(item)
-                                    } else {
-                                        rv?.adapter?.notifyItemChanged(pos)
-                                    }
-                                }
-                            }).attachToRecyclerView(this)
                             // 与原 BookshelfFragment2 一致的 itemDecoration
                             addItemDecoration(object : RecyclerView.ItemDecoration() {
                                 override fun getItemOffsets(
@@ -567,19 +512,6 @@ fun BookshelfPage(
                 },
             )
         }
-    }
-}
-
-/**
- * 按分组自身的排序规则（与书架内显示顺序一致）对书籍排序，用于选取文件夹宫格封面。
- */
-private fun sortBooksByGroup(books: List<Book>, group: BookGroup): List<Book> {
-    return when (group.getRealBookSort()) {
-        1 -> books.sortedByDescending { it.latestChapterTime }
-        2 -> books.sortedWith { o1, o2 -> o1.name.cnCompare(o2.name) }
-        3 -> books.sortedBy { it.order }
-        4 -> books.sortedByDescending { max(it.latestChapterTime, it.durChapterTime) }
-        else -> books.sortedByDescending { it.durChapterTime }
     }
 }
 
