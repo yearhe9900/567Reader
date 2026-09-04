@@ -23,8 +23,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerId
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.awaitEachGesture
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.recyclerview.widget.GridLayoutManager
@@ -200,22 +207,18 @@ fun BookshelfPage(
                 val edgePx = 30.dp.toPx()
                 val thresholdPx = 50.dp.toPx()
                 awaitEachGesture {
-                    val down = awaitFirstDown()
+                    val down = awaitFirstDown(false)
                     if (down.position.x < size.width - edgePx) return@awaitEachGesture
-                    down.consume()
-                    val pastSlop = awaitTouchSlopOrCancellation(down.id) { change, _ ->
-                        change.consume()
-                    } ?: return@awaitEachGesture
-                    var dx = pastSlop.position.x - down.position.x
-                    var id = pastSlop.id
-                    while (true) {
-                        val ev = awaitPointerEvent()
-                        val ch = ev.changes.firstOrNull { it.id == id } ?: break
-                        if (!ch.pressed) { ch.consume(); break }
-                        ch.consume()
-                        dx += ch.position.x - ch.previousPosition.x
+                    var totalDx = 0f
+                    val upOrCancel = edgeDrag(
+                        pointerId = down.id,
+                        onDrag = { change ->
+                            totalDx += change.positionChange().x
+                        },
+                    )
+                    if (upOrCancel != null && totalDx < -thresholdPx) {
+                        onRequestGroups()
                     }
-                    if (dx < -thresholdPx) onRequestGroups()
                 }
             }
     ) {
@@ -290,6 +293,25 @@ fun BookshelfPage(
 
 private fun Int.dpToPx(context: android.content.Context): Float {
     return this * context.resources.displayMetrics.density
+}
+
+/**
+ * 拖拽跟踪：从 pointerId 开始持续跟踪拖拽，直到抬手返回 PointerInputChange，
+ * 取消返回 null。与 DragGestureInspector.drag() 同模式。
+ */
+private suspend fun AwaitPointerEventScope.edgeDrag(
+    pointerId: PointerId,
+    onDrag: (PointerInputChange) -> Unit,
+): PointerInputChange? {
+    var pointer = pointerId
+    while (true) {
+        val event = awaitPointerEvent()
+        val change = event.changes.firstOrNull { it.id == pointer } ?: return null
+        if (change.changedToUpIgnoreConsumed()) return change
+        val moved = change.positionChange()
+        if (moved.x != 0f || moved.y != 0f) onDrag(change)
+        pointer = change.id
+    }
 }
 
 enum class BookshelfMenuAction(var titleRes: Int, var iconRes: Int) {
