@@ -57,6 +57,8 @@
     <string name="layout_grid5">網格五列</string>
     <string name="layout_grid6">網格六列</string>
     <string name="bookshelf_layout">書架布局</string>
+    <string name="list_layout">列表布局</string>
+    <string name="grid_layout">網格布局</string>
     <string name="view">檢視</string>
     <string name="book_library">書城</string>
     <string name="book_local">新增本機</string>

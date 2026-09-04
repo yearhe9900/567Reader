@@ -80,11 +80,15 @@ fun BookshelfPage(
     var bookshelfLayout by remember { mutableIntStateOf(AppConfig.bookshelfLayout) }
     val bookshelfMargin = 12
 
-    // 初始化布局图标
+    // 初始化布局图标与标题
     LaunchedEffect(Unit) {
-        BookshelfMenuAction.ToggleLayout.iconRes =
-            if (bookshelfLayout == 1) R.drawable.ic_chapter_list
-            else R.drawable.ic_view_quilt
+        if (bookshelfLayout == 1) {
+            BookshelfMenuAction.ToggleLayout.titleRes = R.string.list_layout
+            BookshelfMenuAction.ToggleLayout.iconRes = R.drawable.ic_chapter_list
+        } else {
+            BookshelfMenuAction.ToggleLayout.titleRes = R.string.grid_layout
+            BookshelfMenuAction.ToggleLayout.iconRes = R.drawable.ic_view_quilt
+        }
     }
 
     val currentItems = remember { mutableListOf<Any>() }
@@ -132,9 +136,13 @@ fun BookshelfPage(
             BookshelfMenuAction.ToggleLayout -> {
                 bookshelfLayout = if (bookshelfLayout == 1) 0 else 1
                 AppConfig.bookshelfLayout = bookshelfLayout
-                BookshelfMenuAction.ToggleLayout.iconRes =
-                    if (bookshelfLayout == 1) R.drawable.ic_chapter_list
-                    else R.drawable.ic_view_quilt
+                if (bookshelfLayout == 1) {
+                    BookshelfMenuAction.ToggleLayout.titleRes = R.string.list_layout
+                    BookshelfMenuAction.ToggleLayout.iconRes = R.drawable.ic_chapter_list
+                } else {
+                    BookshelfMenuAction.ToggleLayout.titleRes = R.string.grid_layout
+                    BookshelfMenuAction.ToggleLayout.iconRes = R.drawable.ic_view_quilt
+                }
             }
         }
     }
@@ -255,7 +263,7 @@ private fun Int.dpToPx(context: android.content.Context): Float {
     return this * context.resources.displayMetrics.density
 }
 
-enum class BookshelfMenuAction(val titleRes: Int, var iconRes: Int) {
+enum class BookshelfMenuAction(var titleRes: Int, var iconRes: Int) {
     AddLocal(R.string.book_local, R.drawable.ic_add),
     Remote(R.string.add_remote_book, R.drawable.ic_add),
     BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
