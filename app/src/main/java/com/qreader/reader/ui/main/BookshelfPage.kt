@@ -4,13 +4,13 @@ import android.content.Intent
 import android.graphics.Rect
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -42,10 +41,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -57,6 +54,7 @@ import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
+import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 import com.qreader.reader.ui.main.bookshelf.BookshelfViewModel
 import com.qreader.reader.ui.main.bookshelf.style.BaseBooksAdapter
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterGrid
@@ -83,7 +81,6 @@ fun BookshelfPage(
     onGroupLongClick: (BookGroup) -> Unit,
     onRefresh: (List<Book>, Boolean) -> Unit,
     isUpdate: (String) -> Boolean,
-    backdrop: com.kyant.backdrop.Backdrop,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -205,8 +202,16 @@ fun BookshelfPage(
         swipeRefreshRef.value?.isEnabled = itemCount > 0
     }
 
-    // ── UI：Box 包裹 Column + 玻璃弹框 overlay ──
-    Box(modifier = modifier.fillMaxSize()) {
+    // ── 玻璃弹框 backdrop（与 ThemeModeDialogOverlay 同模式：本地创建，按需启用）──
+    val sortBackdrop = rememberLayerBackdrop()
+
+    // ── UI ──
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            // 仅排序弹框打开时启用 layerBackdrop，避免常驻 GPU 离屏开销
+            .then(if (showSortDialog) Modifier.layerBackdrop(sortBackdrop) else Modifier)
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 key(bookshelfLayout) {
@@ -298,114 +303,48 @@ fun BookshelfPage(
             }
         }
 
-        // 排序玻璃态弹框：内联 drawBackdrop（与 ExplorePage 删除弹框同模式）
+        // 排序玻璃态弹框（与 ThemeModeDialogOverlay 完全同模式：本地 backdrop + LiquidGlassDialog）
         if (showSortDialog) {
-            val isEInkMode = AppConfig.isEInkMode
-            val colors = com.qreader.reader.ui.compose.glass.glassDialogColors(isEInkMode)
-
-            Box(modifier = Modifier.fillMaxSize()) {
-                // 蒙板（毛玻璃）
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { com.kyant.shapes.RoundedRectangle(0.5f.dp) },
-                            effects = {
-                                if (!isEInkMode) {
-                                    colorControls(
-                                        brightness = com.qreader.reader.ui.compose.glass.GlassDialogTokens.scrimBrightness,
-                                        saturation = com.qreader.reader.ui.compose.glass.GlassDialogTokens.scrimSaturation
-                                    )
-                                    blur(com.qreader.reader.ui.compose.glass.GlassDialogTokens.scrimBlur.toPx())
-                                    lens(
-                                        com.qreader.reader.ui.compose.glass.GlassDialogTokens.scrimLensX.toPx(),
-                                        com.qreader.reader.ui.compose.glass.GlassDialogTokens.scrimLensY.toPx(),
-                                        depthEffect = true
-                                    )
-                                }
-                            },
-                            highlight = { com.kyant.backdrop.highlight.Highlight.Plain },
-                            onDrawSurface = { drawRect(colors.scrimColor) }
-                        )
-                        .drawWithContent {
-                            drawContent()
-                            drawRect(colors.dimColor)
-                        }
+            LiquidGlassDialog(
+                backdrop = sortBackdrop,
+                onDismiss = { showSortDialog = false },
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .wrapContentHeight(),
+                cardRadius = 28.dp,
+                contentPadding = PaddingValues(20.dp),
+            ) { colors ->
+                BasicText(
+                    text = stringResource(R.string.sort),
+                    style = TextStyle(color = colors.contentColor, fontSize = 18.sp),
+                    modifier = Modifier.padding(bottom = 16.dp),
                 )
-
-                // 居中玻璃卡片
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(
-                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                            indication = null
-                        ) { showSortDialog = false },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth(0.85f)
-                            .clickable(
-                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                                indication = null
-                            ) { /* 点卡片内部不关闭 */ }
-                            .drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { com.kyant.shapes.RoundedRectangle(28.dp) },
-                                effects = {
-                                    if (!isEInkMode) {
-                                        colorControls(
-                                            brightness = com.qreader.reader.ui.compose.glass.GlassDialogTokens.cardBrightness,
-                                            saturation = com.qreader.reader.ui.compose.glass.GlassDialogTokens.cardSaturation
-                                        )
-                                        blur(com.qreader.reader.ui.compose.glass.GlassDialogTokens.cardBlur.toPx())
-                                        lens(
-                                            com.qreader.reader.ui.compose.glass.GlassDialogTokens.cardLensX.toPx(),
-                                            com.qreader.reader.ui.compose.glass.GlassDialogTokens.cardLensY.toPx(),
-                                            depthEffect = true
-                                        )
-                                    }
-                                },
-                                highlight = { com.kyant.backdrop.highlight.Highlight.Plain },
-                                onDrawSurface = { drawRect(colors.containerColor) }
-                            )
-                            .padding(20.dp)
+                val sortOptions = listOf(
+                    R.string.bookshelf_px_0 to 0,
+                    R.string.bookshelf_px_1 to 1,
+                    R.string.bookshelf_px_2 to 2,
+                    R.string.bookshelf_px_3 to 3,
+                    R.string.bookshelf_px_4 to 4,
+                    R.string.bookshelf_px_5 to 5,
+                )
+                sortOptions.forEach { (resId, sortIndex) ->
+                    val isSelected = bookshelfSort == sortIndex
+                    TextButton(
+                        onClick = {
+                            bookshelfSort = sortIndex
+                            AppConfig.bookshelfSort = sortIndex
+                            showSortDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         BasicText(
-                            text = stringResource(R.string.sort),
-                            style = TextStyle(color = colors.contentColor, fontSize = 18.sp),
-                            modifier = Modifier.padding(bottom = 16.dp),
+                            text = stringResource(resId),
+                            style = TextStyle(
+                                color = if (isSelected) colors.accentColor else colors.contentColor,
+                                fontSize = 15.sp,
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         )
-                        val sortOptions = listOf(
-                            R.string.bookshelf_px_0 to 0,
-                            R.string.bookshelf_px_1 to 1,
-                            R.string.bookshelf_px_2 to 2,
-                            R.string.bookshelf_px_3 to 3,
-                            R.string.bookshelf_px_4 to 4,
-                            R.string.bookshelf_px_5 to 5,
-                        )
-                        sortOptions.forEach { (resId, sortIndex) ->
-                            val isSelected = bookshelfSort == sortIndex
-                            TextButton(
-                                onClick = {
-                                    bookshelfSort = sortIndex
-                                    AppConfig.bookshelfSort = sortIndex
-                                    showSortDialog = false
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                BasicText(
-                                    text = stringResource(resId),
-                                    style = TextStyle(
-                                        color = if (isSelected) colors.accentColor else colors.contentColor,
-                                        fontSize = 15.sp,
-                                    ),
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                )
-                            }
-                        }
                     }
                 }
             }
