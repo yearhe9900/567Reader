@@ -115,7 +115,6 @@ fun MainScreen(
         onRequestGroupEdit: (BookGroup) -> Unit,
         bookshelfSort: Int,
         onRequestSort: () -> Unit,
-        onRequestGroups: () -> Unit,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
@@ -285,7 +284,6 @@ fun MainScreen(
                         { group -> groupEditTarget = group; groupEditOpen = true },
                         bookshelfSort,
                         { sortDialogOpen = true },
-                        { groupDrawerOpen = true },
                     )
 
                     1 -> if (showDiscovery) {
@@ -358,6 +356,7 @@ fun MainScreen(
                         containerColor = containerColor,
                         contentColor = contentColor,
                         onSearch = { SearchActivity.start(context, "") },
+                        onGroups = { groupDrawerOpen = true },
                         onMenuAction = { bookshelfMenuAction?.invoke(it) },
                         onMenuOpenChange = { bookshelfMenuOpen = it },
                     )
@@ -695,6 +694,7 @@ private fun BookshelfGlassTitleBar(
     containerColor: Color,
     contentColor: Color,
     onSearch: () -> Unit,
+    onGroups: () -> Unit,
     onMenuAction: (BookshelfMenuAction) -> Unit,
     onMenuOpenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -752,6 +752,32 @@ private fun BookshelfGlassTitleBar(
                     Icon(
                         painter = painterResource(R.drawable.ic_search),
                         contentDescription = context.getString(R.string.search),
+                        tint = contentColor,
+                    )
+                }
+            }
+
+            // 分组按钮（玻璃态）
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedCornerShape(12.dp) },
+                        effects = {
+                            vibrancy()
+                            blur(GlassConfig.blur.toPx())
+                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                        },
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                    )
+                    .size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                IconButton(onClick = onGroups) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_groups),
+                        contentDescription = context.getString(R.string.group_manage),
                         tint = contentColor,
                     )
                 }

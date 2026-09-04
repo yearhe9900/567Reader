@@ -178,7 +178,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 badgeCount = badgeCount,
                 showDiscovery = showDiscovery,
                 isEInkMode = AppConfig.isEInkMode,
-                bookshelfPage = { registerGotoTop, registerBack, registerMenuAction, onRequestGroupEdit, bookshelfSort, onRequestSort, onRequestGroups ->
+                bookshelfPage = { registerGotoTop, registerBack, registerMenuAction, onRequestGroupEdit, bookshelfSort, onRequestSort ->
                     BookshelfPage(
                         registerGotoTop = registerGotoTop,
                         registerBack = registerBack,
@@ -197,7 +197,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                         isUpdate = { viewModel.isUpdate(it) },
                         bookshelfSort = bookshelfSort,
                         onRequestSort = onRequestSort,
-                        onRequestGroups = onRequestGroups,
                     )
                 },
                 explorePage = { registerCompress, searchQuery, onSearchQueryChange, backdrop ->

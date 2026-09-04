@@ -23,14 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.ui.input.pointer.AwaitPointerEventScope
-import androidx.compose.ui.input.pointer.PointerId
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -76,7 +68,6 @@ fun BookshelfPage(
     isUpdate: (String) -> Boolean,
     bookshelfSort: Int,
     onRequestSort: () -> Unit,
-    onRequestGroups: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -199,29 +190,7 @@ fun BookshelfPage(
     }
 
     // ── UI ──
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            // 右边缘滑出分组抽屉：从右侧 30dp 内起始、左滑超过 50dp 触发
-            .pointerInput(Unit) {
-                val edgePx = 30.dp.toPx()
-                val thresholdPx = 50.dp.toPx()
-                awaitEachGesture {
-                    val down = awaitFirstDown(false)
-                    if (down.position.x < size.width - edgePx) return@awaitEachGesture
-                    var totalDx = 0f
-                    val upOrCancel = edgeDrag(
-                        pointerId = down.id,
-                        onDrag = { change ->
-                            totalDx += change.positionChange().x
-                        },
-                    )
-                    if (upOrCancel != null && totalDx < -thresholdPx) {
-                        onRequestGroups()
-                    }
-                }
-            }
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 key(bookshelfLayout) {
@@ -293,25 +262,6 @@ fun BookshelfPage(
 
 private fun Int.dpToPx(context: android.content.Context): Float {
     return this * context.resources.displayMetrics.density
-}
-
-/**
- * 拖拽跟踪：从 pointerId 开始持续跟踪拖拽，直到抬手返回 PointerInputChange，
- * 取消返回 null。与 DragGestureInspector.drag() 同模式。
- */
-private suspend fun AwaitPointerEventScope.edgeDrag(
-    pointerId: PointerId,
-    onDrag: (PointerInputChange) -> Unit,
-): PointerInputChange? {
-    var pointer = pointerId
-    while (true) {
-        val event = awaitPointerEvent()
-        val change = event.changes.firstOrNull { it.id == pointer } ?: return null
-        if (change.changedToUpIgnoreConsumed()) return change
-        val moved = change.positionChange()
-        if (moved.x != 0f || moved.y != 0f) onDrag(change)
-        pointer = change.id
-    }
 }
 
 enum class BookshelfMenuAction(var titleRes: Int, var iconRes: Int) {
