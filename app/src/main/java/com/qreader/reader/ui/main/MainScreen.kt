@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -138,6 +139,10 @@ fun MainScreen(
     // 编辑分组玻璃弹框状态（仅书架页长按入口触发；其余 XML 入口仍用原 GroupEditDialog）
     var groupEditTarget by remember { mutableStateOf<BookGroup?>(null) }
     var groupEditOpen by remember { mutableStateOf(false) }
+
+    // 排序玻璃弹框状态（排序值提升到 MainScreen，供 SortDialogOverlay 选择后回写 BookshelfPage）
+    var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
+    var sortDialogOpen by remember { mutableStateOf(false) }
 
     val tabItems = remember(showDiscovery, context) {
         buildTabItems(context, showDiscovery)
@@ -271,6 +276,8 @@ fun MainScreen(
                         },
                         { bookshelfMenuAction = it },
                         { group -> groupEditTarget = group; groupEditOpen = true },
+                        bookshelfSort,
+                        { sortDialogOpen = true },
                     )
 
                     1 -> if (showDiscovery) {
@@ -439,6 +446,25 @@ fun MainScreen(
             backdrop = backdrop,
             target = groupEditTarget,
             onDismiss = { groupEditOpen = false }
+        )
+    }
+
+    // 排序玻璃弹框覆盖层（与 GroupEditOverlay 同：全屏外层 Box 直接子节点，采样真实书架页）
+    AnimatedVisibility(
+        visible = sortDialogOpen,
+        modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(tween(160)),
+        exit = fadeOut(tween(120))
+    ) {
+        SortDialogOverlay(
+            backdrop = backdrop,
+            currentSort = bookshelfSort,
+            onSelect = { index ->
+                bookshelfSort = index
+                AppConfig.bookshelfSort = index
+                sortDialogOpen = false
+            },
+            onDismiss = { sortDialogOpen = false }
         )
     }
     }

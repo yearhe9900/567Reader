@@ -6,11 +6,8 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -41,8 +38,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
@@ -54,7 +49,6 @@ import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
-import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 import com.qreader.reader.ui.main.bookshelf.BookshelfViewModel
 import com.qreader.reader.ui.main.bookshelf.style.BaseBooksAdapter
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterGrid
@@ -81,6 +75,8 @@ fun BookshelfPage(
     onGroupLongClick: (BookGroup) -> Unit,
     onRefresh: (List<Book>, Boolean) -> Unit,
     isUpdate: (String) -> Boolean,
+    bookshelfSort: Int,
+    onRequestSort: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -93,9 +89,6 @@ fun BookshelfPage(
 
     var bookshelfLayout by remember { mutableIntStateOf(AppConfig.bookshelfLayout) }
     val bookshelfMargin = 12
-
-    var showSortDialog by remember { mutableStateOf(false) }
-    var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
 
     // 初始化布局图标
     LaunchedEffect(Unit) {
@@ -150,7 +143,7 @@ fun BookshelfPage(
                 activity.startActivity(Intent(activity, BookshelfManageActivity::class.java).apply {
                     putExtra("groupId", BookGroup.IdAll)
                 })
-            BookshelfMenuAction.Sort -> showSortDialog = true
+            BookshelfMenuAction.Sort -> onRequestSort()
             BookshelfMenuAction.ToggleLayout -> {
                 bookshelfLayout = if (bookshelfLayout == 1) 0 else 1
                 AppConfig.bookshelfLayout = bookshelfLayout
@@ -202,16 +195,8 @@ fun BookshelfPage(
         swipeRefreshRef.value?.isEnabled = itemCount > 0
     }
 
-    // ── 玻璃弹框 backdrop（与 ThemeModeDialogOverlay 同模式：本地创建，按需启用）──
-    val sortBackdrop = rememberLayerBackdrop()
-
     // ── UI ──
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            // 仅排序弹框打开时启用 layerBackdrop，避免常驻 GPU 离屏开销
-            .then(if (showSortDialog) Modifier.layerBackdrop(sortBackdrop) else Modifier)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 key(bookshelfLayout) {
@@ -300,53 +285,6 @@ fun BookshelfPage(
                         TextButton(onClick = { showAddUrlDialog = false }) { BasicText(stringResource(R.string.cancel)) }
                     },
                 )
-            }
-        }
-
-        // 排序玻璃态弹框（与 ThemeModeDialogOverlay 完全同模式：本地 backdrop + LiquidGlassDialog）
-        if (showSortDialog) {
-            LiquidGlassDialog(
-                backdrop = sortBackdrop,
-                onDismiss = { showSortDialog = false },
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .wrapContentHeight(),
-                cardRadius = 28.dp,
-                contentPadding = PaddingValues(20.dp),
-            ) { colors ->
-                BasicText(
-                    text = stringResource(R.string.sort),
-                    style = TextStyle(color = colors.contentColor, fontSize = 18.sp),
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-                val sortOptions = listOf(
-                    R.string.bookshelf_px_0 to 0,
-                    R.string.bookshelf_px_1 to 1,
-                    R.string.bookshelf_px_2 to 2,
-                    R.string.bookshelf_px_3 to 3,
-                    R.string.bookshelf_px_4 to 4,
-                    R.string.bookshelf_px_5 to 5,
-                )
-                sortOptions.forEach { (resId, sortIndex) ->
-                    val isSelected = bookshelfSort == sortIndex
-                    TextButton(
-                        onClick = {
-                            bookshelfSort = sortIndex
-                            AppConfig.bookshelfSort = sortIndex
-                            showSortDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        BasicText(
-                            text = stringResource(resId),
-                            style = TextStyle(
-                                color = if (isSelected) colors.accentColor else colors.contentColor,
-                                fontSize = 15.sp,
-                            ),
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        )
-                    }
-                }
             }
         }
     }
