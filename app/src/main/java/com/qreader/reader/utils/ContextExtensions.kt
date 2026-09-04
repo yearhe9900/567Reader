@@ -43,10 +43,8 @@ import com.qreader.reader.help.IntentHelp
 import com.qreader.reader.help.book.isAudio
 import com.qreader.reader.help.book.isImage
 import com.qreader.reader.help.book.isLocal
-import com.qreader.reader.help.book.isVideo
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.book.audio.AudioPlayActivity
-import com.qreader.reader.ui.video.VideoPlayerActivity
 import com.qreader.reader.ui.book.manga.ReadMangaActivity
 import com.qreader.reader.ui.book.read.ReadBookActivity
 import splitties.systemservices.clipboardManager
@@ -68,7 +66,6 @@ fun Context.startActivityForBook(
     configIntent: Intent.() -> Unit = {},
 ) {
     val cls = when {
-        book.isVideo -> VideoPlayerActivity::class.java
         book.isAudio -> AudioPlayActivity::class.java
         !book.isLocal && book.isImage && AppConfig.showMangaUi -> ReadMangaActivity::class.java
         else -> ReadBookActivity::class.java

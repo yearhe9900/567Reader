@@ -27,7 +27,6 @@ import com.qreader.reader.model.ImageProvider
 import com.qreader.reader.receiver.SharedReceiverActivity
 import com.qreader.reader.service.WebService
 import com.qreader.reader.ui.file.HandleFileContract
-import com.qreader.reader.ui.video.config.SettingsDialog
 import com.qreader.reader.ui.widget.code.addJsonPattern
 import com.qreader.reader.ui.widget.number.NumberPickerDialog
 import com.qreader.reader.utils.LogUtils
@@ -97,7 +96,6 @@ class OtherConfigFragment : PreferenceFragment(),
         when (preference.key) {
             PreferKey.userAgent -> showUserAgentDialog()
             PreferKey.customHosts -> showCustomHostsDialog()
-            PreferKey.videoSetting -> showDialogFragment(SettingsDialog(requireActivity()))
             PreferKey.defaultBookTreeUri -> localBookTreeSelect.launch {
                 title = getString(R.string.select_book_folder)
                 mode = HandleFileContract.DIR_SYS

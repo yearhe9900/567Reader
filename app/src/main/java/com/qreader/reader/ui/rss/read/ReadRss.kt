@@ -11,11 +11,10 @@ import com.qreader.reader.data.entities.RssReadRecord
 import com.qreader.reader.data.entities.RssSource
 import com.qreader.reader.exception.ContentEmptyException
 import com.qreader.reader.model.rss.Rss
-import com.qreader.reader.ui.video.VideoPlayerActivity
 import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.utils.NetworkUtils
 import com.qreader.reader.utils.showDialogFragment
-import com.qreader.reader.utils.startActivity
+import com.qreader.reader.utils.toastOnUi
 import kotlinx.coroutines.Dispatchers.IO
 
 object ReadRss {
@@ -35,11 +34,7 @@ object ReadRss {
             return
         }
         if (type == 2) {
-            activity.startActivity<VideoPlayerActivity> {
-                putExtra("sourceKey", record.origin)
-                putExtra("sourceType", SourceType.rss)
-                putExtra("record", record.record)
-            }
+            activity.toastOnUi("视频播放功能已移除")
             return
         }
         readNoHtml(activity, record, type)
@@ -62,11 +57,7 @@ object ReadRss {
         }
         if (type == 2) {
             //视频播放
-            fragment.startActivity<VideoPlayerActivity> {
-                putExtra("sourceKey", rssArticle.origin)
-                putExtra("sourceType", SourceType.rss)
-                putExtra("record", rssArticle.link)
-            }
+            fragment.toastOnUi("视频播放功能已移除")
             return
         }
         readNoHtml(fragment, rssArticle, rssSource, type)

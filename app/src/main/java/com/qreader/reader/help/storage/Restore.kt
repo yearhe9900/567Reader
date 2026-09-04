@@ -32,7 +32,6 @@ import com.qreader.reader.help.book.upType
 import com.qreader.reader.help.config.LocalConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.help.config.ThemeConfig
-import com.qreader.reader.model.VideoPlay.VIDEO_PREF_NAME
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.model.localBook.LocalBook
 import com.qreader.reader.utils.ACache
@@ -261,20 +260,6 @@ object Restore {
                 }
             }
             edit.apply()
-        }
-        appCtx.getSharedPreferences(path, "videoConfig")?.all?.let { map ->
-            appCtx.getSharedPreferences(VIDEO_PREF_NAME, Context.MODE_PRIVATE).edit().apply {
-                map.forEach { (key, value) ->
-                    when (value) {
-                        is Int -> putInt(key, value)
-                        is Boolean -> putBoolean(key, value)
-                        is Long -> putLong(key, value)
-                        is Float -> putFloat(key, value)
-                        is String -> putString(key, value)
-                    }
-                }
-                apply()
-            }
         }
         ReadBookConfig.apply {
             comicStyleSelect = appCtx.getPrefInt(PreferKey.comicStyleSelect)

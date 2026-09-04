@@ -15,7 +15,6 @@ import com.qreader.reader.data.entities.RssSource
 import com.qreader.reader.help.JsExtensions
 import com.qreader.reader.model.AudioPlay
 import com.qreader.reader.model.ReadBook
-import com.qreader.reader.model.VideoPlay
 import com.qreader.reader.model.analyzeRule.AnalyzeRule
 import com.qreader.reader.model.analyzeRule.AnalyzeRule.Companion.setChapter
 import com.qreader.reader.ui.association.AddToBookshelfDialog
@@ -263,8 +262,8 @@ open class RssJsExtensions(
             }
 
             BookType.video -> {
-                book = VideoPlay.book
-                chapter = VideoPlay.chapter
+                book = null
+                chapter = null
             }
         }
         Pair(book, chapter)

@@ -171,11 +171,6 @@
         <activity
             android:name="com.qreader.reader.ui.book.audio.AudioPlayActivity"
             android:launchMode="singleTask" />
-        <!-- 视频播放器界面 -->
-        <activity
-            android:name="com.qreader.reader.ui.video.VideoPlayerActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
-            android:launchMode="singleTask" />
         <!-- 授权界面 -->
         <activity
             android:name="com.qreader.reader.lib.permission.PermissionActivity"

@@ -46,7 +46,6 @@ import com.qreader.reader.help.book.isAudio
 import com.qreader.reader.help.book.isImage
 import com.qreader.reader.help.book.isLocal
 import com.qreader.reader.help.book.isLocalTxt
-import com.qreader.reader.help.book.isVideo
 import com.qreader.reader.help.book.isWebFile
 import com.qreader.reader.help.book.removeType
 import com.qreader.reader.help.config.AppConfig
@@ -81,7 +80,6 @@ import com.qreader.reader.ui.book.source.edit.BookSourceEditActivity
 import com.qreader.reader.ui.book.toc.TocActivityResult
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.login.SourceLoginActivity
-import com.qreader.reader.ui.video.VideoPlayerActivity
 import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.ui.widget.dialog.VariableDialog
 import com.qreader.reader.ui.widget.dialog.WaitDialog
@@ -1095,11 +1093,6 @@ class BookInfoActivity :
         when {
             book.isAudio -> readBookResult.launch(
                 Intent(this, AudioPlayActivity::class.java)
-                    .putExtra("bookUrl", book.bookUrl)
-                    .putExtra("inBookshelf", viewModel.inBookshelf)
-            )
-            book.isVideo -> readBookResult.launch(
-                Intent(this, VideoPlayerActivity::class.java)
                     .putExtra("bookUrl", book.bookUrl)
                     .putExtra("inBookshelf", viewModel.inBookshelf)
             )

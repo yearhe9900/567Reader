@@ -45,7 +45,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import androidx.core.content.edit
-import com.qreader.reader.model.VideoPlay.VIDEO_PREF_NAME
 import kotlinx.coroutines.currentCoroutineContext
 
 /**
@@ -84,8 +83,7 @@ object Backup {
             ReadBookConfig.shareConfigFileName,
             ThemeConfig.configFileName,
             BookCover.configFileName,
-            "config.xml",
-            "videoConfig.xml"
+            "config.xml"
         )
     }
 
@@ -196,20 +194,6 @@ object Backup {
                 }
             }
             edit.commit()
-        }
-        currentCoroutineContext().ensureActive()
-        appCtx.getSharedPreferences(backupPath, "videoConfig")?.let { sp ->
-            sp.edit(commit = true) {
-                appCtx.getSharedPreferences(VIDEO_PREF_NAME, Context.MODE_PRIVATE).all.forEach { (key, value) ->
-                    when (value) {
-                        is Int -> putInt(key, value)
-                        is Boolean -> putBoolean(key, value)
-                        is Long -> putLong(key, value)
-                        is Float -> putFloat(key, value)
-                        is String -> putString(key, value)
-                    }
-                }
-            }
         }
         currentCoroutineContext().ensureActive()
         val zipFileName = getNowZipFileName()

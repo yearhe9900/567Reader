@@ -1,9 +1,5 @@
 package com.qreader.reader.help.source
 
-import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import com.qreader.reader.constant.SourceType
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BaseSource
@@ -16,13 +12,9 @@ import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.model.AudioPlay
 import com.qreader.reader.model.ReadBook
 import com.qreader.reader.model.ReadManga
-import com.qreader.reader.model.VideoPlay
-import com.qreader.reader.service.VideoPlayService
-import com.qreader.reader.ui.video.VideoPlayerActivity
 import com.qreader.reader.utils.EncoderUtils
 import com.qreader.reader.utils.NetworkUtils
 import com.qreader.reader.utils.splitNotBlank
-import com.qreader.reader.utils.startActivity
 import com.qreader.reader.utils.toastOnUi
 import splitties.init.appCtx
 
@@ -47,8 +39,6 @@ object SourceHelp {
             return AudioPlay.bookSource
         } else if (ReadManga.bookSource?.bookSourceUrl == key) {
             return ReadManga.bookSource
-        } else if (VideoPlay.source?.getKey() == key) {
-            return VideoPlay.source
         }
         return appDb.bookSourceDao.getBookSource(key)
             ?: appDb.rssSourceDao.getByKey(key)
@@ -182,25 +172,6 @@ object SourceHelp {
                 bookSource.customOrder = index
             }
             appDb.bookSourceDao.upOrder(sources)
-        }
-    }
-
-    fun openVideoPlayer(source: BaseSource?, url: String, title: String, isFloat: Boolean) {
-        if (isFloat) {
-            val intent = Intent(appCtx, VideoPlayService::class.java).apply {
-                putExtra("videoUrl", url)
-                putExtra("videoTitle", title)
-                putExtra("sourceKey", source?.getKey())
-                putExtra("sourceType", source?.getSourceType())
-            }
-            ContextCompat.startForegroundService(appCtx, intent)
-        } else {
-            appCtx.startActivity<VideoPlayerActivity> {
-                putExtra("videoUrl", url)
-                putExtra("videoTitle", title)
-                putExtra("sourceKey", source?.getKey())
-                putExtra("sourceType", source?.getSourceType())
-            }
         }
     }
 

@@ -300,7 +300,7 @@ interface JsExtensions : JsEncodeUtils {
 
     @JavascriptInterface
     fun openVideoPlayer(url: String, title: String) {
-        openVideoPlayer(url, title, false)
+        // 视频播放功能已移除
     }
 
     /**
@@ -311,7 +311,7 @@ interface JsExtensions : JsEncodeUtils {
      */
     @JavascriptInterface
     fun openVideoPlayer(url: String, title: String, isFloat: Boolean) {
-        SourceHelp.openVideoPlayer(getSource(), url, title, isFloat)
+        // 视频播放功能已移除
     }
 
     /**

@@ -1269,9 +1269,7 @@
     <string name="view_code">查看代码</string>
     <string name="show_bookname">显示书名</string>
     <string name="float_permission_rationale">阅读需要悬浮窗权限来显示播放窗口</string>
-    <string name="video">视频</string>
     <string name="float_window">悬浮窗</string>
-    <string name="video_play">视频播放</string>
     <string name="no_more_chapter">没有更多章节</string>
     <string name="overlay">叠加</string>
     <string name="margin">间距</string>
@@ -1289,8 +1287,6 @@
     <string name="write_source_comment">写入源注释</string>
     <string name="auto_play">自动播放</string>
     <string name="start_full">直接全屏播放</string>
-    <string name="video_setting">视频设置</string>
-    <string name="video_setting_summary">自动播放、全屏播放等配置</string>
     <string name="history">历史记录</string>
     <string name="app_name_sigma">阅读Sigma</string>
     <string name="about_description_sigma">\u3000\u3000阅读Sigma继承自legado，旨在原版基础上完善和增加功能，欢迎您的加入。</string>
@@ -1310,7 +1306,6 @@
     <string name="press_speed_summary">长按倍速 %.1f</string>
     <string name="full_bottom_progress">全屏时显示底部进度条</string>
     <string name="json_format">json格式</string>
-    <string name="open_other_video_player">其它播放器打开</string>
     <string name="show_source_comment">显示源注释</string>
     <string name="adapt_special_style">适配特殊样式</string>
     <string name="show_line_number">展示%d行</string>

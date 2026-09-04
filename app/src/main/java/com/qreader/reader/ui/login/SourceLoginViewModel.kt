@@ -13,7 +13,6 @@ import com.qreader.reader.data.entities.BookChapter
 import com.qreader.reader.exception.NoStackTraceException
 import com.qreader.reader.model.AudioPlay
 import com.qreader.reader.model.ReadBook
-import com.qreader.reader.model.VideoPlay
 import com.qreader.reader.utils.toastOnUi
 
 class SourceLoginViewModel(application: Application) : BaseViewModel(application) {
@@ -43,9 +42,9 @@ class SourceLoginViewModel(application: Application) : BaseViewModel(application
                 }
 
                 BookType.video -> {
-                    source = VideoPlay.source
-                    book = VideoPlay.book
-                    chapter = VideoPlay.chapter
+                    source = null
+                    book = null
+                    chapter = null
                 }
 
                 else -> {
