@@ -168,7 +168,7 @@ object ContentHelp {
     }
 
     // 对内容重新划分段落.输入参数str已经使用换行符预分割
-    private fun findNewLines(str: String, dict: List<String>): String {
+    private fun findNewLines(str: String, dict: Set<String>): String {
         val string = StringBuilder(str)
         // 标记string中每个引号的位置.特别的，用引号进行列举时视为只有一对引号。 如：“锅”、“碗”视为“锅、碗”，从而避免误断句。
         val arrayQuote: MutableList<Int> = ArrayList()
@@ -477,23 +477,22 @@ object ContentHelp {
      * @param str
      * @return 词条列表
      */
-    private fun makeDict(str: String): List<String> {
+    private fun makeDict(str: String): Set<String> {
 
         // 引号中间不包含任何标点
         val patten = Pattern.compile(
             """
-          (?<=["'”“])([^
-          \p{P}]{1,$WORD_MAX_LENGTH})(?=["'”“])
+          (?<=["'""])([^
+          \p{P}]{1,$WORD_MAX_LENGTH})(?=["'""])
           """.trimIndent()
         )
-        //Pattern patten = Pattern.compile("(?<=[\"'”“])([^\n\"'”“]{1,16})(?=[\"'”“])");
         val matcher = patten.matcher(str)
-        val cache: MutableList<String> = ArrayList()
-        val dict: MutableList<String> = ArrayList()
+        val cache: MutableSet<String> = HashSet()
+        val dict: MutableSet<String> = HashSet()
         while (matcher.find()) {
             val word = matcher.group()
             if (cache.contains(word)) {
-                if (!dict.contains(word)) dict.add(word)
+                dict.add(word)
             } else cache.add(word)
         }
         return dict
