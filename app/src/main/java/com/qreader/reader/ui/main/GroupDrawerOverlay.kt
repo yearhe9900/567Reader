@@ -1,6 +1,6 @@
 package com.qreader.reader.ui.main
 
-import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -25,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,21 +38,23 @@ import com.kyant.backdrop.Backdrop
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookGroup
-import com.qreader.reader.ui.book.manage.BookshelfManageActivity
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 
 /**
- * 分组抽屉玻璃弹框——从书架页右边缘滑出。
+ * 分组抽屉玻璃弹框——标题栏分组按钮触发。
  *
- * 展示全部分组（含系统分组与用户自建分组），宫格排列，可滚动。
- * 点击某个分组跳转到书架管理页（BookshelfManageActivity）并定位到该分组。
+ * 文件夹形式展示全部分组，点击切换书架当前显示的分组。
  *
- * @param backdrop  玻璃模糊源（由 MainScreen 提供）
- * @param onDismiss 关闭回调
+ * @param backdrop       玻璃模糊源（由 MainScreen 提供）
+ * @param currentGroupId 当前选中的分组 ID（用于高亮）
+ * @param onSelectGroup  选中分组回调（切换书架数据源）
+ * @param onDismiss      关闭回调
  */
 @Composable
 fun GroupDrawerOverlay(
     backdrop: Backdrop,
+    currentGroupId: Long,
+    onSelectGroup: (BookGroup) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -65,15 +70,16 @@ fun GroupDrawerOverlay(
     ) { colors ->
         val contentColor = colors.contentColor
         val containerColor = colors.containerColor
+        val accentColor = colors.accentColor
 
         // 标题
         BasicText(
-            text = context.getString(R.string.group_manage),
+            text = "分组",
             style = TextStyle(contentColor, 20.sp, FontWeight.Medium),
             modifier = Modifier.padding(bottom = 12.dp),
         )
 
-        // 宫格（3 列，可滚动）
+        // 宫格（3 列，文件夹形式，可滚动）
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,15 +94,13 @@ fun GroupDrawerOverlay(
                     row.forEach { group ->
                         GroupGridItem(
                             group = group,
+                            isSelected = group.groupId == currentGroupId,
                             contentColor = contentColor,
                             containerColor = containerColor,
+                            accentColor = accentColor,
                             onClick = {
+                                onSelectGroup(group)
                                 onDismiss()
-                                context.startActivity(
-                                    Intent(context, BookshelfManageActivity::class.java).apply {
-                                        putExtra("groupId", group.groupId)
-                                    }
-                                )
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -114,8 +118,10 @@ fun GroupDrawerOverlay(
 @Composable
 private fun GroupGridItem(
     group: BookGroup,
+    isSelected: Boolean,
     contentColor: Color,
     containerColor: Color,
+    accentColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -123,7 +129,7 @@ private fun GroupGridItem(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(containerColor.copy(alpha = 0.3f))
+            .background(if (isSelected) accentColor.copy(0.15f) else containerColor.copy(alpha = 0.3f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -132,9 +138,24 @@ private fun GroupGridItem(
             .padding(vertical = 12.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // 文件夹图标
+        Image(
+            painter = painterResource(
+                if (isSelected) R.drawable.ic_folder_open else R.drawable.ic_folder
+            ),
+            contentDescription = null,
+            modifier = Modifier.size(32.dp),
+            colorFilter = ColorFilter.tint(
+                if (isSelected) accentColor else contentColor.copy(0.6f)
+            ),
+        )
+        Spacer(modifier = Modifier.height(4.dp))
         BasicText(
             text = group.getManageName(context),
-            style = TextStyle(contentColor.copy(0.9f), 13.sp),
+            style = TextStyle(
+                if (isSelected) accentColor else contentColor.copy(0.9f),
+                12.sp,
+            ),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )

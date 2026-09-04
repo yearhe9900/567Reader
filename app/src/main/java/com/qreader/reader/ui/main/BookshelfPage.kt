@@ -68,6 +68,7 @@ fun BookshelfPage(
     isUpdate: (String) -> Boolean,
     bookshelfSort: Int,
     onRequestSort: () -> Unit,
+    currentGroupId: Long,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -164,8 +165,8 @@ fun BookshelfPage(
     }
 
     // ── 观察 Books（Flow + 排序）──
-    LaunchedEffect(bookshelfSort) {
-        appDb.bookDao.flowByGroup(BookGroup.IdAll)
+    LaunchedEffect(bookshelfSort, currentGroupId) {
+        appDb.bookDao.flowByGroup(currentGroupId)
             .map { list ->
                 when (bookshelfSort) {
                     1 -> list.sortedByDescending { it.latestChapterTime }
@@ -185,7 +186,7 @@ fun BookshelfPage(
         currentItems.clear()
         currentItems.addAll(books)
         itemCount = currentItems.size
-        adapter.updateItems(BookGroup.IdAll)
+        adapter.updateItems(currentGroupId)
         swipeRefreshRef.value?.isEnabled = itemCount > 0
     }
 

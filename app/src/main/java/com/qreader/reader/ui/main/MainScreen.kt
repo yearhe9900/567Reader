@@ -66,6 +66,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
+import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookGroup
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.book.group.GroupEditOverlay
@@ -115,6 +116,7 @@ fun MainScreen(
         onRequestGroupEdit: (BookGroup) -> Unit,
         bookshelfSort: Int,
         onRequestSort: () -> Unit,
+        currentGroupId: Long,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
@@ -147,8 +149,10 @@ fun MainScreen(
     var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
     var sortDialogOpen by remember { mutableStateOf(false) }
 
-    // 分组抽屉玻璃弹框状态（右边缘滑出）
+    // 分组抽屉玻璃弹框状态（标题栏按钮触发）
     var groupDrawerOpen by remember { mutableStateOf(false) }
+    var currentGroupId by remember { mutableLongStateOf(BookGroup.IdAll) }
+    var currentGroupName by remember { mutableStateOf<String?>(null) }
 
     val tabItems = remember(showDiscovery, context) {
         buildTabItems(context, showDiscovery)
@@ -284,6 +288,7 @@ fun MainScreen(
                         { group -> groupEditTarget = group; groupEditOpen = true },
                         bookshelfSort,
                         { sortDialogOpen = true },
+                        currentGroupId,
                     )
 
                     1 -> if (showDiscovery) {
@@ -338,7 +343,7 @@ fun MainScreen(
                 exit = fadeOut(tween(120))
             ) {
                 val title = when (pagerState.currentPage) {
-                    0 -> context.getString(R.string.bookshelf)
+                    0 -> currentGroupName ?: context.getString(R.string.bookshelf)
                     1 -> if (showDiscovery) context.getString(R.string.discovery) else context.getString(R.string.setting)
                     2 -> context.getString(R.string.setting)
                     else -> ""
@@ -484,6 +489,12 @@ fun MainScreen(
     ) {
         GroupDrawerOverlay(
             backdrop = backdrop,
+            currentGroupId = currentGroupId,
+            onSelectGroup = { group ->
+                currentGroupId = group.groupId
+                currentGroupName = if (group.groupId == BookGroup.IdAll) null
+                    else group.groupName
+            },
             onDismiss = { groupDrawerOpen = false },
         )
     }
