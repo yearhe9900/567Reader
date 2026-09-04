@@ -111,6 +111,7 @@ fun MainScreen(
         registerBack: ((() -> Boolean)?) -> Unit,
         registerMenuAction: (((BookshelfMenuAction) -> Unit)?) -> Unit,
         onRequestGroupEdit: (BookGroup) -> Unit,
+        backdrop: Backdrop,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
@@ -271,6 +272,7 @@ fun MainScreen(
                         },
                         { bookshelfMenuAction = it },
                         { group -> groupEditTarget = group; groupEditOpen = true },
+                        backdrop,
                     )
 
                     1 -> if (showDiscovery) {

@@ -6,9 +6,11 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -49,7 +51,7 @@ import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
-import com.qreader.reader.ui.main.bookshelf.BookshelfConfigDialog
+import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 import com.qreader.reader.ui.main.bookshelf.BookshelfViewModel
 import com.qreader.reader.ui.main.bookshelf.style.BaseBooksAdapter
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterGrid
@@ -57,7 +59,6 @@ import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterList
 import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.cnCompare
 import com.qreader.reader.utils.setEdgeEffectColor
-import com.qreader.reader.utils.showDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
@@ -88,6 +89,7 @@ fun BookshelfPage(
     onGroupLongClick: (BookGroup) -> Unit,
     onRefresh: (List<Book>, Boolean) -> Unit,
     isUpdate: (String) -> Boolean,
+    backdrop: com.kyant.backdrop.Backdrop,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -103,8 +105,13 @@ fun BookshelfPage(
     var onlyUpdateRead by remember { mutableStateOf(false) }
     var itemCount by remember { mutableIntStateOf(0) }
 
-    val bookshelfLayout = remember { AppConfig.bookshelfLayout } // 0=列表, 1=网格
+    // 可变布局状态：0=列表, 1=网格，切换时自动重建 adapter
+    var bookshelfLayout by remember { mutableIntStateOf(AppConfig.bookshelfLayout) }
     val bookshelfMargin = 12 // 固定12dp
+
+    // 排序弹框状态
+    var showSortDialog by remember { mutableStateOf(false) }
+    var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
 
     // 顶栏菜单所需
     val bookshelfViewModel = remember { ViewModelProvider(activity)[BookshelfViewModel::class.java] }
@@ -166,8 +173,12 @@ fun BookshelfPage(
                         putExtra("groupId", groupId)
                     }
                 )
-            BookshelfMenuAction.Layout ->
-                activity.showDialogFragment<BookshelfConfigDialog>()
+            BookshelfMenuAction.Sort ->
+                showSortDialog = true
+            BookshelfMenuAction.ToggleLayout -> {
+                bookshelfLayout = if (bookshelfLayout == 1) 0 else 1
+                AppConfig.bookshelfLayout = bookshelfLayout
+            }
         }
     }
 
@@ -199,10 +210,11 @@ fun BookshelfPage(
     }
 
     // ── 观察 Books（Flow + 排序）──
-    LaunchedEffect(Unit) {
+    // bookshelfSort 作为 key：排序变化时重新收集并排序
+    LaunchedEffect(bookshelfSort) {
         appDb.bookDao.flowByGroup(BookGroup.IdAll)
             .map { list ->
-                when (AppConfig.getBookSortByGroupId(groupId)) {
+                when (bookshelfSort) {
                     1 -> list.sortedByDescending { it.latestChapterTime }
                     2 -> list.sortedWith { o1, o2 -> o1.name.cnCompare(o2.name) }
                     3 -> list.sortedBy { it.order }
@@ -381,6 +393,59 @@ fun BookshelfPage(
                 },
             )
         }
+
+        // 排序玻璃态弹框
+        if (showSortDialog) {
+            LiquidGlassDialog(
+                backdrop = backdrop,
+                onDismiss = { showSortDialog = false },
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .wrapContentHeight(),
+                contentPadding = PaddingValues(20.dp),
+            ) { colors ->
+                // 标题
+                BasicText(
+                    text = stringResource(R.string.sort),
+                    style = TextStyle(
+                        color = colors.contentColor,
+                        fontSize = 18.sp,
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp),
+                )
+                // 排序选项
+                val sortOptions = listOf(
+                    R.string.bookshelf_px_0 to 0,  // 按最近阅读
+                    R.string.bookshelf_px_1 to 1,  // 按更新时间
+                    R.string.bookshelf_px_2 to 2,  // 按书名
+                    R.string.bookshelf_px_3 to 3,  // 手动排序
+                    R.string.bookshelf_px_4 to 4,  // 综合排序
+                    R.string.bookshelf_px_5 to 5,  // 按作者
+                )
+                sortOptions.forEach { (resId, sortIndex) ->
+                    val isSelected = bookshelfSort == sortIndex
+                    TextButton(
+                        onClick = {
+                            bookshelfSort = sortIndex
+                            AppConfig.bookshelfSort = sortIndex
+                            showSortDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        BasicText(
+                            text = stringResource(resId),
+                            style = TextStyle(
+                                color = if (isSelected) colors.accentColor else colors.contentColor,
+                                fontSize = 15.sp,
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -397,5 +462,6 @@ enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
     Remote(R.string.add_remote_book, R.drawable.ic_add),
     AddUrl(R.string.add_url, R.drawable.ic_add_online),
     BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
-    Layout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
+    Sort(R.string.sort, R.drawable.ic_sort),
+    ToggleLayout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
 }
