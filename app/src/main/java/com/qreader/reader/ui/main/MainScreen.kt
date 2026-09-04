@@ -362,6 +362,7 @@ fun MainScreen(
                         contentColor = contentColor,
                         onSearch = { SearchActivity.start(context, "") },
                         onGroups = { groupDrawerOpen = true },
+                        menuOpen = bookshelfMenuOpen,
                         onMenuAction = { bookshelfMenuAction?.invoke(it) },
                         onMenuOpenChange = { bookshelfMenuOpen = it },
                     )
@@ -706,6 +707,7 @@ private fun BookshelfGlassTitleBar(
     contentColor: Color,
     onSearch: () -> Unit,
     onGroups: () -> Unit,
+    menuOpen: Boolean,
     onMenuAction: (BookshelfMenuAction) -> Unit,
     onMenuOpenChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -811,7 +813,7 @@ private fun BookshelfGlassTitleBar(
                     .size(40.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                IconButton(onClick = { onMenuOpenChange(true) }) {
+                IconButton(onClick = { onMenuOpenChange(!menuOpen) }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_more_vert),
                         contentDescription = "more",
