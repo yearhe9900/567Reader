@@ -6,8 +6,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookGroup
+import com.qreader.reader.databinding.ItemBookshelfGridGroupBinding
 import com.qreader.reader.databinding.ItemBookshelfListBinding
-import com.qreader.reader.databinding.ItemBookshelfListGroupBinding
 import com.qreader.reader.help.book.isLocal
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.utils.gone
@@ -21,7 +21,7 @@ class BooksAdapterList(context: Context, callBack: CallBack) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            1 -> GroupViewHolder(ItemBookshelfListGroupBinding.inflate(inflater, parent, false))
+            1 -> GroupViewHolder(ItemBookshelfGridGroupBinding.inflate(inflater, parent, false))
             else -> BookViewHolder(ItemBookshelfListBinding.inflate(inflater, parent, false))
         }
     }
@@ -110,19 +110,12 @@ class BooksAdapterList(context: Context, callBack: CallBack) :
 
     }
 
-    inner class GroupViewHolder(val binding: ItemBookshelfListGroupBinding) :
+    inner class GroupViewHolder(val binding: ItemBookshelfGridGroupBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun onBind(item: BookGroup, position: Int) = binding.run {
             tvName.text = item.groupName
             ivCover.load(item.cover)
-            flHasNew.gone()
-            ivAuthor.gone()
-            ivLast.gone()
-            ivRead.gone()
-            tvAuthor.gone()
-            tvLast.gone()
-            tvRead.gone()
         }
 
         fun onBind(item: BookGroup, position: Int, payloads: MutableList<Any>) = binding.run {

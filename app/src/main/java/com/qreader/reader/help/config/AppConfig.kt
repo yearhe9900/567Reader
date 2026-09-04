@@ -6,6 +6,7 @@ import com.qreader.reader.BuildConfig
 import com.qreader.reader.constant.AppConst
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.data.appDb
+import com.qreader.reader.data.entities.BookGroup
 import com.qreader.reader.utils.GSON
 import com.qreader.reader.utils.canvasrecorder.CanvasRecorderFactory
 import com.qreader.reader.utils.fromJsonObject
@@ -246,6 +247,13 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
         get() = appCtx.getPrefInt(PreferKey.saveTabPosition, 0)
         set(value) {
             appCtx.putPrefInt(PreferKey.saveTabPosition, value)
+        }
+
+    var saveBookshelfGroupId: Long
+        get() = appCtx.getPrefString(PreferKey.saveBookshelfGroupId)?.toLongOrNull()
+            ?: BookGroup.IdRoot
+        set(value) {
+            appCtx.putPrefString(PreferKey.saveBookshelfGroupId, value.toString())
         }
 
     var bookExportFileName: String?

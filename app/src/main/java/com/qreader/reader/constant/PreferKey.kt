@@ -52,6 +52,7 @@ object PreferKey {
     const val processText = "process_text"
     const val cleanCache = "cleanCache"
     const val saveTabPosition = "saveTabPosition"
+    const val saveBookshelfGroupId = "saveBookshelfGroupId"
     const val fontFolder = "fontFolder"
     const val backupPath = "backupUri"
     const val restoreIgnore = "restoreIgnore"

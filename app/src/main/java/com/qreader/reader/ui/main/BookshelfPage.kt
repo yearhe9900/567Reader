@@ -102,7 +102,7 @@ fun BookshelfPage(
     // ── 状态 ──
     var bookGroups by remember { mutableStateOf<List<BookGroup>>(emptyList()) }
     var books by remember { mutableStateOf<List<Book>>(emptyList()) }
-    var groupId by remember { mutableLongStateOf(BookGroup.IdRoot) }
+    var groupId by remember { mutableLongStateOf(AppConfig.saveBookshelfGroupId) }
     var enableRefresh by remember { mutableStateOf(true) }
     var onlyUpdateRead by remember { mutableStateOf(false) }
     var itemCount by remember { mutableIntStateOf(0) }
@@ -261,6 +261,8 @@ fun BookshelfPage(
 
     // ── 观察 Books（Flow + 排序）──
     LaunchedEffect(groupId) {
+        // 持久化当前 groupId，避免 config dialog recreate 后跳回根目录
+        AppConfig.saveBookshelfGroupId = groupId
         appDb.bookDao.flowByGroup(groupId)
             .map { list ->
                 when (AppConfig.getBookSortByGroupId(groupId)) {
