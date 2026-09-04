@@ -53,3 +53,15 @@
 * 书架「更多选项」菜单玻璃态化：Material3 DropdownMenu 走独立 Popup 窗口、无法被 drawBackdrop 采样，改为自绘 GlassDropdownMenu（全屏点击关闭层 + 顶部右对齐玻璃面板，距顶 108dp 避开标题栏）；菜单状态提升至 MainScreen，渲染在全屏外层 Box 内且位于标题栏之下（避免点击关闭层吞掉「更多」按钮点击）。菜单项图标 24dp、文字 16sp 对齐原版 PopupMenu，宽度固定 200dp。
 * 移除书架菜单中的「日志」项（菜单由 11 项 → 10 项）。
 * 修复：主题模式弹框打开时不点按钮、侧滑返回退出，标题栏与底部导航栏永久消失。根因为 in-tree overlay 不是 Dialog、返回事件穿透到 MainActivity 把 tab 切回书架，设置页被 Pager 销毁而 themeDialogOpen 状态未复位。改为 LiquidGlassDialog 内置 BackHandler 接管返回键与侧滑手势（三处玻璃弹框统一生效，DialogFragment 场景判空跳过），并在 MainScreen 增加翻页兜底复位开关。
+
+**2026/09/04**
+
+* 书架排序弹框玻璃态化（经多轮定位根因）：弹框在 BookshelfPage 内部（HorizontalPager 内、MainScreen 的 layerBackdrop 捕获层内部）创建本地 backdrop → drawBackdrop 采样到包含弹框自身的层 → 循环捕获崩溃。最终照搬 GroupEditOverlay 模式——排序值 bookshelfSort 提升到 MainScreen，新增 SortDialogOverlay 渲染在全屏外层 Box 直接子节点、layerBackdrop 捕获层之外，复用 MainScreen 的 backdrop。
+* 排序弹框视觉升级：宽度 0.78f、圆角 48dp（对齐主题弹框），TextButton 行改为 clickable Row + drawBackdrop 玻璃态单选圈（Capsule），选中项 accentColor 填充 + 8dp 白色小圆点，即点即用无确认按钮。
+* 移除「添加网址」菜单项及相关代码（BookshelfViewModel.addBookByUrl、AlertDialog、ic_add_online drawable），净减 151 行。
+* 布局切换菜单项动态显示「列表布局/网格布局」（titleRes 改 var，LaunchedEffect 和 handleMenuAction 同步更新）。
+* 新增分组抽屉功能：标题栏搜索按钮旁新增玻璃态分组按钮（ic_groups），点击打开 GroupDrawerOverlay（LiquidGlassDialog 内 3 列文件夹宫格，ic_folder / ic_folder_open 图标，选中项高亮）。点击分组切换书架数据源（currentGroupId 驱动 flowByGroup），标题栏动态显示当前分组名。
+* 菜单按钮改为 toggle（新增 menuOpen 参数，再次点击可关闭菜单）。
+* 移除视频播放器模块（ui/video、help/gsyVideo、VideoPlayService、model/VideoPlay）及 GSYVideo / 弹幕库依赖。
+* ContentHelp 性能优化：makeDict 字典从 ArrayList 改 HashSet，contains 从 O(m) 降到 O(1)。
+* 清理 style1/style2 书架死代码（~1,300 行）；移除缓存/导出、分组管理、导出书单、导入书单菜单项；移除冗余的「更新目录」菜单（下拉刷新已覆盖）。
