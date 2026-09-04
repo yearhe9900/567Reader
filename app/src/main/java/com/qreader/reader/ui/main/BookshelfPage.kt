@@ -7,18 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,13 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -49,7 +40,6 @@ import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
-import com.qreader.reader.ui.main.bookshelf.BookshelfViewModel
 import com.qreader.reader.ui.main.bookshelf.style.BaseBooksAdapter
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterGrid
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterList
@@ -97,10 +87,6 @@ fun BookshelfPage(
             else R.drawable.ic_view_quilt
     }
 
-    val bookshelfViewModel = remember { ViewModelProvider(activity)[BookshelfViewModel::class.java] }
-    var showAddUrlDialog by remember { mutableStateOf(false) }
-    var addUrlText by remember { mutableStateOf("") }
-
     val currentItems = remember { mutableListOf<Any>() }
 
     // ── Adapter CallBack ──
@@ -138,7 +124,6 @@ fun BookshelfPage(
                 activity.startActivity(Intent(activity, ImportBookActivity::class.java))
             BookshelfMenuAction.Remote ->
                 activity.startActivity(Intent(activity, RemoteBookActivity::class.java))
-            BookshelfMenuAction.AddUrl -> showAddUrlDialog = true
             BookshelfMenuAction.BookshelfManage ->
                 activity.startActivity(Intent(activity, BookshelfManageActivity::class.java).apply {
                     putExtra("groupId", BookGroup.IdAll)
@@ -262,30 +247,6 @@ fun BookshelfPage(
                     )
                 }
             }
-
-            // 添加网址对话框
-            if (showAddUrlDialog) {
-                AlertDialog(
-                    onDismissRequest = { showAddUrlDialog = false },
-                    title = { BasicText(stringResource(R.string.add_url), style = TextStyle(fontSize = 18.sp)) },
-                    text = {
-                        TextField(
-                            value = addUrlText, onValueChange = { addUrlText = it },
-                            label = { BasicText("url") }, singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            bookshelfViewModel.addBookByUrl(addUrlText)
-                            showAddUrlDialog = false; addUrlText = ""
-                        }) { BasicText(stringResource(R.string.ok)) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showAddUrlDialog = false }) { BasicText(stringResource(R.string.cancel)) }
-                    },
-                )
-            }
         }
     }
 }
@@ -297,7 +258,6 @@ private fun Int.dpToPx(context: android.content.Context): Float {
 enum class BookshelfMenuAction(val titleRes: Int, var iconRes: Int) {
     AddLocal(R.string.book_local, R.drawable.ic_add),
     Remote(R.string.add_remote_book, R.drawable.ic_add),
-    AddUrl(R.string.add_url, R.drawable.ic_add_online),
     BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
     Sort(R.string.sort, R.drawable.ic_sort),
     ToggleLayout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),

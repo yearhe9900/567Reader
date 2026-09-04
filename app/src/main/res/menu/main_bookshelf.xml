@@ -29,12 +29,6 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/menu_add_url"
-        android:icon="@drawable/ic_add_online"
-        android:title="@string/add_url"
-        app:showAsAction="never" />
-
-    <item
         android:id="@+id/menu_bookshelf_manage"
         android:icon="@drawable/ic_arrange"
         android:title="@string/bookshelf_management"
