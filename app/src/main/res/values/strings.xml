@@ -59,6 +59,7 @@
     <string name="action_search">Search</string>
     <string name="action_download">Download</string>
     <string name="layout_list">List</string>
+    <string name="layout_grid">Grid</string>
     <string name="layout_grid2">Grid-2</string>
     <string name="layout_grid3">Grid-3</string>
     <string name="layout_grid4">Grid-4</string>

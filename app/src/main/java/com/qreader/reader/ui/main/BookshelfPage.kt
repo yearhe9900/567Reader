@@ -107,11 +107,9 @@ fun BookshelfPage(
     var onlyUpdateRead by remember { mutableStateOf(false) }
     var itemCount by remember { mutableIntStateOf(0) }
 
-    val bookshelfLayout = remember { AppConfig.bookshelfLayout }
-    val bookshelfMargin = remember { AppConfig.bookshelfMargin }
-
-    // 书架分组展示样式：0=Tab，1=Folder（与 R.array.group_style 对应）
-    val bookGroupStyle = remember { AppConfig.bookGroupStyle }
+    val bookshelfLayout = remember { AppConfig.bookshelfLayout } // 0=列表, 1=网格
+    val bookshelfMargin = 12 // 固定12dp
+    val bookGroupStyle = 1   // 固定为Folder样式
 
     // Tab 样式：根据 tabs 选择当前 groupId
     // 还原上次选中的分组（与 legado-E BookshelfFragment1.selectLastTab() 一致）
@@ -175,7 +173,7 @@ fun BookshelfPage(
 
     // ── 创建 Adapter（只在 bookshelfLayout 变化时重建）──
     val adapter = remember(bookshelfLayout) {
-        if (bookshelfLayout >= 2) {
+        if (bookshelfLayout == 1) {
             BooksAdapterGrid(context, callBack)
         } else {
             BooksAdapterList(context, callBack)
@@ -332,8 +330,14 @@ fun BookshelfPage(
                             setEdgeEffectColor(ctx.primaryColor)
                             clipToPadding = false
                             setPadding(0, 110.dpToPx(ctx).toInt(), 0, 72.dpToPx(ctx).toInt())
-                            layoutManager = if (bookshelfLayout >= 2) {
-                                GridLayoutManager(ctx, bookshelfLayout)
+                            // 根据屏幕宽度自动计算网格列数
+                            val spanCount = if (bookshelfLayout == 1) {
+                                val screenWidthDp = ctx.resources.displayMetrics.widthPixels / ctx.resources.displayMetrics.density
+                                (screenWidthDp / 100).coerceIn(3, 6)
+                            } else 1
+
+                            layoutManager = if (bookshelfLayout == 1) {
+                                GridLayoutManager(ctx, spanCount)
                             } else {
                                 LinearLayoutManager(ctx)
                             }
@@ -348,8 +352,7 @@ fun BookshelfPage(
                                     state: RecyclerView.State
                                 ) {
                                     val position = parent.getChildAdapterPosition(view)
-                                    if (bookshelfLayout >= 2) {
-                                        val spanCount = bookshelfLayout
+                                    if (bookshelfLayout == 1) {
                                         val rowIndex = position / spanCount
                                         val totalRows =
                                             if (itemCount % spanCount == 0) itemCount / spanCount

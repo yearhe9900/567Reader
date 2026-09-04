@@ -58,6 +58,7 @@
     <string name="action_search">搜索</string>
     <string name="action_download">下载</string>
     <string name="layout_list">列表</string>
+    <string name="layout_grid">网格</string>
     <string name="layout_grid2">网格二列</string>
     <string name="layout_grid3">网格三列</string>
     <string name="layout_grid4">网格四列</string>

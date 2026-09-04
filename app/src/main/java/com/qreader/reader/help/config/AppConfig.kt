@@ -231,7 +231,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
         get() = appCtx.getPrefString(PreferKey.screenOrientation)
 
     var bookGroupStyle: Int
-        get() = appCtx.getPrefInt(PreferKey.bookGroupStyle, 0)
+        get() = appCtx.getPrefInt(PreferKey.bookGroupStyle, 1)
         set(value) {
             appCtx.putPrefInt(PreferKey.bookGroupStyle, value)
         }
