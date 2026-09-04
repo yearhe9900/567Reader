@@ -113,6 +113,13 @@ fun BookshelfPage(
     var showSortDialog by remember { mutableStateOf(false) }
     var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
 
+    // 初始化布局图标（列表→网格图标，网格→列表图标）
+    LaunchedEffect(Unit) {
+        BookshelfMenuAction.ToggleLayout.iconRes =
+            if (bookshelfLayout == 1) R.drawable.ic_chapter_list
+            else R.drawable.ic_view_quilt
+    }
+
     // 顶栏菜单所需
     val bookshelfViewModel = remember { ViewModelProvider(activity)[BookshelfViewModel::class.java] }
     var showAddUrlDialog by remember { mutableStateOf(false) }
@@ -178,6 +185,10 @@ fun BookshelfPage(
             BookshelfMenuAction.ToggleLayout -> {
                 bookshelfLayout = if (bookshelfLayout == 1) 0 else 1
                 AppConfig.bookshelfLayout = bookshelfLayout
+                // 切换图标：网格→列表图标，列表→网格图标
+                BookshelfMenuAction.ToggleLayout.iconRes =
+                    if (bookshelfLayout == 1) R.drawable.ic_chapter_list
+                    else R.drawable.ic_view_quilt
             }
         }
     }
@@ -242,7 +253,8 @@ fun BookshelfPage(
     val barBgColor = Color(context.backgroundColor)
     val barContentColor = if (ColorUtils.isColorLight(context.backgroundColor)) Color.Black else Color.White
     val barAccentColor = Color(context.accentColor)
-    Column(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.weight(1f)) {
             AndroidView(
                 factory = { ctx ->
@@ -393,60 +405,61 @@ fun BookshelfPage(
                 },
             )
         }
+    }
 
-        // 排序玻璃态弹框
-        if (showSortDialog) {
-            LiquidGlassDialog(
-                backdrop = backdrop,
-                onDismiss = { showSortDialog = false },
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .wrapContentHeight(),
-                contentPadding = PaddingValues(20.dp),
-            ) { colors ->
-                // 标题
-                BasicText(
-                    text = stringResource(R.string.sort),
-                    style = TextStyle(
-                        color = colors.contentColor,
-                        fontSize = 18.sp,
-                    ),
-                    modifier = Modifier.padding(bottom = 16.dp),
-                )
-                // 排序选项
-                val sortOptions = listOf(
-                    R.string.bookshelf_px_0 to 0,  // 按最近阅读
-                    R.string.bookshelf_px_1 to 1,  // 按更新时间
-                    R.string.bookshelf_px_2 to 2,  // 按书名
-                    R.string.bookshelf_px_3 to 3,  // 手动排序
-                    R.string.bookshelf_px_4 to 4,  // 综合排序
-                    R.string.bookshelf_px_5 to 5,  // 按作者
-                )
-                sortOptions.forEach { (resId, sortIndex) ->
-                    val isSelected = bookshelfSort == sortIndex
-                    TextButton(
-                        onClick = {
-                            bookshelfSort = sortIndex
-                            AppConfig.bookshelfSort = sortIndex
-                            showSortDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        BasicText(
-                            text = stringResource(resId),
-                            style = TextStyle(
-                                color = if (isSelected) colors.accentColor else colors.contentColor,
-                                fontSize = 15.sp,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                        )
-                    }
+    // 排序玻璃态弹框：放在 Column 外部作为全屏 overlay
+    if (showSortDialog) {
+        LiquidGlassDialog(
+            backdrop = backdrop,
+            onDismiss = { showSortDialog = false },
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .wrapContentHeight(),
+            contentPadding = PaddingValues(20.dp),
+        ) { colors ->
+            // 标题
+            BasicText(
+                text = stringResource(R.string.sort),
+                style = TextStyle(
+                    color = colors.contentColor,
+                    fontSize = 18.sp,
+                ),
+                modifier = Modifier.padding(bottom = 16.dp),
+            )
+            // 排序选项
+            val sortOptions = listOf(
+                R.string.bookshelf_px_0 to 0,  // 按最近阅读
+                R.string.bookshelf_px_1 to 1,  // 按更新时间
+                R.string.bookshelf_px_2 to 2,  // 按书名
+                R.string.bookshelf_px_3 to 3,  // 手动排序
+                R.string.bookshelf_px_4 to 4,  // 综合排序
+                R.string.bookshelf_px_5 to 5,  // 按作者
+            )
+            sortOptions.forEach { (resId, sortIndex) ->
+                val isSelected = bookshelfSort == sortIndex
+                TextButton(
+                    onClick = {
+                        bookshelfSort = sortIndex
+                        AppConfig.bookshelfSort = sortIndex
+                        showSortDialog = false
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    BasicText(
+                        text = stringResource(resId),
+                        style = TextStyle(
+                            color = if (isSelected) colors.accentColor else colors.contentColor,
+                            fontSize = 15.sp,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                    )
                 }
             }
         }
     }
+    } // Box
 }
 
 private fun Int.dpToPx(context: android.content.Context): Float {
@@ -456,7 +469,7 @@ private fun Int.dpToPx(context: android.content.Context): Float {
 /**
  * 书架页顶栏「更多选项」菜单项（与原版 R.menu.main_bookshelf 的溢出菜单一致）
  */
-enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
+enum class BookshelfMenuAction(val titleRes: Int, var iconRes: Int) {
     UpdateToc(R.string.update_toc, R.drawable.ic_refresh_black_24dp),
     AddLocal(R.string.book_local, R.drawable.ic_add),
     Remote(R.string.add_remote_book, R.drawable.ic_add),
