@@ -1,4 +1,4 @@
-package com.qreader.reader.ui.main.bookshelf.style2
+package com.qreader.reader.ui.main.bookshelf.style
 
 import android.content.Context
 import android.os.Parcelable
