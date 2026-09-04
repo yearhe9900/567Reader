@@ -67,6 +67,7 @@ import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.BookGroup
+import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.book.group.GroupEditOverlay
 import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.lib.theme.accentColor
@@ -112,6 +113,8 @@ fun MainScreen(
         registerBack: ((() -> Boolean)?) -> Unit,
         registerMenuAction: (((BookshelfMenuAction) -> Unit)?) -> Unit,
         onRequestGroupEdit: (BookGroup) -> Unit,
+        bookshelfSort: Int,
+        onRequestSort: () -> Unit,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
