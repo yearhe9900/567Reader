@@ -72,7 +72,7 @@ class BookshelfConfigDialog : DialogFragment() {
             changed = true
         }
 
-        // 固定值，不保存用户选择
+        // 固定值
         AppConfig.bookGroupStyle = 1   // Folder
         AppConfig.showBookname = 0     // 显示
         AppConfig.bookshelfMargin = 12 // 固定12dp

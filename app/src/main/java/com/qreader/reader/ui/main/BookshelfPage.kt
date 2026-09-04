@@ -102,18 +102,14 @@ fun BookshelfPage(
     // ── 状态 ──
     var bookGroups by remember { mutableStateOf<List<BookGroup>>(emptyList()) }
     var books by remember { mutableStateOf<List<Book>>(emptyList()) }
-    var groupId by remember { mutableLongStateOf(AppConfig.saveBookshelfGroupId) }
+    // 固定为全部书籍，不再支持分组导航
+    var groupId by remember { mutableLongStateOf(BookGroup.IdAll) }
     var enableRefresh by remember { mutableStateOf(true) }
     var onlyUpdateRead by remember { mutableStateOf(false) }
     var itemCount by remember { mutableIntStateOf(0) }
 
     val bookshelfLayout = remember { AppConfig.bookshelfLayout } // 0=列表, 1=网格
     val bookshelfMargin = 12 // 固定12dp
-    val bookGroupStyle = 1   // 固定为Folder样式
-
-    // Tab 样式：根据 tabs 选择当前 groupId
-    // 还原上次选中的分组（与 legado-E BookshelfFragment1.selectLastTab() 一致）
-    var selectedTabIndex by remember { mutableIntStateOf(AppConfig.saveTabPosition.coerceAtLeast(0)) }
 
     // 顶栏菜单所需
     val bookshelfViewModel = remember { ViewModelProvider(activity)[BookshelfViewModel::class.java] }
@@ -154,7 +150,6 @@ fun BookshelfPage(
             override fun onItemClick(item: Any) {
                 when (item) {
                     is Book -> onBookClick(item)
-                    is BookGroup -> { groupId = item.groupId }
                 }
             }
 
@@ -230,18 +225,7 @@ fun BookshelfPage(
             }
         }
         registerBack {
-            if (bookGroupStyle == 0 && selectedTabIndex != 0) {
-                selectedTabIndex = 0
-                AppConfig.saveTabPosition = 0
-                val group = bookGroups.getOrNull(0)
-                groupId = group?.groupId ?: BookGroup.IdRoot
-                enableRefresh = group?.enableRefresh ?: true
-                onlyUpdateRead = group?.onlyUpdateRead ?: false
-                true
-            } else if (groupId != BookGroup.IdRoot) {
-                groupId = BookGroup.IdRoot
-                true
-            } else false
+            false // 不处理返回键（分组导航已移除）
         }
         registerMenuAction { handleMenuAction(it) }
         onDispose {
@@ -260,10 +244,8 @@ fun BookshelfPage(
     }
 
     // ── 观察 Books（Flow + 排序）──
-    LaunchedEffect(groupId) {
-        // 持久化当前 groupId，避免 config dialog recreate 后跳回根目录
-        AppConfig.saveBookshelfGroupId = groupId
-        appDb.bookDao.flowByGroup(groupId)
+    LaunchedEffect(Unit) {
+        appDb.bookDao.flowByGroup(BookGroup.IdAll)
             .map { list ->
                 when (AppConfig.getBookSortByGroupId(groupId)) {
                     1 -> list.sortedByDescending { it.latestChapterTime }
@@ -279,28 +261,13 @@ fun BookshelfPage(
     }
 
     // ── 数据变化 → 更新 adapter ──
-    LaunchedEffect(bookGroups, books, groupId) {
+    LaunchedEffect(books) {
         currentItems.clear()
-        if (groupId == BookGroup.IdRoot) {
-            currentItems.addAll(bookGroups)
-        }
         currentItems.addAll(books)
         itemCount = currentItems.size
-        adapter.updateItems(groupId)
+        adapter.updateItems(BookGroup.IdAll)
         // 更新空状态 & 下拉刷新开关
         swipeRefreshRef.value?.isEnabled = enableRefresh && itemCount > 0
-    }
-
-    // Tab 样式：根据 tabs 选择当前 groupId（bookGroupStyle / selectedTabIndex 已在上方声明）
-    LaunchedEffect(bookGroups, bookGroupStyle) {
-        if (bookGroupStyle == 0 && bookGroups.isNotEmpty()) {
-            val index = selectedTabIndex.coerceAtMost(bookGroups.lastIndex)
-            if (index != selectedTabIndex) selectedTabIndex = index
-            val group = bookGroups[index]
-            groupId = group.groupId
-            enableRefresh = group.enableRefresh
-            onlyUpdateRead = group.onlyUpdateRead
-        }
     }
 
     // ── UI ──

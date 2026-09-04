@@ -251,7 +251,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     var saveBookshelfGroupId: Long
         get() = appCtx.getPrefString(PreferKey.saveBookshelfGroupId)?.toLongOrNull()
-            ?: BookGroup.IdRoot
+            ?: BookGroup.IdAll
         set(value) {
             appCtx.putPrefString(PreferKey.saveBookshelfGroupId, value.toString())
         }
