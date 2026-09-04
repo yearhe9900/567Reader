@@ -162,8 +162,6 @@ fun BookshelfPage(
     // ── 顶栏菜单项处理 ──
     fun handleMenuAction(action: BookshelfMenuAction) {
         when (action) {
-            BookshelfMenuAction.UpdateToc ->
-                onRefresh(books, onlyUpdateRead)
             BookshelfMenuAction.AddLocal ->
                 activity.startActivity(Intent(activity, ImportBookActivity::class.java))
             BookshelfMenuAction.Remote ->
@@ -404,7 +402,6 @@ private fun Int.dpToPx(context: android.content.Context): Float {
  * 书架页顶栏「更多选项」菜单项
  */
 enum class BookshelfMenuAction(val titleRes: Int, var iconRes: Int) {
-    UpdateToc(R.string.update_toc, R.drawable.ic_refresh_black_24dp),
     AddLocal(R.string.book_local, R.drawable.ic_add),
     Remote(R.string.add_remote_book, R.drawable.ic_add),
     AddUrl(R.string.add_url, R.drawable.ic_add_online),

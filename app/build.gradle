@@ -14,25 +14,20 @@ plugins {
 }
 apply from: 'download.gradle'
 
-static def releaseTime() {
-    return new Date().format("yy.MMddHH", TimeZone.getTimeZone("GMT+8"))
-}
-
 def name = "567Reader"
-// 版本号格式：主版本.子版本.阶段版本.日期_阶段标识
-// 主版本：主要模块重大变化
-// 子版本：功能增加或变化
-// 阶段版本：Bug修复或小变动
-// 日期：修改日期
-// 阶段标识：alpha/beta/rc/release
+// 版本号遵循 Semantic Versioning 2.0.0 (https://semver.org/lang/zh-CN/)
+// 格式：MAJOR.MINOR.PATCH[-prerelease]
+//   MAJOR：不兼容的 API 变更
+//   MINOR：向下兼容的功能性新增
+//   PATCH：向下兼容的问题修正
+//   prerelease：可选，alpha / beta / rc.N；正式版留空则 versionName 不含后缀
 def majorVersion = 1
 def minorVersion = 0
 def patchVersion = 0
-def dateVersion = new Date().format("yyMMdd", TimeZone.getTimeZone("GMT+8"))
-def stageVersion = "release"
-def version = "${majorVersion}.${minorVersion}.${patchVersion}.${dateVersion}_${stageVersion}"
-// versionCode 基于日期生成，避免配置缓存阶段执行外部进程（git rev-list 会破坏 Configuration Cache）
-def versionCodeVal = 100000 + Integer.parseInt(dateVersion)
+def stageVersion = "" // 留空 = 正式版；示例："alpha" / "beta" / "rc.1"
+def version = stageVersion ? "${majorVersion}.${minorVersion}.${patchVersion}-${stageVersion}" : "${majorVersion}.${minorVersion}.${patchVersion}"
+// versionCode 基于日期生成，保证单调递增且避免破坏 Configuration Cache
+def versionCodeVal = 100000 + Integer.parseInt(new Date().format("yyMMdd", TimeZone.getTimeZone("GMT+8")))
 
 android {
     compileSdk = compile_sdk_version
