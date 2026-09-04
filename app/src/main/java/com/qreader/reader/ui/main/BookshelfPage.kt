@@ -3,8 +3,6 @@ package com.qreader.reader.ui.main
 import android.content.Intent
 import android.graphics.Rect
 import android.view.View
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,8 +46,6 @@ import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
-import com.qreader.reader.ui.book.cache.CacheActivity
-import com.qreader.reader.ui.book.group.GroupManageDialog
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
@@ -66,7 +62,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import java.io.File
 import kotlin.math.max
 
 /**
@@ -114,32 +109,7 @@ fun BookshelfPage(
     // 顶栏菜单所需
     val bookshelfViewModel = remember { ViewModelProvider(activity)[BookshelfViewModel::class.java] }
     var showAddUrlDialog by remember { mutableStateOf(false) }
-    var showImportDialog by remember { mutableStateOf(false) }
     var addUrlText by remember { mutableStateOf("") }
-    var importText by remember { mutableStateOf("") }
-    var exportTempFile by remember { mutableStateOf<File?>(null) }
-
-    val importFileLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri ?: return@rememberLauncherForActivityResult
-        kotlin.runCatching {
-            activity.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-        }.onSuccess { text ->
-            text?.let { bookshelfViewModel.importBookshelf(it, groupId) }
-        }
-    }
-    val exportFileLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        uri ?: return@rememberLauncherForActivityResult
-        exportTempFile?.let { file ->
-            kotlin.runCatching {
-                activity.contentResolver.openOutputStream(uri)?.use { out ->
-                    file.inputStream().copyTo(out)
-                }
-            }
-        }
-        exportTempFile = null
-    }
 
     // adapter.getItems() 需要的当前列表快照
     val currentItems = remember { mutableListOf<Any>() }
@@ -196,23 +166,8 @@ fun BookshelfPage(
                         putExtra("groupId", groupId)
                     }
                 )
-            BookshelfMenuAction.Download ->
-                activity.startActivity(
-                    Intent(activity, CacheActivity::class.java).apply {
-                        putExtra("groupId", groupId)
-                    }
-                )
-            BookshelfMenuAction.GroupManage ->
-                activity.showDialogFragment<GroupManageDialog>()
             BookshelfMenuAction.Layout ->
                 activity.showDialogFragment<BookshelfConfigDialog>()
-            BookshelfMenuAction.Export ->
-                bookshelfViewModel.exportBookshelf(books) { file ->
-                    exportTempFile = file
-                    exportFileLauncher.launch("bookshelf.json")
-                }
-            BookshelfMenuAction.Import ->
-                showImportDialog = true
         }
     }
 
@@ -426,50 +381,6 @@ fun BookshelfPage(
                 },
             )
         }
-
-        // 导入书架对话框
-        if (showImportDialog) {
-            AlertDialog(
-                onDismissRequest = { showImportDialog = false },
-                title = {
-                    BasicText(
-                        stringResource(R.string.import_bookshelf),
-                        style = TextStyle(fontSize = 18.sp)
-                    )
-                },
-                text = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        TextField(
-                            value = importText,
-                            onValueChange = { importText = it },
-                            label = { BasicText("url/json") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        TextButton(
-                            onClick = {
-                                importFileLauncher.launch(
-                                    arrayOf("application/json", "text/plain", "*/*")
-                                )
-                            },
-                            modifier = Modifier.padding(top = 8.dp),
-                        ) { BasicText(stringResource(R.string.select_file)) }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        bookshelfViewModel.importBookshelf(importText, groupId)
-                        showImportDialog = false
-                        importText = ""
-                    }) { BasicText(stringResource(R.string.ok)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showImportDialog = false }) {
-                        BasicText(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
     }
 }
 
@@ -486,9 +397,5 @@ enum class BookshelfMenuAction(val titleRes: Int, val iconRes: Int) {
     Remote(R.string.add_remote_book, R.drawable.ic_add),
     AddUrl(R.string.add_url, R.drawable.ic_add_online),
     BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
-    Download(R.string.cache_export, R.drawable.ic_download_line),
-    GroupManage(R.string.group_manage, R.drawable.ic_groups),
     Layout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
-    Export(R.string.export_bookshelf, R.drawable.ic_export),
-    Import(R.string.import_bookshelf, R.drawable.ic_import),
 }
