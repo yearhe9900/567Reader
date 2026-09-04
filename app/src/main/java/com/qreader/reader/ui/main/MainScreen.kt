@@ -115,6 +115,7 @@ fun MainScreen(
         onRequestGroupEdit: (BookGroup) -> Unit,
         bookshelfSort: Int,
         onRequestSort: () -> Unit,
+        onRequestGroups: () -> Unit,
     ) -> Unit,
     explorePage: @Composable (
         registerCompress: ((() -> Unit)?) -> Unit,
@@ -146,6 +147,9 @@ fun MainScreen(
     // 排序玻璃弹框状态（排序值提升到 MainScreen，供 SortDialogOverlay 选择后回写 BookshelfPage）
     var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
     var sortDialogOpen by remember { mutableStateOf(false) }
+
+    // 分组抽屉玻璃弹框状态（右边缘滑出）
+    var groupDrawerOpen by remember { mutableStateOf(false) }
 
     val tabItems = remember(showDiscovery, context) {
         buildTabItems(context, showDiscovery)
@@ -281,6 +285,7 @@ fun MainScreen(
                         { group -> groupEditTarget = group; groupEditOpen = true },
                         bookshelfSort,
                         { sortDialogOpen = true },
+                        { groupDrawerOpen = true },
                     )
 
                     1 -> if (showDiscovery) {
@@ -468,6 +473,19 @@ fun MainScreen(
                 sortDialogOpen = false
             },
             onDismiss = { sortDialogOpen = false }
+        )
+    }
+
+    // 分组抽屉玻璃弹框覆盖层（右边缘滑出，与 GroupEditOverlay 同模式）
+    AnimatedVisibility(
+        visible = groupDrawerOpen,
+        modifier = Modifier.fillMaxSize(),
+        enter = fadeIn(tween(160)),
+        exit = fadeOut(tween(120))
+    ) {
+        GroupDrawerOverlay(
+            backdrop = backdrop,
+            onDismiss = { groupDrawerOpen = false },
         )
     }
     }

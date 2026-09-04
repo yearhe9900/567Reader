@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.awaitEachGesture
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.recyclerview.widget.GridLayoutManager
@@ -67,6 +69,7 @@ fun BookshelfPage(
     isUpdate: (String) -> Boolean,
     bookshelfSort: Int,
     onRequestSort: () -> Unit,
+    onRequestGroups: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -189,7 +192,33 @@ fun BookshelfPage(
     }
 
     // ── UI ──
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            // 右边缘滑出分组抽屉：从右侧 30dp 内起始、左滑超过 50dp 触发
+            .pointerInput(Unit) {
+                val edgePx = 30.dp.toPx()
+                val thresholdPx = 50.dp.toPx()
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    if (down.position.x < size.width - edgePx) return@awaitEachGesture
+                    down.consume()
+                    val pastSlop = awaitTouchSlopOrCancellation(down.id) { change, _ ->
+                        change.consume()
+                    } ?: return@awaitEachGesture
+                    var dx = pastSlop.position.x - down.position.x
+                    var id = pastSlop.id
+                    while (true) {
+                        val ev = awaitPointerEvent()
+                        val ch = ev.changes.firstOrNull { it.id == id } ?: break
+                        if (!ch.pressed) { ch.consume(); break }
+                        ch.consume()
+                        dx += ch.position.x - ch.previousPosition.x
+                    }
+                    if (dx < -thresholdPx) onRequestGroups()
+                }
+            }
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 key(bookshelfLayout) {
