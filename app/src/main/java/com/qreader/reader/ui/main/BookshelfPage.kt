@@ -55,9 +55,9 @@ import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
 import com.qreader.reader.ui.main.bookshelf.BookshelfConfigDialog
 import com.qreader.reader.ui.main.bookshelf.BookshelfViewModel
-import com.qreader.reader.ui.main.bookshelf.style2.BaseBooksAdapter
-import com.qreader.reader.ui.main.bookshelf.style2.BooksAdapterGrid
-import com.qreader.reader.ui.main.bookshelf.style2.BooksAdapterList
+import com.qreader.reader.ui.main.bookshelf.style.BaseBooksAdapter
+import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterGrid
+import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterList
 import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.cnCompare
 import com.qreader.reader.utils.setEdgeEffectColor
