@@ -333,7 +333,7 @@ fun BookshelfPage(
                             // 根据屏幕宽度自动计算网格列数
                             val spanCount = if (bookshelfLayout == 1) {
                                 val screenWidthDp = ctx.resources.displayMetrics.widthPixels / ctx.resources.displayMetrics.density
-                                (screenWidthDp / 100).coerceIn(3, 6)
+                                (screenWidthDp / 100f).toInt().coerceIn(3, 6)
                             } else 1
 
                             layoutManager = if (bookshelfLayout == 1) {
