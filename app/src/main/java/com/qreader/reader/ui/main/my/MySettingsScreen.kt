@@ -24,12 +24,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -526,16 +530,61 @@ private fun ToggleRow(
             }
         }
 
-        // 右侧：Material3 开关，自定义为"白色滑块 + 蓝色轨道"以贴合整体风格
-        Switch(
+        // 右侧：玻璃态开关（圆角胶囊轨道 + 滑块，贴合液态玻璃风格）
+        GlassToggle(
             checked = item.checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFF0088FF),
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = contentColor.copy(0.25f)
-            )
+            contentColor = contentColor,
+        )
+    }
+}
+
+/**
+ * 玻璃态开关（胶囊轨道 + 圆形滑块）。
+ *
+ * 视觉风格与液态玻璃 UI 一致：半透明轨道 + 白色/蓝色滑块，
+ * 无涟漪效果（indication=null），点击整块区域可切换。
+ */
+@Composable
+private fun GlassToggle(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    contentColor: Color,
+) {
+    val trackWidth = 48.dp
+    val trackHeight = 28.dp
+    val thumbSize = 22.dp
+    val thumbPadding = 3.dp
+
+    val thumbOffset by animateDpAsState(
+        targetValue = if (checked) trackWidth - thumbSize - thumbPadding else thumbPadding,
+        animationSpec = tween(durationMillis = 200),
+        label = "thumbOffset"
+    )
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) Color(0xFF0088FF) else contentColor.copy(0.25f),
+        animationSpec = tween(durationMillis = 200),
+        label = "trackColor"
+    )
+
+    Box(
+        modifier = Modifier
+            .width(trackWidth)
+            .height(trackHeight)
+            .clip(RoundedCornerShape(50))
+            .background(trackColor)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) { onCheckedChange(!checked) },
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset)
+                .size(thumbSize)
+                .align(Alignment.CenterStart)
+                .clip(CircleShape)
+                .background(Color.White)
         )
     }
 }
