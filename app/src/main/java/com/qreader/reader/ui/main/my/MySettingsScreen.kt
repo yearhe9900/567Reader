@@ -43,6 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,14 +56,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qreader.reader.R
 import com.qreader.reader.constant.PreferKey
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberBackdrop
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
@@ -184,6 +193,7 @@ fun MySettingsScreen(
                                     item = item,
                                     contentColor = contentColor,
                                     iconTint = iconTint,
+                                    backdrop = backdrop,
                                     onCheckedChange = { checked ->
                                         if (item.key == PreferKey.webService) {
                                             onWebServiceToggle(checked)
@@ -497,6 +507,7 @@ private fun ToggleRow(
     item: SettingItem.Toggle,
     contentColor: Color,
     iconTint: Color,
+    backdrop: Backdrop,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
@@ -534,57 +545,91 @@ private fun ToggleRow(
         GlassToggle(
             checked = item.checked,
             onCheckedChange = onCheckedChange,
-            contentColor = contentColor,
+            backdrop = backdrop,
         )
     }
 }
 
 /**
- * 玻璃态开关（胶囊轨道 + 圆形滑块）。
+ * 玻璃态开关——参考 AndroidLiquidGlass LiquidToggle 实现。
  *
- * 视觉风格与液态玻璃 UI 一致：半透明轨道 + 白色/蓝色滑块，
- * 无涟漪效果（indication=null），点击整块区域可切换。
+ * 轨道：drawBackdrop 采样 backdrop 做毛玻璃 + 颜色过渡；
+ * 滑块：drawBackdrop 采样 backdrop 做毛玻璃 + lens 折射。
+ * 简化版：省略 DampedDragAnimation 的拖拽手势和 velocity 弹性，
+ * 仅保留点击切换 + spring 动画。
  */
 @Composable
 private fun GlassToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    contentColor: Color,
+    backdrop: Backdrop,
+    accentColor: Color = Color(0xFF30D158),
+    trackColor: Color = Color(0xFF787880).copy(0.36f),
 ) {
-    val trackWidth = 48.dp
+    val trackWidth = 64.dp
     val trackHeight = 28.dp
-    val thumbSize = 22.dp
-    val thumbPadding = 3.dp
+    val thumbSize = 40.dp
+    val dragWidth = 20.dp
 
-    val thumbOffset by animateDpAsState(
-        targetValue = if (checked) trackWidth - thumbSize - thumbPadding else thumbPadding,
-        animationSpec = tween(durationMillis = 200),
-        label = "thumbOffset"
+    val fraction by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = spring(stiffness = 1000f),
+        label = "fraction"
     )
-    val trackColor by animateColorAsState(
-        targetValue = if (checked) Color(0xFF0088FF) else contentColor.copy(0.25f),
-        animationSpec = tween(durationMillis = 200),
-        label = "trackColor"
-    )
+
+    val trackBackdrop = rememberLayerBackdrop()
 
     Box(
         modifier = Modifier
-            .width(trackWidth)
-            .height(trackHeight)
-            .clip(RoundedCornerShape(50))
-            .background(trackColor)
+            .size(trackWidth, trackHeight)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
             ) { onCheckedChange(!checked) },
+        contentAlignment = Alignment.CenterStart,
     ) {
+        // 轨道：毛玻璃 + 颜色过渡
         Box(
             modifier = Modifier
-                .offset(x = thumbOffset)
+                .size(trackWidth, trackHeight)
+                .layerBackdrop(trackBackdrop)
+                .clip(Capsule())
+                .drawBehind {
+                    drawRect(lerp(trackColor, accentColor, fraction))
+                }
+        )
+
+        // 滑块：毛玻璃 + lens 折射
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    val padding = 2.dp.toPx()
+                    translationX = lerp(padding, padding + dragWidth.toPx(), fraction)
+                }
+                .drawBackdrop(
+                    backdrop = rememberCombinedBackdrop(
+                        backdrop,
+                        rememberBackdrop(trackBackdrop) { drawBackdrop ->
+                            scale(0.75f, 0.75f) { drawBackdrop() }
+                        }
+                    ),
+                    shape = { Capsule() },
+                    effects = {
+                        blur(8.dp.toPx() * (1f - fraction))
+                        lens(5.dp.toPx() * fraction, 10.dp.toPx() * fraction, chromaticAberration = true)
+                    },
+                    highlight = {
+                        Highlight.Ambient.copy(
+                            width = Highlight.Ambient.width / 1.5f,
+                            blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                            alpha = fraction
+                        )
+                    },
+                    shadow = { Shadow(radius = 4.dp, color = Color.Black.copy(alpha = 0.05f)) },
+                    innerShadow = { InnerShadow(radius = 4.dp * fraction, alpha = fraction) },
+                    onDrawSurface = { drawRect(Color.White.copy(alpha = 1f - fraction * 0.3f)) }
+                )
                 .size(thumbSize)
-                .align(Alignment.CenterStart)
-                .clip(CircleShape)
-                .background(Color.White)
         )
     }
 }
