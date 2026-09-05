@@ -275,7 +275,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { alpha = pageFade.value },
-                beyondViewportPageCount = 2, // 预组合全部 3 页，避免跳页时中间页组合卡顿
+                beyondViewportPageCount = 1, // 预组合相邻 1 页，平衡内存与切换流畅度
             ) { page ->
                 when (page) {
                     0 -> bookshelfPage(
