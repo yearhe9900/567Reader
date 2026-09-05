@@ -692,7 +692,7 @@ private fun buildSettingCategories(
             )
         ),
 
-        // 分组四：工具 —— 书签、阅读记录、文件管理
+        // 分组四：工具 —— 书签、阅读记录
         SettingCategory(
             title = "工具",
             items = listOf(
@@ -707,12 +707,6 @@ private fun buildSettingCategories(
                     icon = R.drawable.ic_history,
                     title = context.getString(R.string.read_record),
                     summary = context.getString(R.string.read_record_summary)
-                ),
-                SettingItem.Action(
-                    key = "fileManage",
-                    icon = R.drawable.ic_folder_outline,
-                    title = context.getString(R.string.file_manage),
-                    summary = context.getString(R.string.file_manage_summary)
                 )
             )
         ),

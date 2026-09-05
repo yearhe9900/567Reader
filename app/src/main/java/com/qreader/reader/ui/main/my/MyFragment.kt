@@ -23,7 +23,6 @@ import com.qreader.reader.ui.compose.GlassDemoActivity
 import com.qreader.reader.ui.config.ConfigActivity
 import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
-import com.qreader.reader.ui.file.FileManageActivity
 import com.qreader.reader.ui.main.MainFragmentInterface
 import com.qreader.reader.ui.replace.ReplaceRuleActivity
 import com.qreader.reader.utils.getPrefString
@@ -126,7 +125,6 @@ class MyFragment() : BaseFragment(R.layout.fragment_my_config), MainFragmentInte
             "theme_setting" -> startActivity<ConfigActivity> {
                 putExtra("configTag", ConfigTag.THEME_CONFIG)
             }
-            "fileManage" -> startActivity<FileManageActivity>()
             "readRecord" -> startActivity<ReadRecordActivity>()
             "glassDemo" -> startActivity<GlassDemoActivity>()
             "appVersion" -> showAppVersion()
