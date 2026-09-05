@@ -604,7 +604,7 @@ private fun GlassToggle(
             modifier = Modifier
                 .graphicsLayer {
                     val padding = 2.dp.toPx()
-                    translationX = lerp(padding, padding + dragWidth.toPx(), fraction)
+                    translationX = androidx.compose.ui.util.lerp(padding, padding + dragWidth.toPx(), fraction)
                 }
                 .drawBackdrop(
                     backdrop = rememberCombinedBackdrop(
