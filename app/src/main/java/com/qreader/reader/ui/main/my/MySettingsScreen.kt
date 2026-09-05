@@ -61,7 +61,6 @@ import androidx.compose.animation.core.spring
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberBackdrop
-import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -193,7 +192,6 @@ fun MySettingsScreen(
                                     item = item,
                                     contentColor = contentColor,
                                     iconTint = iconTint,
-                                    backdrop = backdrop,
                                     onCheckedChange = { checked ->
                                         if (item.key == PreferKey.webService) {
                                             onWebServiceToggle(checked)
@@ -507,7 +505,6 @@ private fun ToggleRow(
     item: SettingItem.Toggle,
     contentColor: Color,
     iconTint: Color,
-    backdrop: Backdrop,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
@@ -545,7 +542,6 @@ private fun ToggleRow(
         GlassToggle(
             checked = item.checked,
             onCheckedChange = onCheckedChange,
-            backdrop = backdrop,
         )
     }
 }
@@ -562,7 +558,6 @@ private fun ToggleRow(
 private fun GlassToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    backdrop: Backdrop,
     accentColor: Color = Color(0xFF30D158),
     trackColor: Color = Color(0xFF787880).copy(0.36f),
 ) {
@@ -577,6 +572,7 @@ private fun GlassToggle(
         label = "fraction"
     )
 
+    // 自建 backdrop：轨道层作为采样源，始终活跃
     val trackBackdrop = rememberLayerBackdrop()
 
     Box(
@@ -588,7 +584,7 @@ private fun GlassToggle(
             ) { onCheckedChange(!checked) },
         contentAlignment = Alignment.CenterStart,
     ) {
-        // 轨道：毛玻璃 + 颜色过渡
+        // 轨道：layerBackdrop 捕获 + 颜色过渡
         Box(
             modifier = Modifier
                 .size(trackWidth, trackHeight)
@@ -599,7 +595,7 @@ private fun GlassToggle(
                 }
         )
 
-        // 滑块：毛玻璃 + lens 折射
+        // 滑块：采样 trackBackdrop（轨道内容）做毛玻璃 + lens 折射
         Box(
             modifier = Modifier
                 .graphicsLayer {
@@ -607,12 +603,9 @@ private fun GlassToggle(
                     translationX = androidx.compose.ui.util.lerp(padding, padding + dragWidth.toPx(), fraction)
                 }
                 .drawBackdrop(
-                    backdrop = rememberCombinedBackdrop(
-                        backdrop,
-                        rememberBackdrop(trackBackdrop) { drawBackdrop ->
-                            scale(0.75f, 0.75f) { drawBackdrop() }
-                        }
-                    ),
+                    backdrop = rememberBackdrop(trackBackdrop) { drawBackdrop ->
+                        scale(0.75f, 0.75f) { drawBackdrop() }
+                    },
                     shape = { Capsule() },
                     effects = {
                         blur(8.dp.toPx() * (1f - fraction))
