@@ -163,7 +163,7 @@ fun LiquidToggle(
                     shape = { Capsule() },
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
-                        blur(8f.dp.toPx() * (1f - progress))
+                        blur(8f.dp.toPx() * (1f - progress * 0.5f))
                         lens(
                             5f.dp.toPx() * progress,
                             10f.dp.toPx() * progress,
@@ -173,22 +173,22 @@ fun LiquidToggle(
                     highlight = {
                         val progress = dampedDragAnimation.pressProgress
                         Highlight.Ambient.copy(
-                            width = Highlight.Ambient.width / 1.5f,
-                            blurRadius = Highlight.Ambient.blurRadius / 1.5f,
-                            alpha = progress
+                            width = Highlight.Ambient.width / 1.2f,
+                            blurRadius = Highlight.Ambient.blurRadius / 1.2f,
+                            alpha = 0.3f + progress * 0.7f
                         )
                     },
                     shadow = {
                         Shadow(
                             radius = 4f.dp,
-                            color = Color.Black.copy(alpha = 0.05f)
+                            color = Color.Black.copy(alpha = 0.15f)
                         )
                     },
                     innerShadow = {
                         val progress = dampedDragAnimation.pressProgress
                         InnerShadow(
-                            radius = 4f.dp * progress,
-                            alpha = progress
+                            radius = 4f.dp * (0.3f + progress * 0.7f),
+                            alpha = 0.3f + progress * 0.7f
                         )
                     },
                     layerBlock = {
@@ -200,7 +200,8 @@ fun LiquidToggle(
                     },
                     onDrawSurface = {
                         val progress = dampedDragAnimation.pressProgress
-                        drawRect(Color.White.copy(alpha = 1f - progress))
+                        // 常态半透明（玻璃质感），按下时更透明（看到更多折射）
+                        drawRect(Color.White.copy(alpha = 0.55f - progress * 0.3f))
                     }
                 )
                 .size(40f.dp, 24f.dp)
