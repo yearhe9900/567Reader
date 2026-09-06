@@ -41,12 +41,14 @@ import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.book.import.local.ImportBookActivity
 import com.qreader.reader.ui.book.import.remote.RemoteBookActivity
 import com.qreader.reader.ui.book.manage.BookshelfManageActivity
+import com.qreader.reader.ui.book.group.GroupManageDialog
 import com.qreader.reader.ui.main.bookshelf.style.BaseBooksAdapter
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterGrid
 import com.qreader.reader.ui.main.bookshelf.style.BooksAdapterList
 import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.cnCompare
 import com.qreader.reader.utils.setEdgeEffectColor
+import com.qreader.reader.utils.showDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
@@ -134,6 +136,8 @@ fun BookshelfPage(
                 activity.startActivity(Intent(activity, BookshelfManageActivity::class.java).apply {
                     putExtra("groupId", BookGroup.IdAll)
                 })
+            BookshelfMenuAction.GroupManage ->
+                activity.showDialogFragment<GroupManageDialog>()
             BookshelfMenuAction.Sort -> onRequestSort()
             BookshelfMenuAction.ToggleLayout -> {
                 bookshelfLayout = if (bookshelfLayout == 1) 0 else 1
@@ -269,6 +273,7 @@ enum class BookshelfMenuAction(var titleRes: Int, var iconRes: Int) {
     AddLocal(R.string.book_local, R.drawable.ic_add),
     Remote(R.string.add_remote_book, R.drawable.ic_add),
     BookshelfManage(R.string.bookshelf_management, R.drawable.ic_arrange),
+    GroupManage(R.string.group_manage, R.drawable.ic_groups),
     Sort(R.string.sort, R.drawable.ic_sort),
     ToggleLayout(R.string.bookshelf_layout, R.drawable.ic_view_quilt),
 }
