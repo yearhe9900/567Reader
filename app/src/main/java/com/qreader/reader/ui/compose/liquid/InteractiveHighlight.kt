@@ -114,7 +114,7 @@ half4 main(float2 coord) {
                         launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
                     }
                 }
-            ) { change, _ ->
+            ) { change ->
                 animationScope.launch { positionAnimation.snapTo(change.position) }
             }
         }
