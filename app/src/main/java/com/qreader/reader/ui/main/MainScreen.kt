@@ -197,6 +197,9 @@ fun MainScreen(
     // 注意：它只覆盖「手指按住」阶段，松手后的 fling 惯性阶段为 false，故不能作为唯一手段。
     val isUserDragging by pagerState.interactionSource.collectIsDraggedAsState()
 
+    // 程序化滚动期间禁用 backdrop GPU 效果，避免 animateScrollToPage 与 backdrop 离屏渲染双重 GPU 压力
+    var isProgrammaticScroll by remember { mutableStateOf(false) }
+
     // 跨页切换（0↔2）时整页的淡入进度。
     // 只在 draw 阶段被 graphicsLayer 读取，因此动画期间只重绘、不触发重组。
     val pageFade = remember { Animatable(1f) }
@@ -217,22 +220,27 @@ fun MainScreen(
         if (isUserDragging) return@LaunchedEffect // 手势滑动中不干预，交给用户
         val target = selectedTabIndex()
         if (pagerState.settledPage == target) return@LaunchedEffect
-        if (abs(pagerState.settledPage - target) > 1) {
-            // 跨页：直接跳转，不让页面从中间的发现页「掠过」（观感差），
-            // 改为瞬跳 + 目标页淡入，兼顾干脆与平滑。
-            pagerState.scrollToPage(target)
-            pageFade.snapTo(CROSS_PAGE_FADE_START)
-            pageFade.animateTo(
-                1f,
-                tween(durationMillis = 160, easing = FastOutLinearInEasing)
-            )
-        } else {
-            // 相邻页：短促 tween 平滑滑过。用 tween 而非默认 spring：
-            // spring 收尾段速度衰减极慢，长距离下会明显拖沓。
-            pagerState.animateScrollToPage(
-                page = target,
-                animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing),
-            )
+        isProgrammaticScroll = true
+        try {
+            if (abs(pagerState.settledPage - target) > 1) {
+                // 跨页：直接跳转，不让页面从中间的发现页「掠过」（观感差），
+                // 改为瞬跳 + 目标页淡入，兼顾干脆与平滑。
+                pagerState.scrollToPage(target)
+                pageFade.snapTo(CROSS_PAGE_FADE_START)
+                pageFade.animateTo(
+                    1f,
+                    tween(durationMillis = 160, easing = FastOutLinearInEasing)
+                )
+            } else {
+                // 相邻页：短促 tween 平滑滑过。用 tween 而非默认 spring：
+                // spring 收尾段速度衰减极慢，长距离下会明显拖沓。
+                pagerState.animateScrollToPage(
+                    page = target,
+                    animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing),
+                )
+            }
+        } finally {
+            isProgrammaticScroll = false
         }
     }
 
@@ -267,7 +275,7 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .layerBackdrop(backdrop)
+                .then(if (!isProgrammaticScroll) Modifier.layerBackdrop(backdrop) else Modifier)
         ) {
             // 内容区：HorizontalPager 全屏，延伸到状态栏和导航栏背后
             HorizontalPager(
