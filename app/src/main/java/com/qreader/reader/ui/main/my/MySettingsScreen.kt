@@ -137,13 +137,13 @@ fun MySettingsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 页面内容：始终启用 layerBackdrop，供 LiquidToggle 的 drawBackdrop 采样。
-        // 官方 demo 的 backdrop 也是始终活跃的（采样壁纸背景）。
+        // 页面内容：条件性启用 layerBackdrop（仅主题弹框打开时）。
+        // LiquidToggle 用独立的本地 backdrop 采样轨道内容，不依赖页面级 backdrop。
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(pageBackgroundColor)
-                .layerBackdrop(backdrop)
+                .then(if (themeDialogOpen) Modifier.layerBackdrop(backdrop) else Modifier)
         ) {
             // 可滚动内容容器（卡片之间 16dp 间距，靠卡片本身分组，无分类标题）
             Column(
@@ -195,10 +195,9 @@ fun MySettingsScreen(
                 }
             }
         }
-        // ↑ layerBackdrop 捕获层结束
 
         // 主题模式弹框覆盖层（真·毛玻璃：玻璃采样真实设置页，无截图）
-        // 必须在 layerBackdrop 捕获层之外，避免 drawBackdrop 采样到弹框自身 → 循环捕获崩溃
+        // 条件性 layerBackdrop 已在上方关闭时不含弹框，开启时弹框在 layerBackdrop 之外
         AnimatedVisibility(
             visible = themeDialogOpen,
             enter = fadeIn(tween(160)),
