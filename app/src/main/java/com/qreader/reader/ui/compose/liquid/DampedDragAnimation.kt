@@ -7,6 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.CoroutineScope
@@ -87,7 +88,8 @@ class DampedDragAnimation(
                 onDragStopped()
                 release()
             }
-        ) { change, dragAmount ->
+        ) { change ->
+            val dragAmount = change.positionChange()
             onDrag(size, dragAmount)
         }
     }

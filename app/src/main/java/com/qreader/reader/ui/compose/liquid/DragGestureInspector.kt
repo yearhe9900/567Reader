@@ -9,10 +9,23 @@ import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.isOutOfBounds
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.util.fastFirstOrNull
+import kotlin.math.abs
 
+/**
+ * 拖拽手势检测器，区分 tap 和 drag。
+ *
+ * 与官方 AndroidLiquidGlass 版本的区别：增加了 tap 检测逻辑。
+ * 如果总位移小于 [tapSlop]，即使有微小移动也会被视为 tap，
+ * 调用 [onDragEnd] 而非 [onDrag]。这解决了 scroll 拦截产生的
+ * 微小位移导致 toggle 无法点击切换的问题。
+ *
+ * @param tapSlop 判定为 tap 的最大位移（px），默认 4px
+ */
 suspend fun PointerInputScope.inspectDragGestures(
+    tapSlop: Float = 4f,
     onDragStart: (down: PointerInputChange) -> Unit = {},
     onDragEnd: (change: PointerInputChange) -> Unit = {},
     onDragCancel: () -> Unit = {},
@@ -26,10 +39,22 @@ suspend fun PointerInputScope.inspectDragGestures(
 
         onDragStart(down)
         onDrag(drag, Offset.Zero)
+
+        var totalDragX = 0f
+        var totalDragY = 0f
+
         val upEvent =
             drag(
                 pointerId = drag.id,
-                onDrag = { onDrag(it, it.positionChange()) }
+                onDrag = { change ->
+                    val dragAmount = change.positionChange()
+                    totalDragX += dragAmount.x
+                    totalDragY += dragAmount.y
+                    // 只有累计位移超过阈值才报告拖拽
+                    if (abs(totalDragX) > tapSlop || abs(totalDragY) > tapSlop) {
+                        onDrag(change, dragAmount)
+                    }
+                }
             )
         if (upEvent == null) {
             onDragCancel()
