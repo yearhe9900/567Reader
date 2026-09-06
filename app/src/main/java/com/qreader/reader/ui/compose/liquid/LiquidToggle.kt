@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -62,6 +63,12 @@ fun LiquidToggle(
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val dragWidth = with(density) { 20f.dp.toPx() }
     val animationScope = rememberCoroutineScope()
+
+    // 用 rememberUpdatedState 持有最新的 selected/onSelect 引用，
+    // 避免 remember(animationScope) 的 DampedDragAnimation 捕获过期闭包。
+    val latestSelected = rememberUpdatedState(selected)
+    val latestOnSelect = rememberUpdatedState(onSelect)
+
     var didDrag by remember { mutableStateOf(false) }
     var fraction by remember { mutableFloatStateOf(if (selected()) 1f else 0f) }
     val dampedDragAnimation = remember(animationScope) {
@@ -76,11 +83,11 @@ fun LiquidToggle(
             onDragStopped = {
                 if (didDrag) {
                     fraction = if (targetValue >= 0.5f) 1f else 0f
-                    onSelect(fraction == 1f)
+                    latestOnSelect.value(fraction == 1f)
                     didDrag = false
                 } else {
-                    fraction = if (selected()) 0f else 1f
-                    onSelect(fraction == 1f)
+                    fraction = if (latestSelected.value()) 0f else 1f
+                    latestOnSelect.value(fraction == 1f)
                 }
             },
             onDrag = { _, dragAmount ->
