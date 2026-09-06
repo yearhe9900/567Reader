@@ -137,30 +137,29 @@ fun MySettingsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 页面内容：条件性启用 layerBackdrop（仅主题弹框打开时）。
-        // LiquidToggle 用独立的本地 backdrop 采样轨道内容，不依赖页面级 backdrop。
-        Column(
+        // ── 背景采样层：纯色背景 + layerBackdrop，始终活跃 ──
+        // 官方 demo 用壁纸 Image 做 layerBackdrop，这里用纯色背景替代。
+        // 此层只绘制纯色，不含任何 drawBackdrop 调用，不会循环捕获。
+        // 上方的 LiquidToggle / ThemeModeDialogOverlay 的 drawBackdrop 采样此层内容。
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(pageBackgroundColor)
-                .then(if (themeDialogOpen) Modifier.layerBackdrop(backdrop) else Modifier)
-        ) {
-            // 可滚动内容容器（卡片之间 16dp 间距，靠卡片本身分组，无分类标题）
+                .layerBackdrop(backdrop)
+        )
+
+        // ── 内容层：可滚动设置项（无 layerBackdrop，不参与采样）──
+        Column(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    // 底部 88dp 为悬浮玻璃导航栏预留（导航栏 72dp + 16dp 余量），
-                    // 保证滚到底时最后一项不被导航栏遮挡
                     .padding(start = 16.dp, top = 110.dp, end = 16.dp, bottom = 88.dp)
             ) {
                 categories.forEachIndexed { index, category ->
-                    // 仅卡片之间加 16dp，第一个卡片之前由 Column top=12dp 给出呼吸感
                     if (index > 0) {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-
-                    // 圆角卡片（大圆角、纯色背景、无边框）
                     GlassSettingsCard(containerColor = containerColor) {
                         category.items.forEach { item ->
                             when (item) {
@@ -170,14 +169,12 @@ fun MySettingsScreen(
                                     iconTint = iconTint,
                                     onClick = {
                                         if (item.key == PreferKey.themeMode) {
-                                            // 主题模式：在本页内弹出玻璃覆盖层（采样真实设置页）
                                             onThemeDialogOpenChange(true)
                                         } else {
                                             onActionClick(item.key)
                                         }
                                     }
                                 )
-
                                 is SettingItem.Toggle -> ToggleRow(
                                     item = item,
                                     contentColor = contentColor,
@@ -196,8 +193,8 @@ fun MySettingsScreen(
             }
         }
 
-        // 主题模式弹框覆盖层（真·毛玻璃：玻璃采样真实设置页，无截图）
-        // 条件性 layerBackdrop 已在上方关闭时不含弹框，开启时弹框在 layerBackdrop 之外
+        // ── 主题弹框层：在背景采样层和内容层之上 ──
+        // drawBackdrop(backdrop) 采样背景采样层的纯色内容 → 正常玻璃效果，无循环捕获
         AnimatedVisibility(
             visible = themeDialogOpen,
             enter = fadeIn(tween(160)),
