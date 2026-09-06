@@ -25,15 +25,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,12 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,16 +52,14 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.InnerShadow
-import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
+import com.qreader.reader.ui.compose.liquid.LiquidToggle
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
@@ -192,6 +182,7 @@ fun MySettingsScreen(
                                     item = item,
                                     contentColor = contentColor,
                                     iconTint = iconTint,
+                                    backdrop = backdrop,
                                     onCheckedChange = { checked ->
                                         if (item.key == PreferKey.webService) {
                                             onWebServiceToggle(checked)
@@ -505,6 +496,7 @@ private fun ToggleRow(
     item: SettingItem.Toggle,
     contentColor: Color,
     iconTint: Color,
+    backdrop: Backdrop,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
@@ -538,91 +530,11 @@ private fun ToggleRow(
             }
         }
 
-        // 右侧：玻璃态开关（圆角胶囊轨道 + 滑块，贴合液态玻璃风格）
-        GlassToggle(
-            checked = item.checked,
-            onCheckedChange = onCheckedChange,
-        )
-    }
-}
-
-/**
- * 玻璃态开关——参考 AndroidLiquidGlass LiquidToggle 实现。
- *
- * 轨道：drawBackdrop 采样 backdrop 做毛玻璃 + 颜色过渡；
- * 滑块：drawBackdrop 采样 backdrop 做毛玻璃 + lens 折射。
- * 简化版：省略 DampedDragAnimation 的拖拽手势和 velocity 弹性，
- * 仅保留点击切换 + spring 动画。
- */
-@Composable
-private fun GlassToggle(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    accentColor: Color = Color(0xFF30D158),
-    trackColor: Color = Color(0xFF787880).copy(0.36f),
-) {
-    val trackWidth = 64.dp
-    val trackHeight = 28.dp
-    val thumbSize = 40.dp
-    val dragWidth = 20.dp
-
-    val fraction by animateFloatAsState(
-        targetValue = if (checked) 1f else 0f,
-        animationSpec = spring(stiffness = 1000f),
-        label = "fraction"
-    )
-
-    // 自建 backdrop：轨道层作为采样源，始终活跃
-    val trackBackdrop = rememberLayerBackdrop()
-
-    Box(
-        modifier = Modifier
-            .size(trackWidth, trackHeight)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-            ) { onCheckedChange(!checked) },
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        // 轨道：layerBackdrop 捕获 + 颜色过渡
-        Box(
-            modifier = Modifier
-                .size(trackWidth, trackHeight)
-                .layerBackdrop(trackBackdrop)
-                .clip(Capsule())
-                .drawBehind {
-                    drawRect(androidx.compose.ui.graphics.lerp(trackColor, accentColor, fraction))
-                }
-        )
-
-        // 滑块：采样 trackBackdrop（轨道内容）做毛玻璃 + lens 折射
-        Box(
-            modifier = Modifier
-                .graphicsLayer {
-                    val padding = 2.dp.toPx()
-                    translationX = androidx.compose.ui.util.lerp(padding, padding + dragWidth.toPx(), fraction)
-                }
-                .drawBackdrop(
-                    backdrop = rememberBackdrop(trackBackdrop) { drawBackdrop ->
-                        scale(0.75f, 0.75f) { drawBackdrop() }
-                    },
-                    shape = { Capsule() },
-                    effects = {
-                        blur(8.dp.toPx() * (1f - fraction))
-                        lens(5.dp.toPx() * fraction, 10.dp.toPx() * fraction, chromaticAberration = true)
-                    },
-                    highlight = {
-                        Highlight.Ambient.copy(
-                            width = Highlight.Ambient.width / 1.5f,
-                            blurRadius = Highlight.Ambient.blurRadius / 1.5f,
-                            alpha = fraction
-                        )
-                    },
-                    shadow = { Shadow(radius = 4.dp, color = Color.Black.copy(alpha = 0.05f)) },
-                    innerShadow = { InnerShadow(radius = 4.dp * fraction, alpha = fraction) },
-                    onDrawSurface = { drawRect(Color.White.copy(alpha = 1f - fraction * 0.3f)) }
-                )
-                .size(thumbSize)
+        // 右侧：官方 LiquidToggle 玻璃态开关
+        LiquidToggle(
+            selected = { item.checked },
+            onSelect = onCheckedChange,
+            backdrop = backdrop,
         )
     }
 }
