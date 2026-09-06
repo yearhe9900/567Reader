@@ -98,7 +98,8 @@ fun LiquidToggle(
                 fraction =
                     if (isLtr) (fraction + delta).fastCoerceIn(0f, 1f)
                     else (fraction - delta).fastCoerceIn(0f, 1f)
-            }
+            },
+            minHoldDuration = 130L
         )
     }
     LaunchedEffect(dampedDragAnimation) {

@@ -11,6 +11,7 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -28,6 +29,14 @@ class DampedDragAnimation(
     val onDragStarted: DampedDragAnimation.(position: Offset) -> Unit,
     val onDragStopped: DampedDragAnimation.() -> Unit,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
+    /**
+     * 最短按压保持时长（ms）。
+     * 放大（scaleX/scaleY）走的是慢弹簧（刚度 250，约 400ms 才稳定），
+     * 快速点击（~100ms）松手后 release 立刻反向，放大动画来不及跑出来 → 点击看不到滑块放大。
+     * 设 >0 时，release 会等够这个时长再反向，让点击也能完整跑出放大+玻璃态；拖动不受影响。
+     * 默认 0（保持官方 demo 行为）。
+     */
+    val minHoldDuration: Long = 0L,
 ) {
 
     private val valueAnimationSpec =
@@ -55,6 +64,9 @@ class DampedDragAnimation(
     private val mutatorMutex = MutatorMutex()
 
     private val velocityTracker = VelocityTracker()
+
+    /** press() 触发时刻，用于 release 计算已按压时长，决定是否需要补齐 minHoldDuration */
+    private var pressStartTime = 0L
 
     val value: Float get() = valueAnimation.value
     val progress: Float get() = (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
@@ -100,6 +112,7 @@ class DampedDragAnimation(
 
     fun press() {
         velocityTracker.resetTracking()
+        pressStartTime = Clock.System.now().toEpochMilliseconds()
         animationScope.launch {
             launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
             launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
@@ -110,6 +123,13 @@ class DampedDragAnimation(
     fun release() {
         animationScope.launch {
             awaitFrame()
+            // 点击场景中手指停留极短，放大动画来不及跑出；补齐最短按压时长再反向，
+            // 让点击也能看到完整的滑块放大 + 玻璃态。拖动（停留久）不受此影响。
+            if (minHoldDuration > 0L) {
+                val heldMs = Clock.System.now().toEpochMilliseconds() - pressStartTime
+                val remaining = minHoldDuration - heldMs
+                if (remaining > 0L) delay(remaining)
+            }
             if (value != targetValue) {
                 val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
                 snapshotFlow { valueAnimation.value }
