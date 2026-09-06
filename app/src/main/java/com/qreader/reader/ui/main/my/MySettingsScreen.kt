@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Brush
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.utils.ColorUtils
 import androidx.compose.foundation.layout.Box
@@ -137,14 +138,26 @@ fun MySettingsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // ── 背景采样层：纯色背景 + layerBackdrop，始终活跃 ──
-        // 官方 demo 用壁纸 Image 做 layerBackdrop，这里用纯色背景替代。
-        // 此层只绘制纯色，不含任何 drawBackdrop 调用，不会循环捕获。
-        // 上方的 LiquidToggle / ThemeModeDialogOverlay 的 drawBackdrop 采样此层内容。
+        // ── 背景采样层：渐变背景 + layerBackdrop，始终活跃 ──
+        // 官方 demo 用壁纸 Image 做 layerBackdrop，这里用微妙渐变替代。
+        // 纯色 blur 后仍是纯色（玻璃效果不可见），渐变提供视觉变化让 blur/lens 生效。
+        // 此层不含任何 drawBackdrop 调用，不会循环捕获。
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(pageBackgroundColor)
+                .background(
+                    Brush.verticalGradient(
+                        colors = if (isLightTheme) listOf(
+                            pageBackgroundColor,
+                            Color(0xFFE8E0F0), // 微妙紫调
+                            pageBackgroundColor,
+                        ) else listOf(
+                            pageBackgroundColor,
+                            Color(0xFF1A1025), // 深色微妙紫调
+                            pageBackgroundColor,
+                        )
+                    )
+                )
                 .layerBackdrop(backdrop)
         )
 
