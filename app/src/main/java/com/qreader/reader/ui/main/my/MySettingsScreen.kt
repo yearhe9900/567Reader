@@ -137,13 +137,13 @@ fun MySettingsScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // 页面内容：包在 layerBackdrop 内，作为主题弹框玻璃的模糊源。
-        // 仅弹框打开时启用 layerBackdrop，避免常驻 GPU 离屏开销。
+        // 页面内容：始终启用 layerBackdrop，供 LiquidToggle 的 drawBackdrop 采样。
+        // 官方 demo 的 backdrop 也是始终活跃的（采样壁纸背景）。
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(pageBackgroundColor)
-                .then(if (themeDialogOpen) Modifier.layerBackdrop(backdrop) else Modifier)
+                .layerBackdrop(backdrop)
         ) {
             // 可滚动内容容器（卡片之间 16dp 间距，靠卡片本身分组，无分类标题）
             Column(
