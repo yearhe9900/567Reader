@@ -198,9 +198,12 @@ fun LiquidToggle(
                         scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                         scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                     },
+                    // 官方 demo 的背景是丰富壁纸，surface 不透明白色即可借高光/阴影呈现玻璃感。
+                    // 本页背景为柔和渐变，若 rest 态 alpha=1 会完全盖住 blur/lens 采样结果，
+                    // 导致点击/静止时看不到玻璃折射。降低静止透明度，让 backdrop blur 始终可见。
                     onDrawSurface = {
                         val progress = dampedDragAnimation.pressProgress
-                        drawRect(Color.White.copy(alpha = 1f - progress))
+                        drawRect(Color.White.copy(alpha = 0.6f - progress * 0.25f))
                     }
                 )
                 .size(40f.dp, 24f.dp)
