@@ -38,7 +38,6 @@ suspend fun PointerInputScope.inspectDragGestures(
         val drag = initialDown
 
         onDragStart(down)
-        onDrag(drag, Offset.Zero)
 
         var totalDragX = 0f
         var totalDragY = 0f
@@ -52,7 +51,7 @@ suspend fun PointerInputScope.inspectDragGestures(
                     totalDragY += dragAmount.y
                     // 只有累计位移超过阈值才报告拖拽
                     if (abs(totalDragX) > tapSlop || abs(totalDragY) > tapSlop) {
-                        onDrag(change, dragAmount)
+                        onDrag(change)
                     }
                 }
             )
