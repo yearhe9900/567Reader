@@ -222,23 +222,13 @@ fun MainScreen(
         if (pagerState.settledPage == target) return@LaunchedEffect
         isProgrammaticScroll = true
         try {
-            if (abs(pagerState.settledPage - target) > 1) {
-                // 跨页：直接跳转，不让页面从中间的发现页「掠过」（观感差），
-                // 改为瞬跳 + 目标页淡入，兼顾干脆与平滑。
-                pagerState.scrollToPage(target)
-                pageFade.snapTo(CROSS_PAGE_FADE_START)
-                pageFade.animateTo(
-                    1f,
-                    tween(durationMillis = 160, easing = FastOutLinearInEasing)
-                )
-            } else {
-                // 相邻页：短促 tween 平滑滑过。用 tween 而非默认 spring：
-                // spring 收尾段速度衰减极慢，长距离下会明显拖沓。
-                pagerState.animateScrollToPage(
-                    page = target,
-                    animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing),
-                )
-            }
+            // 所有点击切换统一瞬跳 + 淡入，避免 animateScrollToPage 的程序驱动滚动卡顿
+            pagerState.scrollToPage(target)
+            pageFade.snapTo(CROSS_PAGE_FADE_START)
+            pageFade.animateTo(
+                1f,
+                tween(durationMillis = 160, easing = FastOutLinearInEasing)
+            )
         } finally {
             isProgrammaticScroll = false
         }
