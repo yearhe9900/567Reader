@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -41,10 +39,8 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -55,25 +51,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
+import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
-import com.qreader.reader.data.entities.Book
-import com.qreader.reader.lib.theme.accentColor
-import com.qreader.reader.lib.theme.backgroundColor
-import com.qreader.reader.lib.theme.primaryColor
-import com.qreader.reader.lib.theme.primaryTextColor
+import com.qreader.reader.lib.theme.MaterialValueHelperKt
+import com.qreader.reader.lib.theme.ThemeStore
 import kotlinx.coroutines.flow.distinctUntilChanged
 import splitties.init.appCtx
 
@@ -92,12 +83,15 @@ fun SearchScreen(
     val searchScopeState by viewModel.searchScope.stateLiveData.observeAsState("")
     val searchFinishEmpty by viewModel.searchFinishLiveData.observeAsState(false)
 
+    val context = LocalContext.current
+    val primaryColor = Color(ThemeStore.primaryColor(context))
+    val accentColor = Color(ThemeStore.accentColor(context))
+    val bgColor = Color(ThemeStore.backgroundColor(context))
+
     var query by remember { mutableStateOf("") }
     var showInputHelp by remember { mutableStateOf(true) }
     var historyKeywords by remember { mutableStateOf(emptyList<SearchKeyword>()) }
     var matchedBooks by remember { mutableStateOf(emptyList<Book>()) }
-
-    val context = LocalContext.current
 
     // 收集搜索历史
     LaunchedEffect(query) {
@@ -188,6 +182,7 @@ fun SearchScreen(
                 InputHelpContent(
                     historyKeywords = historyKeywords,
                     matchedBooks = matchedBooks,
+                    bgColor = bgColor,
                     onHistoryClick = { keyword ->
                         query = keyword
                         viewModel.saveSearchKey(keyword)
@@ -247,6 +242,7 @@ fun SearchScreen(
                                 SearchBookItem(
                                     searchBook = searchBook,
                                     isInBookshelf = viewModel.isInBookShelf(searchBook),
+                                    primaryColor = primaryColor,
                                     onClick = {
                                         onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
                                     }
@@ -295,7 +291,7 @@ fun SearchScreen(
                 containerColor = accentColor
             ) {
                 Icon(
-                    imageVector = if (isSearching) Icons.Default.Stop else Icons.Default.Search,
+                    imageVector = if (isSearching) Icons.Default.Close else Icons.Default.Search,
                     contentDescription = if (isSearching) stringResource(R.string.stop) else "继续搜索"
                 )
             }
@@ -308,6 +304,7 @@ fun SearchScreen(
 private fun InputHelpContent(
     historyKeywords: List<SearchKeyword>,
     matchedBooks: List<Book>,
+    bgColor: Color,
     onHistoryClick: (String) -> Unit,
     onHistoryDelete: (SearchKeyword) -> Unit,
     onClearHistory: () -> Unit,
@@ -316,7 +313,7 @@ private fun InputHelpContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(bgColor)
             .navigationBarsPadding(),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
@@ -408,6 +405,7 @@ private fun FilletText(
 private fun SearchBookItem(
     searchBook: SearchBook,
     isInBookshelf: Boolean,
+    primaryColor: Color,
     onClick: () -> Unit
 ) {
     Row(
@@ -417,19 +415,6 @@ private fun SearchBookItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 封面
-        if (!searchBook.coverUrl.isNullOrEmpty()) {
-            AsyncImage(
-                model = searchBook.coverUrl,
-                contentDescription = searchBook.name,
-                modifier = Modifier
-                    .size(56.dp, 75.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-        }
-
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
@@ -471,10 +456,11 @@ private fun SearchBookItem(
             )
 
             // 最新章节
-            if (!searchBook.latestChapterTitle.isNullOrEmpty()) {
+            val latestChapter = searchBook.latestChapterTitle
+            if (!latestChapter.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = stringResource(R.string.lasted_show, searchBook.latestChapterTitle ?: ""),
+                    text = stringResource(R.string.lasted_show, latestChapter),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -483,7 +469,8 @@ private fun SearchBookItem(
             }
 
             // 简介
-            if (!searchBook.intro.isNullOrEmpty()) {
+            val intro = searchBook.intro
+            if (!intro.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = searchBook.trimIntro(appCtx),
