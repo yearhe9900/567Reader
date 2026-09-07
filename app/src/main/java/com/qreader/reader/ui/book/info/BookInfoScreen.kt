@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +64,9 @@ import com.qreader.reader.model.BookCover
 import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * 书籍信息 Compose 页面。
@@ -137,6 +141,7 @@ fun BookInfoScreen(
     val summaryColor = Color(context.getColor(R.color.tv_text_summary))
     var isRefreshing by remember { mutableStateOf(false) }
     val backdrop = rememberLayerBackdrop()
+    val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = modifier.fillMaxSize()) {
         // ── 模糊背景（无 padding，覆盖整个区域）──
@@ -182,9 +187,17 @@ fun BookInfoScreen(
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = {
-                    isRefreshing = true
-                    onRefresh()
-                    isRefreshing = false
+                    coroutineScope.launch {
+                        isRefreshing = true
+                        try {
+                            // 设置 5 秒超时，超时后自动退出刷新状态
+                            withTimeout(5000L) {
+                                onRefresh()
+                            }
+                        } finally {
+                            isRefreshing = false
+                        }
+                    }
                 },
                 modifier = Modifier
                     .weight(1f)
