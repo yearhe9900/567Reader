@@ -386,6 +386,36 @@ class BookInfoActivity :
                         }
                     }
                 },
+                onLabelClick = { kind ->
+                    viewModel.getBook()?.let { book ->
+                        viewModel.bookSource?.let { source ->
+                            SourceCallBack.callBackBtn(
+                                this@BookInfoActivity,
+                                SourceCallBack.CLICK_BOOK_LABEL,
+                                source,
+                                book,
+                                null,
+                                result = kind
+                            ) {
+                                SearchActivity.start(this@BookInfoActivity, source, kind)
+                            }
+                        } ?: SearchActivity.start(this@BookInfoActivity, kind)
+                    }
+                },
+                onLabelLongClick = { kind ->
+                    viewModel.getBook()?.let { book ->
+                        viewModel.bookSource?.let { source ->
+                            SourceCallBack.callBackBtn(
+                                this@BookInfoActivity,
+                                SourceCallBack.LONG_CLICK_BOOK_LABEL,
+                                source,
+                                book,
+                                null,
+                                result = kind
+                            )
+                        }
+                    }
+                },
                 onRefresh = { refreshBook() },
             )
         }

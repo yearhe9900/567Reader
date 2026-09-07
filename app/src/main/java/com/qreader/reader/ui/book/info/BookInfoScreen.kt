@@ -1,6 +1,7 @@
 package com.qreader.reader.ui.book.info
 
 import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,8 +22,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +47,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.qreader.reader.R
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.lib.theme.accentColor
+import com.qreader.reader.model.BookCover
 import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 
@@ -73,6 +80,8 @@ import com.qreader.reader.ui.widget.image.CoverImageView
  * @param onNameLongClick  书名长按
  * @param onAuthorClick    作者点击
  * @param onAuthorLongClick 作者长按
+ * @param onLabelClick     标签点击（用于搜索）
+ * @param onLabelLongClick 标签长按（用于 SourceCallBack）
  * @param onRefresh        下拉刷新
  */
 @Composable
@@ -100,6 +109,8 @@ fun BookInfoScreen(
     onNameLongClick: (() -> Unit)?,
     onAuthorClick: () -> Unit,
     onAuthorLongClick: (() -> Unit)?,
+    onLabelClick: ((String) -> Unit)?,
+    onLabelLongClick: ((String) -> Unit)?,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -108,48 +119,85 @@ fun BookInfoScreen(
     val bottomBg = Color(context.getColor(R.color.background_menu))
     val textColor = Color(context.getColor(R.color.primaryText))
     val summaryColor = Color(context.getColor(R.color.tv_text_summary))
+    var isRefreshing by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // ── 可滚动内容区 ──
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
+        // ── 可滚动内容区（支持拉动刷新）──
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                onRefresh()
+                // 由外部通过 ViewModel 控制刷新完成状态，这里简单延迟
+                isRefreshing = false
+            },
+            modifier = Modifier.weight(1f),
         ) {
-            // ── 封面区域：渐变背景 + 居中封面 ──
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+            // ── 封面区域：模糊背景 + 渐变遮罩 + 居中封面 ──
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.3f),
-                                bgColor,
-                            )
-                        )
-                    )
-                    .padding(top = 60.dp, bottom = 16.dp),
-                contentAlignment = Alignment.Center,
+                    .height(280.dp),
             ) {
+                // 模糊背景图
                 AndroidView(
                     factory = { ctx ->
-                        CoverImageView(ctx).apply {
-                            layoutParams = FrameLayout.LayoutParams(
-                                110.dpToPx(ctx), 160.dpToPx(ctx)
-                            )
-                            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                        ImageView(ctx).apply {
+                            scaleType = ImageView.ScaleType.CENTER_CROP
                             setImageResource(R.drawable.image_cover_default)
-                            setOnClickListener { onCoverClick() }
-                            setOnLongClickListener { onCoverLongClick(); true }
                         }
                     },
                     update = { view ->
-                        book?.let { view.load(it) }
+                        book?.let { b ->
+                            BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
+                                .into(view)
+                        }
                     },
-                    modifier = Modifier
-                        .size(110.dp, 160.dp)
-                        .clip(RoundedCornerShape(5.dp))
+                    modifier = Modifier.fillMaxSize()
                 )
+                // 渐变遮罩
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.4f),
+                                    bgColor,
+                                )
+                            )
+                        )
+                )
+                // 居中封面
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AndroidView(
+                        factory = { ctx ->
+                            CoverImageView(ctx).apply {
+                                layoutParams = FrameLayout.LayoutParams(
+                                    110.dpToPx(ctx), 160.dpToPx(ctx)
+                                )
+                                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                setImageResource(R.drawable.image_cover_default)
+                                setOnClickListener { onCoverClick() }
+                                setOnLongClickListener { onCoverLongClick(); true }
+                            }
+                        },
+                        update = { view ->
+                            book?.let { view.load(it) }
+                        },
+                        modifier = Modifier
+                            .size(110.dp, 160.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                    )
+                }
             }
 
             // ── 信息区 ──
@@ -184,11 +232,27 @@ fun BookInfoScreen(
                     AndroidView(
                         factory = { ctx ->
                             LabelsBar(ctx).apply {
-                                setLabels(kinds)
+                                setLabels(
+                                    kinds,
+                                    onLabelClick?.let { click ->
+                                        { kind -> click(kind) }
+                                    },
+                                    onLabelLongClick?.let { longClick ->
+                                        { kind -> longClick(kind); true }
+                                    }
+                                )
                             }
                         },
                         update = { view ->
-                            view.setLabels(kinds)
+                            view.setLabels(
+                                kinds,
+                                onLabelClick?.let { click ->
+                                    { kind -> click(kind) }
+                                },
+                                onLabelLongClick?.let { longClick ->
+                                    { kind -> longClick(kind); true }
+                                }
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -315,6 +379,7 @@ fun BookInfoScreen(
                         .background(bgColor)
                         .padding(horizontal = 8.dp),
                 )
+            }
             }
         }
 
