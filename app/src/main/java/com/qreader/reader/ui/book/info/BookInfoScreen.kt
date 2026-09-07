@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,8 +28,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,10 +49,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.model.BookCover
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 
@@ -129,17 +135,351 @@ fun BookInfoScreen(
     val textColor = Color(context.getColor(R.color.primaryText))
     val summaryColor = Color(context.getColor(R.color.tv_text_summary))
     var isRefreshing by remember { mutableStateOf(false) }
+    val backdrop = rememberLayerBackdrop()
 
-    Column(modifier = modifier.fillMaxSize()) {
-        // ── 顶部标题栏（透明背景，深色主题）──
-        TopAppBar(
-            title = {
-                BasicText(
-                    text = stringResource(R.string.book_info),
-                    style = TextStyle(Color.White, 18.sp),
+    Box(modifier = modifier.fillMaxSize()) {
+        // ── 背景内容层（作为玻璃态采样源）──
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(backdrop)
+        ) {
+            // ── 可滚动内容区（支持拉动刷新）──
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    onRefresh()
+                    isRefreshing = false
+                },
+                modifier = Modifier.weight(1f),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // ── 封面区域：模糊背景 + 渐变遮罩 + 居中封面 ──
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(240.dp),
+                    ) {
+                        // 模糊背景图
+                        AndroidView(
+                            factory = { ctx ->
+                                ImageView(ctx).apply {
+                                    scaleType = ImageView.ScaleType.CENTER_CROP
+                                    setImageResource(R.drawable.image_cover_default)
+                                }
+                            },
+                            update = { view ->
+                                book?.let { b ->
+                                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
+                                        .into(view)
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // 渐变遮罩
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Black.copy(alpha = 0.4f),
+                                            bgColor,
+                                        )
+                                    )
+                                )
+                        )
+                        // 居中封面
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AndroidView(
+                                factory = { ctx ->
+                                    CoverImageView(ctx).apply {
+                                        layoutParams = FrameLayout.LayoutParams(
+                                            110.dpToPx(ctx), 160.dpToPx(ctx)
+                                        )
+                                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                        setImageResource(R.drawable.image_cover_default)
+                                        setOnClickListener { onCoverClick() }
+                                        setOnLongClickListener { onCoverLongClick(); true }
+                                    }
+                                },
+                                update = { view ->
+                                    book?.let { view.load(it) }
+                                },
+                                modifier = Modifier
+                                    .size(110.dp, 160.dp)
+                                    .clip(RoundedCornerShape(5.dp))
+                            )
+                        }
+                    }
+
+                    // ── 信息区 ──
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(bgColor)
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                    ) {
+                        // 书名
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            BasicText(
+                                text = bookName,
+                                style = TextStyle(textColor, 18.sp, FontWeight.Medium),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = onNameClick,
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            )
+                        }
+
+                        // 标签（kinds）
+                        if (kinds.isNotEmpty()) {
+                            AndroidView(
+                                factory = { ctx ->
+                                    LabelsBar(ctx).apply {
+                                        setLabels(
+                                            kinds,
+                                            onLabelClick?.let { click ->
+                                                { kind -> click(kind) }
+                                            },
+                                            onLabelLongClick?.let { longClick ->
+                                                { kind -> longClick(kind); true }
+                                            }
+                                        )
+                                    }
+                                },
+                                update = { view ->
+                                    view.setLabels(
+                                        kinds,
+                                        onLabelClick?.let { click ->
+                                            { kind -> click(kind) }
+                                        },
+                                        onLabelLongClick?.let { longClick ->
+                                            { kind -> longClick(kind); true }
+                                        }
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // 作者行
+                        InfoRow(
+                            iconRes = R.drawable.ic_author,
+                            text = author,
+                            summaryColor = summaryColor,
+                            onClick = onAuthorClick,
+                        )
+
+                        // 来源行
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_web_outline),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.sp.value.dp),
+                                colorFilter = ColorFilter.tint(summaryColor),
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            BasicText(
+                                text = origin,
+                                style = TextStyle(summaryColor, 13.sp),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = onOriginClick,
+                                    ),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            AccentButton(
+                                text = stringResource(R.string.change_origin),
+                                onClick = onChangeSource,
+                            )
+                        }
+
+                        // 最新章节行
+                        InfoRow(
+                            iconRes = R.drawable.ic_book_last,
+                            text = latestChapter,
+                            summaryColor = summaryColor,
+                        )
+
+                        // 分组行
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_groups),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.sp.value.dp),
+                                colorFilter = ColorFilter.tint(summaryColor),
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            BasicText(
+                                text = groupText,
+                                style = TextStyle(summaryColor, 13.sp),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            AccentButton(
+                                text = stringResource(R.string.change_group),
+                                onClick = onGroupChange,
+                            )
+                        }
+
+                        // 目录行
+                        if (tocVisible) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_folder_open),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.sp.value.dp),
+                                    colorFilter = ColorFilter.tint(summaryColor),
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                BasicText(
+                                    text = tocText,
+                                    style = TextStyle(summaryColor, 13.sp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                AccentButton(
+                                    text = stringResource(R.string.view_toc),
+                                    onClick = onTocClick,
+                                )
+                            }
+                        }
+                    }
+
+                    // ── 简介区域 ──
+                    if (introContainer != null) {
+                        AndroidView(
+                            factory = { introContainer },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(bgColor)
+                                .padding(horizontal = 8.dp),
+                        )
+                    }
+                }
+            }
+
+            // ── 底部分割线 + 操作栏 ──
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(context.getColor(R.color.bg_divider_line)))
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(bottomBg)
+                    .navigationBarsPadding(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                // 书架按钮
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onShelfClick,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = shelfText,
+                        style = TextStyle(textColor, 15.sp),
+                    )
+                }
+                // 阅读按钮
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color(context.accentColor))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onReadClick,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = stringResource(R.string.reading),
+                        style = TextStyle(Color.White, 15.sp),
+                    )
+                }
+            }
+        }
+
+        // ── 玻璃态标题栏（悬浮在顶部）──
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RoundedCornerShape(0.dp) },
+                    effects = {
+                        vibrancy()
+                        blur(GlassConfig.blur.toPx())
+                        lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                    },
+                    onDrawSurface = { drawRect(GlassConfig.containerColor(false)) }
                 )
-            },
-            navigationIcon = {
+                .statusBarsPadding()
+                .height(56.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -147,321 +487,10 @@ fun BookInfoScreen(
                         tint = Color.White,
                     )
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-            ),
-        )
-
-        // ── 可滚动内容区（支持拉动刷新）──
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                isRefreshing = true
-                onRefresh()
-                // 由外部通过 ViewModel 控制刷新完成状态，这里简单延迟
-                isRefreshing = false
-            },
-            modifier = Modifier.weight(1f),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-            ) {
-            // ── 封面区域：模糊背景 + 渐变遮罩 + 居中封面 ──
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp),
-            ) {
-                // 模糊背景图
-                AndroidView(
-                    factory = { ctx ->
-                        ImageView(ctx).apply {
-                            scaleType = ImageView.ScaleType.CENTER_CROP
-                            setImageResource(R.drawable.image_cover_default)
-                        }
-                    },
-                    update = { view ->
-                        book?.let { b ->
-                            BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
-                                .into(view)
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-                // 渐变遮罩
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Black.copy(alpha = 0.4f),
-                                    bgColor,
-                                )
-                            )
-                        )
-                )
-                // 居中封面
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    AndroidView(
-                        factory = { ctx ->
-                            CoverImageView(ctx).apply {
-                                layoutParams = FrameLayout.LayoutParams(
-                                    110.dpToPx(ctx), 160.dpToPx(ctx)
-                                )
-                                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                                setImageResource(R.drawable.image_cover_default)
-                                setOnClickListener { onCoverClick() }
-                                setOnLongClickListener { onCoverLongClick(); true }
-                            }
-                        },
-                        update = { view ->
-                            book?.let { view.load(it) }
-                        },
-                        modifier = Modifier
-                            .size(110.dp, 160.dp)
-                            .clip(RoundedCornerShape(5.dp))
-                    )
-                }
-            }
-
-            // ── 信息区 ──
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(bgColor)
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
-            ) {
-                // 书名
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    BasicText(
-                        text = bookName,
-                        style = TextStyle(textColor, 18.sp, FontWeight.Medium),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = onNameClick,
-                            )
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                    )
-                }
-
-                // 标签（kinds）
-                if (kinds.isNotEmpty()) {
-                    AndroidView(
-                        factory = { ctx ->
-                            LabelsBar(ctx).apply {
-                                setLabels(
-                                    kinds,
-                                    onLabelClick?.let { click ->
-                                        { kind -> click(kind) }
-                                    },
-                                    onLabelLongClick?.let { longClick ->
-                                        { kind -> longClick(kind); true }
-                                    }
-                                )
-                            }
-                        },
-                        update = { view ->
-                            view.setLabels(
-                                kinds,
-                                onLabelClick?.let { click ->
-                                    { kind -> click(kind) }
-                                },
-                                onLabelLongClick?.let { longClick ->
-                                    { kind -> longClick(kind); true }
-                                }
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // 作者行
-                InfoRow(
-                    iconRes = R.drawable.ic_author,
-                    text = author,
-                    summaryColor = summaryColor,
-                    onClick = onAuthorClick,
-                )
-
-                // 来源行
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.ic_web_outline),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.sp.value.dp),
-                        colorFilter = ColorFilter.tint(summaryColor),
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    BasicText(
-                        text = origin,
-                        style = TextStyle(summaryColor, 13.sp),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = onOriginClick,
-                            ),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    AccentButton(
-                        text = stringResource(R.string.change_origin),
-                        onClick = onChangeSource,
-                    )
-                }
-
-                // 最新章节行
-                InfoRow(
-                    iconRes = R.drawable.ic_book_last,
-                    text = latestChapter,
-                    summaryColor = summaryColor,
-                )
-
-                // 分组行
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.ic_groups),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.sp.value.dp),
-                        colorFilter = ColorFilter.tint(summaryColor),
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    BasicText(
-                        text = groupText,
-                        style = TextStyle(summaryColor, 13.sp),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    AccentButton(
-                        text = stringResource(R.string.change_group),
-                        onClick = onGroupChange,
-                    )
-                }
-
-                // 目录行
-                if (tocVisible) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_folder_open),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.sp.value.dp),
-                            colorFilter = ColorFilter.tint(summaryColor),
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        BasicText(
-                            text = tocText,
-                            style = TextStyle(summaryColor, 13.sp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        AccentButton(
-                            text = stringResource(R.string.view_toc),
-                            onClick = onTocClick,
-                        )
-                    }
-                }
-            }
-
-            // ── 简介区域 ──
-            if (introContainer != null) {
-                AndroidView(
-                    factory = { introContainer },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(bgColor)
-                        .padding(horizontal = 8.dp),
-                )
-            }
-            }
-        }
-
-        // ── 底部分割线 + 操作栏 ──
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color(context.getColor(R.color.bg_divider_line)))
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(bottomBg)
-                .navigationBarsPadding(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            // 书架按钮
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onShelfClick,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
                 BasicText(
-                    text = shelfText,
-                    style = TextStyle(textColor, 15.sp),
-                )
-            }
-            // 阅读按钮
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(context.accentColor))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onReadClick,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                BasicText(
-                    text = stringResource(R.string.reading),
-                    style = TextStyle(Color.White, 15.sp),
+                    text = stringResource(R.string.book_info),
+                    style = TextStyle(Color.White, 18.sp),
+                    modifier = Modifier.padding(start = 8.dp),
                 )
             }
         }
