@@ -130,6 +130,11 @@ fun BookInfoScreen(
     onLabelLongClick: ((String) -> Unit)?,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    deleteDialogOpen: Boolean = false,
+    deleteDialogShowCheckBox: Boolean = false,
+    deleteDialogCheckBoxChecked: Boolean = false,
+    onDeleteDialogConfirm: (Boolean) -> Unit = {},
+    onDeleteDialogCancel: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -503,6 +508,18 @@ fun BookInfoScreen(
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
+        }
+
+        // ── 删除确认弹框 ──
+        if (deleteDialogOpen) {
+            DeleteBookDialogOverlay(
+                backdrop = backdrop,
+                showCheckBox = deleteDialogShowCheckBox,
+                checkBoxText = if (deleteDialogShowCheckBox) stringResource(R.string.delete_book_file) else "",
+                checkBoxChecked = deleteDialogCheckBoxChecked,
+                onConfirm = onDeleteDialogConfirm,
+                onCancel = onDeleteDialogCancel,
+            )
         }
     }
 }

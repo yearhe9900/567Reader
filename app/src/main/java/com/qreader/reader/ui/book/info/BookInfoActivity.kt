@@ -2,8 +2,6 @@ package com.qreader.reader.ui.book.info
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -80,7 +78,6 @@ import com.qreader.reader.ui.login.SourceLoginActivity
 import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.ui.widget.dialog.VariableDialog
 import com.qreader.reader.ui.widget.dialog.WaitDialog
-import com.qreader.reader.ui.compose.GlassAlertDialog
 import com.qreader.reader.utils.ConvertUtils
 import com.qreader.reader.utils.FileDoc
 import com.qreader.reader.utils.StartActivityContract
@@ -128,6 +125,11 @@ class BookInfoActivity :
     private var uiTocVisible by mutableStateOf(true)
     private var uiShelfText by mutableStateOf("")
     private val uiKinds = mutableStateListOf<String>()
+
+    // ── 删除弹框状态 ──
+    private var deleteDialogOpen by mutableStateOf(false)
+    private var deleteDialogShowCheckBox by mutableStateOf(false)
+    private var deleteDialogCheckBoxChecked by mutableStateOf(false)
 
     // ── 简介容器（由 Activity 管理，Compose 通过 AndroidView 展示）──
     private lateinit var introContainer: FrameLayout
@@ -417,6 +419,27 @@ class BookInfoActivity :
                 },
                 onBack = { finish() },
                 onRefresh = { refreshBook() },
+                deleteDialogOpen = deleteDialogOpen,
+                deleteDialogShowCheckBox = deleteDialogShowCheckBox,
+                deleteDialogCheckBoxChecked = deleteDialogCheckBoxChecked,
+                onDeleteDialogConfirm = { checkBoxChecked ->
+                    deleteDialogOpen = false
+                    viewModel.getBook()?.let { book ->
+                        if (book.isLocal) {
+                            LocalConfig.deleteBookOriginal = checkBoxChecked
+                        }
+                        SourceCallBack.callBackBook(
+                            SourceCallBack.DEL_BOOK_SHELF,
+                            viewModel.bookSource,
+                            book
+                        )
+                        viewModel.delBook(LocalConfig.deleteBookOriginal) {
+                            setResult(RESULT_OK)
+                            finish()
+                        }
+                    }
+                },
+                onDeleteDialogCancel = { deleteDialogOpen = false },
             )
         }
 
@@ -892,46 +915,9 @@ class BookInfoActivity :
     private fun deleteBook() {
         viewModel.getBook()?.let { book ->
             if (LocalConfig.bookInfoDeleteAlert) {
-                val pageBitmap = try {
-                    val rootView = window.decorView
-                    if (rootView.width > 0 && rootView.height > 0) {
-                        Bitmap.createBitmap(
-                            rootView.width,
-                            rootView.height,
-                            Bitmap.Config.ARGB_8888
-                        ).also { rootView.draw(Canvas(it)) }
-                    } else {
-                        null
-                    }
-                } catch (_: Exception) {
-                    null
-                }
-                val dialog = GlassAlertDialog.newInstance(
-                    title = getString(R.string.draw),
-                    message = getString(R.string.sure_del),
-                    confirmText = getString(R.string.ok),
-                    cancelText = getString(R.string.cancel),
-                    showCheckBox = book.isLocal,
-                    checkBoxText = if (book.isLocal) getString(R.string.delete_book_file) else "",
-                    checkBoxChecked = LocalConfig.deleteBookOriginal,
-                    backdropBitmap = pageBitmap,
-                    onConfirm = { checkBoxChecked ->
-                        if (book.isLocal) {
-                            LocalConfig.deleteBookOriginal = checkBoxChecked
-                        }
-                        SourceCallBack.callBackBook(
-                            SourceCallBack.DEL_BOOK_SHELF,
-                            viewModel.bookSource,
-                            book
-                        )
-                        viewModel.delBook(LocalConfig.deleteBookOriginal) {
-                            setResult(RESULT_OK)
-                            finish()
-                        }
-                    },
-                    onCancel = {}
-                )
-                dialog.show(supportFragmentManager, "glass_delete_dialog")
+                deleteDialogShowCheckBox = book.isLocal
+                deleteDialogCheckBoxChecked = LocalConfig.deleteBookOriginal
+                deleteDialogOpen = true
             } else {
                 SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, viewModel.bookSource, book)
                 viewModel.delBook(LocalConfig.deleteBookOriginal) {
