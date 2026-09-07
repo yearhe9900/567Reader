@@ -206,7 +206,7 @@ fun BookInfoScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 20.dp), // 微调与模糊背景的间距
+                            .padding(top = 40.dp), // 微调与模糊背景的间距
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // 封面
