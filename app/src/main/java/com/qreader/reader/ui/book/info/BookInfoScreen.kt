@@ -84,6 +84,7 @@ import com.qreader.reader.ui.widget.image.CoverImageView
  * @param onLabelLongClick 标签长按（用于 SourceCallBack）
  * @param onRefresh        下拉刷新
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookInfoScreen(
     book: Book?,
