@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -203,12 +202,11 @@ fun BookInfoScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // ── 封面 + 信息整体区域（带顶部 padding）──
+                    // ── 封面 + 信息整体区域 ──
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-80).dp) // 向上偏移，使封面与模糊背景重叠
-                            .padding(top = 56.dp), // 为标题栏留空间
+                            .padding(top = 10.dp), // 微调与模糊背景的间距
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // 封面
