@@ -139,6 +139,39 @@ fun BookInfoScreen(
     val backdrop = rememberLayerBackdrop()
 
     Box(modifier = modifier.fillMaxSize()) {
+        // ── 模糊背景（无 padding，覆盖整个区域）──
+        AndroidView(
+            factory = { ctx ->
+                ImageView(ctx).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    setImageResource(R.drawable.image_cover_default)
+                }
+            },
+            update = { view ->
+                book?.let { b ->
+                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
+                        .into(view)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+        )
+        // 渐变遮罩
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.4f),
+                            bgColor,
+                        )
+                    )
+                )
+        )
+
         // ── 背景内容层（作为玻璃态采样源）──
         Column(
             modifier = Modifier
@@ -153,86 +186,55 @@ fun BookInfoScreen(
                     onRefresh()
                     isRefreshing = false
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 60.dp), // 为标题栏留空间，刷新指示器在此之下
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // ── 封面区域：模糊背景 + 渐变遮罩 + 居中封面 ──
+                    // ── 封面区域（留出模糊背景空间）──
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(240.dp),
+                            .height(180.dp), // 模糊背景高度 240dp - 标题栏 60dp
                     ) {
-                        // 模糊背景图（无 padding，覆盖整个区域）
-                        AndroidView(
-                            factory = { ctx ->
-                                ImageView(ctx).apply {
-                                    scaleType = ImageView.ScaleType.CENTER_CROP
-                                    setImageResource(R.drawable.image_cover_default)
-                                }
-                            },
-                            update = { view ->
-                                book?.let { b ->
-                                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
-                                        .into(view)
-                                }
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        // 渐变遮罩
+                        // 居中封面
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Black.copy(alpha = 0.4f),
-                                            bgColor,
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AndroidView(
+                                factory = { ctx ->
+                                    CoverImageView(ctx).apply {
+                                        layoutParams = FrameLayout.LayoutParams(
+                                            110.dpToPx(ctx), 160.dpToPx(ctx)
                                         )
-                                    )
-                                )
-                        )
+                                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                        setImageResource(R.drawable.image_cover_default)
+                                        setOnClickListener { onCoverClick() }
+                                        setOnLongClickListener { onCoverLongClick(); true }
+                                    }
+                                },
+                                update = { view ->
+                                    book?.let { view.load(it) }
+                                },
+                                modifier = Modifier
+                                    .size(110.dp, 160.dp)
+                                    .clip(RoundedCornerShape(5.dp))
+                            )
+                        }
                     }
 
-                    // ── 封面 + 信息整体区域（带顶部 padding）──
+                    // ── 信息区 ──
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-80).dp) // 向上偏移，使封面与模糊背景重叠
-                            .padding(top = 56.dp), // 为标题栏留空间
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                            .background(bgColor)
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        // 封面
-                        AndroidView(
-                            factory = { ctx ->
-                                CoverImageView(ctx).apply {
-                                    layoutParams = FrameLayout.LayoutParams(
-                                        110.dpToPx(ctx), 160.dpToPx(ctx)
-                                    )
-                                    scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                                    setImageResource(R.drawable.image_cover_default)
-                                    setOnClickListener { onCoverClick() }
-                                    setOnLongClickListener { onCoverLongClick(); true }
-                                }
-                            },
-                            update = { view ->
-                                book?.let { view.load(it) }
-                            },
-                            modifier = Modifier
-                                .size(110.dp, 160.dp)
-                                .clip(RoundedCornerShape(5.dp))
-                        )
-
-                        // ── 信息区 ──
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(bgColor)
-                                .padding(horizontal = 8.dp, vertical = 8.dp)
-                        ) {
                         // 书名
                         Box(
                             modifier = Modifier.fillMaxWidth(),
@@ -393,7 +395,6 @@ fun BookInfoScreen(
                                     onClick = onTocClick,
                                 )
                             }
-                        }
                         }
                     }
 
