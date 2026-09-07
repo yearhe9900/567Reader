@@ -66,7 +66,6 @@ import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 
 /**
  * 书籍信息 Compose 页面。
@@ -189,64 +188,56 @@ fun BookInfoScreen(
                 onRefresh = {
                     coroutineScope.launch {
                         isRefreshing = true
-                        try {
-                            // 设置 5 秒超时，超时后自动退出刷新状态
-                            withTimeout(5000L) {
-                                onRefresh()
-                            }
-                        } finally {
-                            isRefreshing = false
-                        }
+                        onRefresh()
+                        // 等待至少 1 秒让刷新动画显示，但不超过 5 秒
+                        delay(1000L)
+                        isRefreshing = false
                     }
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .padding(top = 60.dp), // 为标题栏留空间，刷新指示器在此之下
+                    .padding(top = 70.dp), // 为标题栏留空间，刷新指示器在此之下
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // ── 封面区域（留出模糊背景空间）──
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp), // 模糊背景高度 240dp - 标题栏 60dp
-                    ) {
-                        // 居中封面
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            AndroidView(
-                                factory = { ctx ->
-                                    CoverImageView(ctx).apply {
-                                        layoutParams = FrameLayout.LayoutParams(
-                                            110.dpToPx(ctx), 160.dpToPx(ctx)
-                                        )
-                                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                                        setImageResource(R.drawable.image_cover_default)
-                                        setOnClickListener { onCoverClick() }
-                                        setOnLongClickListener { onCoverLongClick(); true }
-                                    }
-                                },
-                                update = { view ->
-                                    book?.let { view.load(it) }
-                                },
-                                modifier = Modifier
-                                    .size(110.dp, 160.dp)
-                                    .clip(RoundedCornerShape(5.dp))
-                            )
-                        }
-                    }
-
-                    // ── 信息区 ──
+                    // ── 封面 + 信息整体区域 ──
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(bgColor)
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                            .padding(top = 70.dp) // 为标题栏留空间
+                            .offset(y = (-80).dp), // 向上偏移，使封面与模糊背景重叠
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        // 封面
+                        AndroidView(
+                            factory = { ctx ->
+                                CoverImageView(ctx).apply {
+                                    layoutParams = FrameLayout.LayoutParams(
+                                        110.dpToPx(ctx), 160.dpToPx(ctx)
+                                    )
+                                    scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                    setImageResource(R.drawable.image_cover_default)
+                                    setOnClickListener { onCoverClick() }
+                                    setOnLongClickListener { onCoverLongClick(); true }
+                                }
+                            },
+                            update = { view ->
+                                book?.let { view.load(it) }
+                            },
+                            modifier = Modifier
+                                .size(110.dp, 160.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                        )
+
+                        // ── 信息区 ──
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(bgColor)
+                                .padding(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         // 书名
                         Box(
@@ -409,6 +400,7 @@ fun BookInfoScreen(
                                 )
                             }
                         }
+                    }
                     }
 
                     // ── 简介区域 ──
