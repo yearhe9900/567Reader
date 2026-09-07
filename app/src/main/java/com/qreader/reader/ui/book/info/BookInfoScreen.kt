@@ -207,8 +207,7 @@ fun BookInfoScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 70.dp) // 为标题栏留空间
-                            .offset(y = (-80).dp), // 向上偏移，使封面与模糊背景重叠
+                            .offset(y = (-10).dp), // 微调位置，使封面与模糊背景自然重叠
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // 封面
