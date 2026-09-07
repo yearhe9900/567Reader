@@ -143,7 +143,7 @@ fun BookInfoScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp),
+                    .height(240.dp),
             ) {
                 // 模糊背景图
                 AndroidView(
