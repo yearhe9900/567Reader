@@ -31,6 +31,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,19 +64,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
 import com.qreader.reader.lib.theme.isDarkTheme
-import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.lib.theme.ThemeStore
 import kotlinx.coroutines.flow.distinctUntilChanged
 import splitties.init.appCtx
 
@@ -94,16 +90,16 @@ fun SearchScreen(
 
     val context = LocalContext.current
     val isDark = context.isDarkTheme
-    val primaryColor = Color(android.graphics.Color.parseColor(
-        String.format("#%06X", 0xFFFFFF and com.qreader.reader.lib.theme.ThemeStore.primaryColor(context))
-    ))
+    val primaryColor = Color(ThemeStore.primaryColor(context))
+    val titleBarColor = primaryColor
+    val searchFieldColor = Color.White.copy(alpha = if (isDark) 0.14f else 0.25f)
+    val textColor = Color(ThemeStore.textColorPrimary(context))
     val focusManager = LocalFocusManager.current
 
     var query by remember { mutableStateOf("") }
     var showInputHelp by remember { mutableStateOf(true) }
     var historyKeywords by remember { mutableStateOf(emptyList<SearchKeyword>()) }
     var matchedBooks by remember { mutableStateOf(emptyList<Book>()) }
-    val backdrop = rememberLayerBackdrop()
 
     fun doSearch(key: String) {
         val trimmed = key.trim()
@@ -150,116 +146,18 @@ fun SearchScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // ── 背景内容层（作为玻璃态采样源）──
+        Column(modifier = Modifier.fillMaxSize()) {
+        // ── 标题栏（深色底 + 内嵌胶囊搜索框 + 菜单）──
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .layerBackdrop(backdrop)
-        ) {
-            // 为标题栏留空间
-            Spacer(modifier = Modifier.height(56.dp + 48.dp))
-
-            // 搜索进度条
-            AnimatedVisibility(
-                visible = isSearching,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = primaryColor
-                )
-            }
-
-            // 输入帮助（搜索历史 + 书架匹配）或搜索结果
-            if (showInputHelp) {
-                InputHelpContent(
-                    historyKeywords = historyKeywords,
-                    matchedBooks = matchedBooks,
-                    onHistoryClick = { keyword ->
-                        query = keyword
-                        doSearch(keyword)
-                    },
-                    onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
-                    onClearHistory = { viewModel.clearHistory() },
-                    onBookClick = { book -> onBookshelfBookClick(book) },
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                // 搜索结果列表
-                Box(modifier = Modifier.weight(1f)) {
-                    if (searchBooks.isEmpty() && !isSearching) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.empty),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 80.dp)
-                        ) {
-                            items(
-                                items = searchBooks,
-                                key = { "${it.name}-${it.author}-${it.bookUrl}" }
-                            ) { searchBook ->
-                                SearchBookItem(
-                                    searchBook = searchBook,
-                                    isInBookshelf = viewModel.isInBookShelf(searchBook),
-                                    primaryColor = primaryColor,
-                                    onClick = {
-                                        onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
-                                    }
-                                )
-                            }
-
-                            if (isSearching) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = primaryColor
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── 玻璃态标题栏（悬浮在顶部）──
-        Box(
-            modifier = Modifier
                 .fillMaxWidth()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedCornerShape(0.dp) },
-                    effects = {
-                        vibrancy()
-                        blur(GlassConfig.blur.toPx())
-                        lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                    },
-                    onDrawSurface = { drawRect(GlassConfig.containerColor(!isDark)) }
-                )
+                .background(titleBarColor)
                 .statusBarsPadding()
-                .height(56.dp),
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .height(56.dp)
                     .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -267,93 +165,156 @@ fun SearchScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back),
-                        tint = Color.White,
+                        tint = textColor,
                     )
                 }
-                Text(
-                    text = stringResource(R.string.search_book_key),
-                    style = TextStyle(Color.White, 18.sp),
-                    modifier = Modifier.padding(start = 4.dp),
-                )
-            }
-        }
-
-        // ── 搜索输入框（标题栏下方，用 BasicTextField 不会全屏展开）──
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(top = 56.dp)
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedCornerShape(0.dp) },
-                    effects = {
-                        blur(GlassConfig.blur.toPx())
-                    },
-                    onDrawSurface = { drawRect(GlassConfig.containerColor(!isDark)) }
-                )
-                .height(48.dp)
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                BasicTextField(
-                    value = query,
-                    onValueChange = { newQuery ->
-                        query = newQuery
-                        viewModel.stop()
-                        showInputHelp = true
-                    },
-                    modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(Color.White, 15.sp),
-                    cursorBrush = SolidColor(Color.White),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { doSearch(query) }),
-                    decorationBox = { innerTextField ->
-                        Box {
-                            if (query.isEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.search_book_key),
-                                    style = TextStyle(Color.White.copy(alpha = 0.5f), 15.sp)
-                                )
-                            }
-                            innerTextField()
-                        }
-                    }
-                )
-                if (query.isNotEmpty()) {
-                    IconButton(
-                        onClick = {
-                            query = ""
+                // 胶囊搜索框
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(searchFieldColor)
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = textColor.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    BasicTextField(
+                        value = query,
+                        onValueChange = { newQuery ->
+                            query = newQuery
                             viewModel.stop()
                             showInputHelp = true
                         },
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.weight(1f),
+                        textStyle = TextStyle(textColor, 15.sp),
+                        cursorBrush = SolidColor(textColor),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { doSearch(query) }),
+                        decorationBox = { innerTextField ->
+                            Box {
+                                if (query.isEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.search_book_key),
+                                        style = TextStyle(textColor.copy(alpha = 0.5f), 15.sp)
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                    if (query.isNotEmpty()) {
+                        IconButton(
+                            onClick = { doSearch(query) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = textColor.copy(alpha = 0.7f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+                // 三点菜单
+                IconButton(onClick = onSearchScopeClick) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = textColor,
+                    )
+                }
+            }
+        }
+
+        // 搜索进度条
+        AnimatedVisibility(
+            visible = isSearching,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+                color = primaryColor
+            )
+        }
+
+        // 输入帮助（搜索历史 + 书架匹配）或搜索结果
+        if (showInputHelp) {
+            InputHelpContent(
+                historyKeywords = historyKeywords,
+                matchedBooks = matchedBooks,
+                onHistoryClick = { keyword ->
+                    query = keyword
+                    doSearch(keyword)
+                },
+                onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
+                onClearHistory = { viewModel.clearHistory() },
+                onBookClick = { book -> onBookshelfBookClick(book) },
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            // 搜索结果列表
+            Box(modifier = Modifier.weight(1f)) {
+                if (searchBooks.isEmpty() && !isSearching) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.7f),
-                            modifier = Modifier.size(16.dp)
+                        Text(
+                            text = stringResource(R.string.empty),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 80.dp)
+                    ) {
+                        items(
+                            items = searchBooks,
+                            key = { "${it.name}-${it.author}-${it.bookUrl}" }
+                        ) { searchBook ->
+                            SearchBookItem(
+                                searchBook = searchBook,
+                                isInBookshelf = viewModel.isInBookShelf(searchBook),
+                                primaryColor = primaryColor,
+                                onClick = {
+                                    onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
+                                }
+                            )
+                        }
+
+                        if (isSearching) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = primaryColor
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    }
 
         // 开始/停止 FAB
         AnimatedVisibility(
