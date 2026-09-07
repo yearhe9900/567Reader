@@ -163,8 +163,7 @@ fun BookInfoScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(240.dp)
-                            .padding(top = 56.dp), // 为玻璃态标题栏留出空间
+                            .height(240.dp),
                     ) {
                         // 模糊背景图
                         AndroidView(
