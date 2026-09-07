@@ -165,7 +165,7 @@ fun BookInfoScreen(
                             .fillMaxWidth()
                             .height(240.dp),
                     ) {
-                        // 模糊背景图
+                        // 模糊背景图（无 padding，覆盖整个区域）
                         AndroidView(
                             factory = { ctx ->
                                 ImageView(ctx).apply {
@@ -194,40 +194,44 @@ fun BookInfoScreen(
                                     )
                                 )
                         )
-                        // 居中封面
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            AndroidView(
-                                factory = { ctx ->
-                                    CoverImageView(ctx).apply {
-                                        layoutParams = FrameLayout.LayoutParams(
-                                            110.dpToPx(ctx), 160.dpToPx(ctx)
-                                        )
-                                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                                        setImageResource(R.drawable.image_cover_default)
-                                        setOnClickListener { onCoverClick() }
-                                        setOnLongClickListener { onCoverLongClick(); true }
-                                    }
-                                },
-                                update = { view ->
-                                    book?.let { view.load(it) }
-                                },
-                                modifier = Modifier
-                                    .size(110.dp, 160.dp)
-                                    .clip(RoundedCornerShape(5.dp))
-                            )
-                        }
                     }
 
-                    // ── 信息区 ──
+                    // ── 封面 + 信息整体区域（带顶部 padding）──
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(bgColor)
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                            .offset(y = (-80).dp) // 向上偏移，使封面与模糊背景重叠
+                            .padding(top = 56.dp), // 为标题栏留空间
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
+                        // 封面
+                        AndroidView(
+                            factory = { ctx ->
+                                CoverImageView(ctx).apply {
+                                    layoutParams = FrameLayout.LayoutParams(
+                                        110.dpToPx(ctx), 160.dpToPx(ctx)
+                                    )
+                                    scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                    setImageResource(R.drawable.image_cover_default)
+                                    setOnClickListener { onCoverClick() }
+                                    setOnLongClickListener { onCoverLongClick(); true }
+                                }
+                            },
+                            update = { view ->
+                                book?.let { view.load(it) }
+                            },
+                            modifier = Modifier
+                                .size(110.dp, 160.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                        )
+
+                        // ── 信息区 ──
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(bgColor)
+                                .padding(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
                         // 书名
                         Box(
                             modifier = Modifier.fillMaxWidth(),
