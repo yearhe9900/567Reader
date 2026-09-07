@@ -203,11 +203,12 @@ fun BookInfoScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    // ── 封面 + 信息整体区域 ──
+                    // ── 封面 + 信息整体区域（带顶部 padding）──
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-10).dp), // 微调位置，使封面与模糊背景自然重叠
+                            .offset(y = (-80).dp) // 向上偏移，使封面与模糊背景重叠
+                            .padding(top = 56.dp), // 为标题栏留空间
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // 封面
