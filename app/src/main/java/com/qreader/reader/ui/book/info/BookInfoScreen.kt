@@ -153,7 +153,9 @@ fun BookInfoScreen(
                     onRefresh()
                     isRefreshing = false
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 56.dp), // 为标题栏留空间
             ) {
                 Column(
                     modifier = Modifier
@@ -197,12 +199,11 @@ fun BookInfoScreen(
                         )
                     }
 
-                    // ── 封面 + 信息整体区域（带顶部 padding）──
+                    // ── 封面 + 信息整体区域 ──
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-80).dp) // 向上偏移，使封面与模糊背景重叠
-                            .padding(top = 56.dp), // 为标题栏留空间
+                            .offset(y = (-80).dp), // 向上偏移，使封面与模糊背景重叠
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         // 封面
