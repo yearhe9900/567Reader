@@ -15,12 +15,6 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/menu_share_it"
-        android:icon="@drawable/ic_share"
-        android:title="@string/share"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/menu_upload"
         android:title="@string/upload_to_remote"
         app:showAsAction="never" />

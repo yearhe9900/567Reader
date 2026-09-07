@@ -83,7 +83,6 @@ import com.qreader.reader.ui.widget.dialog.WaitDialog
 import com.qreader.reader.ui.compose.GlassAlertDialog
 import com.qreader.reader.utils.ConvertUtils
 import com.qreader.reader.utils.FileDoc
-import com.qreader.reader.utils.GSON
 import com.qreader.reader.utils.StartActivityContract
 import com.qreader.reader.utils.dpToPx
 import com.qreader.reader.utils.longSnackbar
@@ -478,26 +477,6 @@ class BookInfoActivity :
                 viewModel.getBook()?.let {
                     infoEditResult.launch {
                         putExtra("bookUrl", it.bookUrl)
-                    }
-                }
-            }
-            R.id.menu_share_it -> {
-                viewModel.getBook()?.let {
-                    val bookJson = GSON.toJson(it)
-                    val shareStr = "${it.bookUrl}#$bookJson"
-                    SourceCallBack.callBackBtn(
-                        this,
-                        SourceCallBack.CLICK_SHARE_BOOK,
-                        viewModel.bookSource,
-                        it,
-                        null,
-                        result = shareStr
-                    ) {
-                        val intent = Intent(Intent.ACTION_SEND)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.putExtra(Intent.EXTRA_TEXT, shareStr)
-                        intent.type = "text/plain"
-                        startActivity(Intent.createChooser(intent, it.name))
                     }
                 }
             }
