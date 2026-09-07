@@ -93,7 +93,6 @@
 
     <string-array name="rule_type">
         <item>Nguồn sách</item>
-        <item>Nguồn RSS</item>
         <item>Quy tắc thay thế</item>
     </string-array>
 

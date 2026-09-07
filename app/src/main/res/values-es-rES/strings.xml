@@ -49,7 +49,6 @@
     <string name="favorite">Favorito</string>
     <string name="in_favorites">en Favoritos</string>
     <string name="out_favorites">No está en Favoritos</string>
-    <string name="rss">Suscripción</string>
     <string name="all">Todo</string>
     <string name="recent_reading">Lecturas recientes</string>
     <string name="last_read">Última lectura</string>
@@ -176,7 +175,6 @@
     <string name="edit_book_source">Editar fuente de libro</string>
     <string name="disable_book_source">Desactivar fuente de libro</string>
     <string name="add_book_source">Añadir fuente de libro</string>
-    <string name="add_rss_source">Añadir fuente de suscripción</string>
     <string name="book_file_selector">Añadir libros</string>
     <string name="scan_book_source">Buscar</string>
     <string name="copy_source">Copiar fuente</string>
@@ -277,7 +275,6 @@
     <string name="bookshelf_management">Organización de estantería</string>
     <string name="clear_bookshelf_s">Esto borrará a todos los libros. Por favor, tenga cuidado.</string>
     <string name="search_book_source">Buscar fuentes de libros</string>
-    <string name="search_rss_source">Buscar fuentes de suscripción</string>
     <string name="search_book_source_num">Búsqueda (%d fuentes en total)</string>
     <string name="chapter_list_size">Capítulos (%d)</string>
     <string name="text_bold">Negrito</string>
@@ -601,8 +598,6 @@
     <string name="web_dav_url">Dirección del servidor WebDav</string>
     <string name="web_dav_account">Cuenta WebDav</string>
     <string name="web_dav_account_s">Ingrese su cuenta WebDav</string>
-    <string name="rss_source">Fuente de suscripción</string>
-    <string name="rss_source_edit">Editar fuente de suscripción</string>
     <string name="screen">Filtro</string>
     <string name="screen_find">Search Discovery sources</string>
     <string name="dur_pos">Ubicación actual:</string>
@@ -628,14 +623,12 @@
     <string name="next_sentence">Siguiente oración</string>
     <string name="other_folder">Otra carpeta</string>
     <string name="text_too_long_qr_error">Demasiadas palabras para crear un código QR</string>
-    <string name="share_rss_source">Compartir fuentes de suscripción</string>
     <string name="share_book_source">Compartir fuentes de libros</string>
     <string name="auto_dark_mode">Cambio automático al modo oscuro</string>
     <string name="auto_dark_mode_s">Sigue el modo oscuro del sistema</string>
     <string name="go_back">Atrás</string>
     <string name="tone_colour">Tono de voz en línea</string>
     <string name="select_count">(%1$d/%2$d)</string>
-    <string name="show_rss">Mostrar suscripción</string>
     <string name="service_stop">Servicio detenido</string>
     <string name="service_start">Iniciando el servicio\nComprobando la barra de notificaciones para más detalles</string>
     <string name="default_path">Carpeta predeterminada</string>
@@ -769,7 +762,6 @@
     <string name="error">Error</string>
     <string name="show_brightness_view">Mostrar widget de brillo</string>
     <string name="language">Idioma</string>
-    <string name="import_rss_source">Importar fuente RSS</string>
     <string name="donate_summary">Su donación mejora esta aplicación</string>
     <string name="about_summary">Cuenta oficial de Wechat [开源阅读软件]</string>
     <string name="read_record">Leer historial</string>
@@ -789,7 +781,6 @@
     <string name="select_theme">Cambiar tema predeterminado</string>
     <string name="sort_by_lastUpdateTime">Ordenar por hora de actualización</string>
     <string name="search_content">Contenido de búsqueda</string>
-    <string name="rss_source_empty">Empty now!</string>
     <string name="explore_empty">Actualmente no hay una fuente para Descubrir!</string>
     <string name="page_key_set_help">将焦点放到输入框按下物理按键会自动录入键值,多个按键会自动用英文逗号隔开.</string>
     <string name="theme_name">Nombre del tema</string>

@@ -25,9 +25,6 @@ class OnLineImportActivity :
                 "bookSource" -> showDialogFragment(
                     ImportBookSourceDialog(it.second, true)
                 )
-                "rssSource" -> showDialogFragment(
-                    ImportRssSourceDialog(it.second, true)
-                )
                 "replaceRule" -> showDialogFragment(
                     ImportReplaceRuleDialog(it.second, true)
                 )
@@ -59,10 +56,6 @@ class OnLineImportActivity :
                     ImportBookSourceDialog(url, true)
                 )
 
-                "/rssSource" -> showDialogFragment(
-                    ImportRssSourceDialog(url, true)
-                )
-
                 "/replaceRule" -> showDialogFragment(
                     ImportReplaceRuleDialog(url, true)
                 )
@@ -87,9 +80,6 @@ class OnLineImportActivity :
                 "/importonline" -> when (it.host) {
                     "booksource" -> showDialogFragment(
                         ImportBookSourceDialog(url, true)
-                    )
-                    "rsssource" -> showDialogFragment(
-                        ImportRssSourceDialog(url, true)
                     )
                     "replace" -> showDialogFragment(
                         ImportReplaceRuleDialog(url, true)

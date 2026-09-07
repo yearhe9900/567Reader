@@ -116,7 +116,6 @@
 
 	<string-array name="rule_type">
 		<item>FuenteLibro</item>
-		<item>FuenteRSS</item>
 		<item>SustituirRegla</item>
 	</string-array>
 

@@ -37,7 +37,6 @@ import com.qreader.reader.ui.association.ImportBookSourceDialog
 import com.qreader.reader.ui.association.ImportDictRuleDialog
 import com.qreader.reader.ui.association.ImportHttpTtsDialog
 import com.qreader.reader.ui.association.ImportReplaceRuleDialog
-import com.qreader.reader.ui.association.ImportRssSourceDialog
 import com.qreader.reader.ui.association.ImportTxtTocRuleDialog
 import com.qreader.reader.ui.book.bookmark.AllBookmarkActivity
 import com.qreader.reader.ui.book.cache.CacheActivity
@@ -453,7 +452,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     override fun openImportUi(type: Int, source: String) {
         when (type) {
             0 -> showDialogFragment(ImportBookSourceDialog(source))
-            1 -> showDialogFragment(ImportRssSourceDialog(source))
             2 -> showDialogFragment(ImportReplaceRuleDialog(source))
         }
     }
@@ -470,8 +468,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                     when (type) {
                         StringUtils.BOOK_SOURCE ->
                             showDialogFragment(ImportBookSourceDialog(url))
-                        StringUtils.RSS_SOURCE ->
-                            showDialogFragment(ImportRssSourceDialog(url))
                         StringUtils.DICT_RULE ->
                             showDialogFragment(ImportDictRuleDialog(url))
                         StringUtils.REPLACE_RULE ->

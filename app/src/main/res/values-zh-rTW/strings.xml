@@ -43,7 +43,6 @@
     <string name="favorite">收藏</string>
     <string name="in_favorites">已收藏</string>
     <string name="out_favorites">未收藏</string>
-    <string name="rss">訂閱</string>
     <string name="all">全部</string>
     <string name="recent_reading">最近閱讀</string>
     <string name="last_read">最後閱讀</string>
@@ -176,7 +175,6 @@
     <string name="edit_book_source">編輯書源</string>
     <string name="disable_book_source">禁用書源</string>
     <string name="add_book_source">建立書源</string>
-    <string name="add_rss_source">建立訂閱源</string>
     <string name="book_file_selector">新增書籍</string>
     <string name="scan_book_source">掃描</string>
     <string name="copy_source">複製源</string>
@@ -277,7 +275,6 @@
     <string name="bookshelf_management">書架管理</string>
     <string name="clear_bookshelf_s">這將會刪除所有書籍，請謹慎操作。</string>
     <string name="search_book_source">搜尋書源</string>
-    <string name="search_rss_source">搜尋訂閱源</string>
     <string name="search_book_source_num">搜尋(共%d個書源)</string>
     <string name="chapter_list_size">目錄(%d)</string>
     <string name="text_bold">加粗</string>
@@ -601,8 +598,6 @@
     <string name="web_dav_url">WebDav 伺服器地址</string>
     <string name="web_dav_account">WebDav 帳號</string>
     <string name="web_dav_account_s">輸入你的WebDav帳號</string>
-    <string name="rss_source">訂閱源</string>
-    <string name="rss_source_edit">編輯訂閱源</string>
     <string name="screen">篩選</string>
     <string name="screen_find">篩選發現源</string>
     <string name="dur_pos">目前位置：</string>
@@ -628,14 +623,12 @@
     <string name="next_sentence">下一句</string>
     <string name="other_folder">其它目錄</string>
     <string name="text_too_long_qr_error">文字太多，生成二維碼失敗</string>
-    <string name="share_rss_source">分享RSS源</string>
     <string name="share_book_source">分享書源</string>
     <string name="auto_dark_mode">自動切換夜間模式</string>
     <string name="auto_dark_mode_s">夜間模式跟隨系統</string>
     <string name="go_back">上級</string>
     <string name="tone_colour">線上朗讀音色</string>
     <string name="select_count">(%1$d/%2$d)</string>
-    <string name="show_rss">顯示訂閱</string>
     <string name="service_stop">服務已停止</string>
     <string name="service_start">正在啟動服務\n具體訊息查看通知欄</string>
     <string name="default_path">預設路徑</string>
@@ -768,7 +761,6 @@
     <string name="error">錯誤</string>
     <string name="show_brightness_view">顯示亮度調節控制項</string>
     <string name="language">語言</string>
-    <string name="import_rss_source">匯入訂閱源</string>
     <string name="donate_summary">您的支援是我更新的動力</string>
     <string name="about_summary">公眾號[开源阅读软件]</string>
     <string name="read_record">閱讀記錄</string>
@@ -788,7 +780,6 @@
     <string name="select_theme">切換預設主題</string>
     <string name="sort_by_lastUpdateTime">更新時間排序</string>
     <string name="search_content">全文搜尋</string>
-    <string name="rss_source_empty">這裡目前什麼都沒有！</string>
     <string name="explore_empty">目前沒有發現源！</string>
     <string name="page_key_set_help">將焦點放到輸入框按下物理按鍵會自動輸入鍵值，多個按鍵會自動用英文逗號隔開。</string>
     <string name="theme_name">主題名稱</string>

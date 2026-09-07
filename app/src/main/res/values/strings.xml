@@ -50,7 +50,6 @@
     <string name="favorite">Favorite</string>
     <string name="in_favorites">in Favorites</string>
     <string name="out_favorites">Not in Favorites</string>
-    <string name="rss">RSS feeds</string>
     <string name="all">All</string>
     <string name="recent_reading">Recent reading</string>
     <string name="last_read">Last reading</string>
@@ -185,7 +184,6 @@
     <string name="edit_book_source">Edit Book source</string>
     <string name="disable_book_source">Disable Book source</string>
     <string name="add_book_source">Add Book source</string>
-    <string name="add_rss_source">Add RSS source</string>
     <string name="book_file_selector">Add books</string>
     <string name="scan_book_source">Scan</string>
     <string name="copy_source">Copy source</string>
@@ -287,7 +285,6 @@
     <string name="bookshelf_management">Bookshelf management</string>
     <string name="clear_bookshelf_s">It will delete all books. Be careful,please.</string>
     <string name="search_book_source">Search book sources</string>
-    <string name="search_rss_source">Search RSS sources</string>
     <string name="search_book_source_num">Search( %d sources in total)</string>
     <string name="chapter_list_size">Chapters(%d)</string>
     <string name="text_bold">Bold</string>
@@ -612,8 +609,6 @@
     <string name="web_dav_url">WebDav server address</string>
     <string name="web_dav_account">WebDav account</string>
     <string name="web_dav_account_s">Input your WebDav account</string>
-    <string name="rss_source">RSS source</string>
-    <string name="rss_source_edit">Edit RSS source</string>
     <string name="screen">Filter</string>
     <string name="screen_find">Search Discovery sources</string>
     <string name="dur_pos">Current location：</string>
@@ -639,14 +634,12 @@
     <string name="next_sentence">Next sentence</string>
     <string name="other_folder">Other folder</string>
     <string name="text_too_long_qr_error">There are too many words to create a QR code</string>
-    <string name="share_rss_source">RSS sources sharing</string>
     <string name="share_book_source">Book sources sharing</string>
     <string name="auto_dark_mode">Automatic switching dark mode</string>
     <string name="auto_dark_mode_s">Following system dark mode</string>
     <string name="go_back">Go back</string>
     <string name="tone_colour">Online Speech tone</string>
     <string name="select_count">(%1$d/%2$d)</string>
-    <string name="show_rss">Show RSS feeds</string>
     <string name="service_stop">Service stopped</string>
     <string name="service_start">Starting service\nChecking notification bar for details</string>
     <string name="default_path">Default path</string>
@@ -780,7 +773,6 @@
     <string name="error">Error</string>
     <string name="show_brightness_view">Show brightness widget</string>
     <string name="language">Language</string>
-    <string name="import_rss_source">Import rss source</string>
     <string name="donate_summary">Your donation makes this app better</string>
     <string name="about_summary">Wechat official account [开源阅读软件]</string>
     <string name="read_record">Read record</string>
@@ -801,7 +793,6 @@
     <string name="sort_by_lastUpdateTime">Sort by update time</string>
     <string name="sort_by_respondTime">Sort by respond time</string>
     <string name="search_content">Search content</string>
-    <string name="rss_source_empty">Empty now!</string>
     <string name="explore_empty">Empty now!</string>
     <string name="page_key_set_help">Focusing on the input box and pressing a physical key will automatically enter the value of the key, and multiple keys will be automatically separated by commas.</string>
     <string name="theme_name">Theme name</string>

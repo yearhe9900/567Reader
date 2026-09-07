@@ -48,7 +48,6 @@
     <string name="favorite">Yêu thích</string>
     <string name="in_favorites">Đã yêu thích</string>
     <string name="out_favorites">Chưa yêu thích</string>
-    <string name="rss">Nguồn cấp RSS</string>
     <string name="all">Tất cả</string>
     <string name="recent_reading">Đọc gần đây</string>
     <string name="last_read">Lần đọc cuối</string>
@@ -175,7 +174,6 @@
     <string name="edit_book_source">Sửa nguồn sách</string>
     <string name="disable_book_source">Vô hiệu hóa nguồn sách</string>
     <string name="add_book_source">Thêm nguồn sách</string>
-    <string name="add_rss_source">Thêm nguồn RSS</string>
     <string name="book_file_selector">Thêm sách</string>
     <string name="scan_book_source">Quét</string>
     <string name="copy_source">Sao chép nguồn</string>
@@ -275,7 +273,6 @@
     <string name="bookshelf_management">Quản lý tủ sách</string>
     <string name="clear_bookshelf_s">Thao tác này sẽ xóa tất cả sách. Vui lòng cẩn thận.</string>
     <string name="search_book_source">Tìm kiếm nguồn sách</string>
-    <string name="search_rss_source">Tìm kiếm nguồn RSS</string>
     <string name="search_book_source_num">Tìm kiếm (tổng cộng %d nguồn)</string>
     <string name="chapter_list_size">Chương (%d)</string>
     <string name="text_bold">In đậm</string>
@@ -599,8 +596,6 @@
     <string name="web_dav_url">Địa chỉ máy chủ WebDav</string>
     <string name="web_dav_account">Tài khoản WebDav</string>
     <string name="web_dav_account_s">Nhập tài khoản WebDav của bạn</string>
-    <string name="rss_source">Nguồn RSS</string>
-    <string name="rss_source_edit">Sửa nguồn RSS</string>
     <string name="screen">Bộ lọc</string>
     <string name="screen_find">Search Discovery sources</string>
     <string name="dur_pos">Vị trí hiện tại：</string>
@@ -626,14 +621,12 @@
     <string name="next_sentence">Câu sau</string>
     <string name="other_folder">Thư mục khác</string>
     <string name="text_too_long_qr_error">Có quá nhiều từ để tạo mã QR</string>
-    <string name="share_rss_source">Chia sẻ nguồn RSS</string>
     <string name="share_book_source">Chia sẻ nguồn sách</string>
     <string name="auto_dark_mode">Tự động chuyển chế độ tối</string>
     <string name="auto_dark_mode_s">Theo chế độ tối của hệ thống</string>
     <string name="go_back">Quay lại</string>
     <string name="tone_colour">Âm sắc đọc trực tuyến</string>
     <string name="select_count">(%1$d/%2$d)</string>
-    <string name="show_rss">Hiển thị nguồn cấp RSS</string>
     <string name="service_stop">Dịch vụ đã dừng</string>
     <string name="service_start">Đang khởi động dịch vụ\nKiểm tra thanh thông báo để biết chi tiết</string>
     <string name="default_path">Đường dẫn mặc định</string>
@@ -767,7 +760,6 @@
     <string name="error">Lỗi</string>
     <string name="show_brightness_view">Hiển thị widget độ sáng</string>
     <string name="language">Ngôn ngữ</string>
-    <string name="import_rss_source">Nhập nguồn RSS</string>
     <string name="donate_summary">Sự ủng hộ của bạn làm cho ứng dụng này tốt hơn</string>
     <string name="about_summary">Tài khoản chính thức Wechat [开源阅读软件]</string>
     <string name="read_record">Lịch sử đọc</string>
@@ -788,7 +780,6 @@
     <string name="sort_by_lastUpdateTime">Sắp xếp theo thời gian cập nhật</string>
     <string name="sort_by_respondTime">Sắp xếp theo thời gian phản hồi</string>
     <string name="search_content">Tìm kiếm nội dung</string>
-    <string name="rss_source_empty">Hiện tại trống!</string>
     <string name="explore_empty">Hiện tại trống!</string>
     <string name="page_key_set_help">Tập trung vào hộp nhập và nhấn một phím vật lý sẽ tự động nhập giá trị của phím, và nhiều phím sẽ được tự động phân tách bằng dấu phẩy.</string>
     <string name="theme_name">Tên chủ đề</string>

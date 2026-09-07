@@ -21,7 +21,6 @@ import com.qreader.reader.ui.association.AddToBookshelfDialog
 import com.qreader.reader.ui.book.explore.ExploreShowActivity
 import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.ui.login.SourceLoginActivity
-import com.qreader.reader.ui.rss.article.RssSortActivity
 import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.utils.isJsonObject
 import com.qreader.reader.utils.openUrl
@@ -129,87 +128,6 @@ open class RssJsExtensions(
                                 }
                             }
                         }
-                    }
-                }
-
-                "sort" -> {
-                    val toSource = origin?.let { o ->
-                        appDb.rssSourceDao.getByKey(o)
-                    } ?: (source as? RssSource) ?: return@launch
-                    val sortUrl = if (url.isJsonObject()) {
-                        url
-                    } else {
-                        title?.let {
-                            JSONObject().put(title, url).toString()
-                        } ?: url
-                    }
-                    val sourceUrl = toSource.sourceUrl
-                    RssSortActivity.start(activity, sortUrl, sourceUrl)
-                }
-
-                "rss" -> {
-                    val toSource = origin?.let { o ->
-                        appDb.rssSourceDao.getByKey(o)
-                    } ?: (source as? RssSource) ?: return@launch
-                    val title = title ?: toSource.sourceName
-                    val sourceUrl = toSource.sourceUrl
-                    val singleTop = sourceUrl == source.getKey()
-                    if (url.isNullOrBlank()) {
-                        if (toSource.singleUrl) {
-                            if (sourceUrl.startsWith("http", true)) {
-                                ReadRssActivity.start(
-                                    activity,
-                                    singleTop,
-                                    sourceUrl,
-                                    title
-                                )
-                            } else {
-                                activity.openUrl(sourceUrl)
-                            }
-                            return@launch
-                        }
-                        val startHtml = toSource.startHtml?.let {
-                            when {
-                                it.startsWith("@js:") -> runScriptWithContext {
-                                    toSource.evalJS(it.substring(4)).toString()
-                                }
-
-                                it.startsWith("<js>") -> runScriptWithContext {
-                                    toSource.evalJS(it.substring(4, it.lastIndexOf("<"))).toString()
-                                }
-
-                                else -> it
-                            }
-                        }
-                        if (startHtml.isNullOrBlank()) {
-                            RssSortActivity.start(activity, null, sourceUrl)
-                        } else {
-                            ReadRssActivity.start(
-                                activity,
-                                singleTop,
-                                sourceUrl,
-                                title,
-                                startHtml = startHtml
-                            )
-                        }
-                        return@launch
-                    }
-                    val rss =appDb.rssStarDao.get(sourceUrl, url)?.toRecord() ?: appDb.rssArticleDao.getByLink(sourceUrl, url)?.toRecord()
-                    val rssReadRecord = rss ?: RssReadRecord(
-                        record = url,
-                        title = title,
-                        origin = sourceUrl,
-                        readTime = System.currentTimeMillis()
-                    )
-                    appDb.rssReadRecordDao.insertRecord(rssReadRecord) //留下历史记录
-                    withContext(Main) {
-                        ReadRssActivity.start(
-                            activity,
-                            singleTop,
-                            sourceUrl,
-                            title,
-                            url
-                        )
                     }
                 }
 

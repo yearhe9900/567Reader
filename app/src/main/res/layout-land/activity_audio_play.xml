@@ -67,8 +67,7 @@
         app:layout_constraintBottom_toTopOf="@+id/ll_player_progress"
         app:layout_constraintEnd_toStartOf="@+id/lyricViewX"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_bar"
-        tools:src="@drawable/image_rss_article" />
+        app:layout_constraintTop_toBottomOf="@+id/title_bar" />
 
     <com.dirror.lyricviewx.LyricViewX
         android:id="@+id/lyricViewX"
