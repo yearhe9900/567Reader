@@ -44,7 +44,6 @@ object BackupConfig {
         appCtx.getString(R.string.theme_config),
         appCtx.getString(R.string.cover_config),
         appCtx.getString(R.string.bookshelf_layout),
-        appCtx.getString(R.string.show_rss),
         appCtx.getString(R.string.thread_count),
         appCtx.getString(R.string.local_book)
     )
