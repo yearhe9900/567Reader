@@ -2,6 +2,7 @@ package com.qreader.reader.ui.book.info
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
