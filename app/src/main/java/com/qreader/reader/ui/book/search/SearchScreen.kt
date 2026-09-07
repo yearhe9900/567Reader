@@ -89,10 +89,11 @@ fun SearchScreen(
     onSearchScopeClick: () -> Unit,
     onSourceManageClick: () -> Unit,
     onBack: () -> Unit,
+    initialKey: String = "",
     modifier: Modifier = Modifier
 ) {
     val isSearching by viewModel.isSearchLiveData.observeAsState(false)
-    val searchBooks by viewModel.searchBookLiveData.observeAsState(emptyList())
+    val searchBooks by viewModel.searchBookLiveData.observeAsState(emptyList<SearchBook>())
 
     val context = LocalContext.current
     // 与 MainScreen 一致：以主色深浅判断明暗主题
