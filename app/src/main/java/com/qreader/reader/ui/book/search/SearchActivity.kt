@@ -46,10 +46,13 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
     // Compose 状态
     private var showScopeDialog by mutableStateOf(false)
 
+    // 首次进入时携带的搜索关键词（用于回填输入框并直接展示结果）
+    private var initialSearchKey: String = ""
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
+        receiptIntent(intent)
         initComposeView()
         initData()
-        receiptIntent(intent)
     }
 
     private fun initComposeView() {
@@ -79,7 +82,8 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
                 onSourceManageClick = {
                     startActivity<BookSourceActivity>()
                 },
-                onBack = { finish() }
+                onBack = { finish() },
+                initialKey = initialSearchKey
             )
         }
     }
@@ -189,6 +193,7 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
         }
         val key = intent?.getStringExtra("key")
         if (!key.isNullOrBlank()) {
+            if (initialSearchKey.isBlank()) initialSearchKey = key
             viewModel.saveSearchKey(key)
             viewModel.searchKey = ""
             viewModel.search(key)
