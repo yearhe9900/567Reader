@@ -11,15 +11,17 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
-import com.qreader.reader.ui.widget.text.ScrollTextView
 import android.view.textclassifier.TextClassifier
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.CheckBox
-import android.widget.LinearLayout
+import android.widget.FrameLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
@@ -34,7 +36,7 @@ import com.qreader.reader.data.entities.BaseSource
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.BookChapter
 import com.qreader.reader.data.entities.BookSource
-import com.qreader.reader.databinding.ActivityBookInfoBinding
+import com.qreader.reader.databinding.ActivityBookInfoComposeBinding
 import com.qreader.reader.exception.NoStackTraceException
 import com.qreader.reader.help.AppWebDav
 import com.qreader.reader.help.GlideImageGetter
@@ -59,11 +61,6 @@ import com.qreader.reader.help.webView.WebJsExtensions.Companion.nameSource
 import com.qreader.reader.help.webView.WebViewPool
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.dialogs.selector
-import com.qreader.reader.lib.theme.accentColor
-import com.qreader.reader.lib.theme.backgroundColor
-import com.qreader.reader.lib.theme.bottomBackground
-import com.qreader.reader.lib.theme.getPrimaryTextColor
-import com.qreader.reader.model.BookCover
 import com.qreader.reader.model.remote.RemoteBookWebDav
 import com.qreader.reader.ui.book.audio.AudioPlayActivity
 import com.qreader.reader.ui.book.changecover.ChangeCoverDialog
@@ -84,14 +81,11 @@ import com.qreader.reader.ui.widget.dialog.PhotoDialog
 import com.qreader.reader.ui.widget.dialog.VariableDialog
 import com.qreader.reader.ui.widget.dialog.WaitDialog
 import com.qreader.reader.ui.compose.GlassAlertDialog
-import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.ConvertUtils
 import com.qreader.reader.utils.FileDoc
 import com.qreader.reader.utils.GSON
 import com.qreader.reader.utils.StartActivityContract
-import com.qreader.reader.utils.applyNavigationBarPadding
 import com.qreader.reader.utils.dpToPx
-import com.qreader.reader.utils.gone
 import com.qreader.reader.utils.longSnackbar
 import com.qreader.reader.utils.longToastOnUi
 import com.qreader.reader.utils.observeEvent
@@ -104,7 +98,6 @@ import com.qreader.reader.utils.showDialogFragment
 import com.qreader.reader.utils.startActivity
 import com.qreader.reader.utils.toastOnUi
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
-import com.qreader.reader.utils.visible
 import io.noties.markwon.Markwon
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.html.HtmlPlugin
@@ -114,12 +107,70 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class BookInfoActivity :
-    VMBaseActivity<ActivityBookInfoBinding, BookInfoViewModel>(toolBarTheme = Theme.Dark, showOpenMenuIcon = false),
+    VMBaseActivity<ActivityBookInfoComposeBinding, BookInfoViewModel>(
+        toolBarTheme = Theme.Dark,
+        showOpenMenuIcon = false
+    ),
     GroupSelectDialog.CallBack,
     ChangeBookSourceDialog.CallBack,
     ChangeCoverDialog.CallBack,
     VariableDialog.Callback {
 
+    override val binding by viewBinding(ActivityBookInfoComposeBinding::inflate)
+    override val viewModel by viewModels<BookInfoViewModel>()
+
+    // ── Compose 状态变量 ──
+    private var uiBookName by mutableStateOf("")
+    private var uiAuthor by mutableStateOf("")
+    private var uiOrigin by mutableStateOf("")
+    private var uiLatestChapter by mutableStateOf("")
+    private var uiGroupText by mutableStateOf("")
+    private var uiTocText by mutableStateOf("")
+    private var uiTocVisible by mutableStateOf(true)
+    private var uiShelfText by mutableStateOf("")
+    private val uiKinds = mutableStateListOf<String>()
+
+    // ── 简介容器（由 Activity 管理，Compose 通过 AndroidView 展示）──
+    private lateinit var introContainer: FrameLayout
+    private var initIntroView = false
+    private var pooledWebView: PooledWebView? = null
+
+    private val introTextView by lazy {
+        initIntroView = true
+        val inflater = LayoutInflater.from(this)
+        val view = inflater.inflate(R.layout.view_book_intro, introContainer, false)
+            as com.qreader.reader.ui.widget.text.ScrollTextView
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+            view.revealOnFocusHint = false
+        }
+        view
+    }
+
+    private val imgAvailableWidth by lazy {
+        val textView = introTextView
+        textView.width - textView.paddingLeft - textView.paddingRight - 8.dpToPx()
+    }
+    private var initGetter = false
+    private val glideImageGetter by lazy {
+        initGetter = true
+        GlideImageGetter(
+            this,
+            introTextView,
+            lifecycle,
+            imgAvailableWidth,
+            viewModel.bookSource?.bookSourceUrl
+        )
+    }
+
+    private val textViewTagHandler by lazy {
+        TextViewTagHandler(object : TextViewTagHandler.OnButtonClickListener {
+            override fun onButtonClick(name: String, click: String) {
+                viewModel.onButtonClick(this@BookInfoActivity, "info button $name", click)
+            }
+        })
+    }
+
+    // ── Activity Result Contracts ──
     private val tocActivityResult = registerForActivityResult(TocActivityResult()) {
         it?.let {
             viewModel.getBook(false)?.let { book ->
@@ -141,7 +192,7 @@ class BookInfoActivity :
             }
         } ?: let {
             if (!viewModel.inBookshelf) {
-                viewModel.delBook() //进目录会保存book，此时退出目录触发的book删除，不通知书源回调
+                viewModel.delBook()
             }
         }
     }
@@ -159,7 +210,6 @@ class BookInfoActivity :
                 viewModel.inBookshelf = true
                 upTvBookshelf()
             }
-
             RESULT_DELETED -> {
                 setResult(RESULT_OK)
                 finish()
@@ -192,61 +242,159 @@ class BookInfoActivity :
     private var menuCustomBtn: MenuItem? = null
     private val book get() = viewModel.getBook(false)
 
-    override val binding by viewBinding(ActivityBookInfoBinding::inflate)
-    override val viewModel by viewModels<BookInfoViewModel>()
-    private var initIntroView = false
-    private val introTextView by lazy {
-        initIntroView = true
-        val inflater = LayoutInflater.from(this)
-        val view = inflater.inflate(R.layout.view_book_intro, binding.tvIntroContainer, false) as ScrollTextView
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-            view.revealOnFocusHint = false
-        }
-        view
-    }
-
-    private var pooledWebView: PooledWebView? = null
-
-    private val imgAvailableWidth by lazy {
-        val textView = introTextView
-        textView.width - textView.paddingLeft - textView.paddingRight - 8.dpToPx()  //8是为了文字对齐额外的右边距
-    }
-    private var initGetter = false
-    private val glideImageGetter by lazy {
-        initGetter = true
-        GlideImageGetter(
-            this,
-            introTextView,
-            lifecycle,
-            imgAvailableWidth,
-            viewModel.bookSource?.bookSourceUrl
-        )
-    }
-
-    private val textViewTagHandler by lazy {
-        TextViewTagHandler(object : TextViewTagHandler.OnButtonClickListener {
-            override fun onButtonClick(name: String, click: String) {
-                viewModel.onButtonClick(this@BookInfoActivity, "info button $name" , click)
-            }
-        })
-    }
-
     @SuppressLint("PrivateResource")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        binding.titleBar.setBackgroundResource(R.color.transparent)
-        binding.refreshLayout?.setColorSchemeColors(accentColor)
-        binding.arcView?.setBgColor(backgroundColor)
-        binding.llInfo.setBackgroundColor(backgroundColor)
-        binding.ivCoverC.setCardBackgroundColor(backgroundColor)
-        binding.flAction.setBackgroundColor(bottomBackground)
-        binding.vwBg.applyNavigationBarPadding()
-        binding.tvShelf.setTextColor(getPrimaryTextColor(ColorUtils.isColorLight(bottomBackground)))
-        binding.tvToc.text = getString(R.string.toc_s, getString(R.string.loading))
+        // 创建简介容器
+        introContainer = FrameLayout(this)
+
+        // 设置 Compose 内容
+        binding.composeView.setContent {
+            BookInfoScreen(
+                book = viewModel.bookData.value,
+                bookName = uiBookName,
+                author = uiAuthor,
+                origin = uiOrigin,
+                latestChapter = uiLatestChapter,
+                groupText = uiGroupText,
+                tocText = uiTocText,
+                tocVisible = uiTocVisible,
+                shelfText = uiShelfText,
+                introContainer = introContainer,
+                kinds = uiKinds.toList(),
+                onCoverClick = {
+                    viewModel.getBook()?.let {
+                        showDialogFragment(ChangeCoverDialog(it.name, it.author))
+                    }
+                },
+                onCoverLongClick = {
+                    viewModel.getBook()?.getDisplayCover()?.let { path ->
+                        showDialogFragment(PhotoDialog(path, isBook = true))
+                    }
+                },
+                onReadClick = {
+                    viewModel.getBook()?.let { book ->
+                        if (book.isWebFile) {
+                            showWebFileDownloadAlert { readBook(it) }
+                        } else {
+                            readBook(book)
+                        }
+                    }
+                },
+                onShelfClick = {
+                    viewModel.getBook()?.let { book ->
+                        if (viewModel.inBookshelf) {
+                            deleteBook()
+                        } else {
+                            if (book.isWebFile) {
+                                showWebFileDownloadAlert()
+                            } else {
+                                viewModel.addToBookshelf { upTvBookshelf() }
+                            }
+                        }
+                    }
+                },
+                onOriginClick = {
+                    viewModel.getBook()?.let { book ->
+                        if (book.isLocal) return@let
+                        if (!appDb.bookSourceDao.has(book.origin)) {
+                            toastOnUi(R.string.error_no_source)
+                            return@let
+                        }
+                        editSourceResult.launch {
+                            putExtra("sourceUrl", book.origin)
+                        }
+                    }
+                },
+                onChangeSource = {
+                    viewModel.getBook()?.let { book ->
+                        showDialogFragment(ChangeBookSourceDialog(book.name, book.author))
+                    }
+                },
+                onTocClick = {
+                    if (viewModel.chapterListData.value.isNullOrEmpty()) {
+                        toastOnUi(R.string.chapter_list_empty)
+                        return@BookInfoScreen
+                    }
+                    viewModel.getBook()?.let { book ->
+                        if (!viewModel.inBookshelf) {
+                            viewModel.saveBook(book) {
+                                viewModel.saveChapterList { openChapterList() }
+                            }
+                        } else {
+                            openChapterList()
+                        }
+                    }
+                },
+                onGroupChange = {
+                    viewModel.getBook()?.let {
+                        showDialogFragment(GroupSelectDialog(it.group))
+                    }
+                },
+                onNameClick = {
+                    viewModel.getBook(false)?.let { book ->
+                        SourceCallBack.callBackBtn(
+                            this@BookInfoActivity,
+                            SourceCallBack.CLICK_BOOK_NAME,
+                            viewModel.bookSource,
+                            book,
+                            null,
+                            result = book.name
+                        ) {
+                            SearchActivity.start(this@BookInfoActivity, book.name)
+                        }
+                    }
+                },
+                onNameLongClick = {
+                    viewModel.getBook(false)?.let { book ->
+                        SourceCallBack.callBackBtn(
+                            this@BookInfoActivity,
+                            SourceCallBack.LONG_CLICK_BOOK_NAME,
+                            viewModel.bookSource,
+                            book,
+                            null,
+                            result = book.name
+                        ) {
+                            SearchActivity.start(this@BookInfoActivity, book.name)
+                        }
+                    }
+                },
+                onAuthorClick = {
+                    viewModel.getBook(false)?.let { book ->
+                        SourceCallBack.callBackBtn(
+                            this@BookInfoActivity,
+                            SourceCallBack.CLICK_AUTHOR,
+                            viewModel.bookSource,
+                            book,
+                            null,
+                            result = book.author
+                        ) {
+                            SearchActivity.start(this@BookInfoActivity, book.author)
+                        }
+                    }
+                },
+                onAuthorLongClick = {
+                    viewModel.getBook(false)?.let { book ->
+                        SourceCallBack.callBackBtn(
+                            this@BookInfoActivity,
+                            SourceCallBack.LONG_CLICK_AUTHOR,
+                            viewModel.bookSource,
+                            book,
+                            null,
+                            result = book.author
+                        ) {
+                            SearchActivity.start(this@BookInfoActivity, book.author)
+                        }
+                    }
+                },
+                onRefresh = { refreshBook() },
+            )
+        }
+
+        // 观察 ViewModel
         viewModel.bookData.observe(this) { showBook(it) }
         viewModel.chapterListData.observe(this) { upLoading(false, it) }
         viewModel.waitDialogData.observe(this) { upWaitDialogStatus(it) }
         viewModel.initData(intent)
-        initViewEvent()
     }
 
     override fun onCompatCreateOptionsMenu(menu: Menu): Boolean {
@@ -295,7 +443,6 @@ class BookInfoActivity :
                     }
                 }
             }
-
             R.id.menu_edit -> {
                 viewModel.getBook()?.let {
                     infoEditResult.launch {
@@ -303,7 +450,6 @@ class BookInfoActivity :
                     }
                 }
             }
-
             R.id.menu_share_it -> {
                 viewModel.getBook()?.let {
                     val bookJson = GSON.toJson(it)
@@ -324,11 +470,7 @@ class BookInfoActivity :
                     }
                 }
             }
-
-            R.id.menu_refresh -> {
-                refreshBook()
-            }
-
+            R.id.menu_refresh -> refreshBook()
             R.id.menu_login -> viewModel.bookSource?.let {
                 startActivity<SourceLoginActivity> {
                     putExtra("type", "bookSource")
@@ -336,7 +478,6 @@ class BookInfoActivity :
                     putExtra("bookUrl", book?.bookUrl)
                 }
             }
-
             R.id.menu_top -> viewModel.topBook()
             R.id.menu_set_source_variable -> setSourceVariable()
             R.id.menu_set_book_variable -> setBookVariable()
@@ -348,11 +489,8 @@ class BookInfoActivity :
                     it,
                     null,
                     result = it.bookUrl
-                ) {
-                    sendToClip(it.bookUrl)
-                }
+                ) { sendToClip(it.bookUrl) }
             }
-
             R.id.menu_copy_toc_url -> viewModel.getBook()?.let {
                 SourceCallBack.callBackBtn(
                     this,
@@ -361,11 +499,8 @@ class BookInfoActivity :
                     it,
                     null,
                     result = it.tocUrl
-                ) {
-                    sendToClip(it.tocUrl)
-                }
+                ) { sendToClip(it.tocUrl) }
             }
-
             R.id.menu_can_update -> {
                 viewModel.getBook()?.let {
                     it.canUpdate = !it.canUpdate
@@ -377,12 +512,15 @@ class BookInfoActivity :
                     }
                 }
             }
-
             R.id.menu_clear_cache -> viewModel.getBook()?.let {
-                    SourceCallBack.callBackBtn(this, SourceCallBack.CLICK_CLEAR_CACHE, viewModel.bookSource, it, null) {
-                        viewModel.clearCache(it)
-                    }
-                }
+                SourceCallBack.callBackBtn(
+                    this,
+                    SourceCallBack.CLICK_CLEAR_CACHE,
+                    viewModel.bookSource,
+                    it,
+                    null
+                ) { viewModel.clearCache(it) }
+            }
             R.id.menu_split_long_chapter -> {
                 upLoading(true)
                 viewModel.getBook()?.let {
@@ -392,15 +530,12 @@ class BookInfoActivity :
                 item.isChecked = !item.isChecked
                 if (!item.isChecked) longToastOnUi(R.string.need_more_time_load_content)
             }
-
             R.id.menu_delete_alert -> LocalConfig.bookInfoDeleteAlert = !item.isChecked
             R.id.menu_upload -> {
                 viewModel.getBook()?.let { book ->
                     book.getRemoteUrl()?.let {
                         alert(R.string.draw, R.string.sure_upload) {
-                            okButton {
-                                upLoadBook(book)
-                            }
+                            okButton { upLoadBook(book) }
                             cancelButton()
                         }
                     } ?: upLoadBook(book)
@@ -418,14 +553,12 @@ class BookInfoActivity :
                 }
             }
         }
-
-        observeEvent<Boolean>(EventBus.REFRESH_BOOK_INFO) { //书源js函数触发刷新
+        observeEvent<Boolean>(EventBus.REFRESH_BOOK_INFO) {
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 refreshBook()
             }
         }
-
-        observeEvent<Boolean>(EventBus.REFRESH_BOOK_TOC) { //书源js函数触发刷新
+        observeEvent<Boolean>(EventBus.REFRESH_BOOK_TOC) {
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
                 refreshToc()
             }
@@ -445,16 +578,12 @@ class BookInfoActivity :
 
     private fun refreshBook() {
         upLoading(true)
-        viewModel.getBook()?.let {
-            viewModel.refreshBook(it)
-        }
+        viewModel.getBook()?.let { viewModel.refreshBook(it) }
     }
 
     private fun refreshToc() {
         upLoading(true)
-        viewModel.getBook()?.let {
-            viewModel.loadChapter(it, true, isFromBookInfo = true)
-        }
+        viewModel.getBook()?.let { viewModel.loadChapter(it, true, isFromBookInfo = true) }
     }
 
     private fun upLoadBook(
@@ -465,10 +594,7 @@ class BookInfoActivity :
             waitDialog.setText("上传中.....")
             waitDialog.show()
             try {
-                bookWebDav
-                    ?.upload(book)
-                    ?: throw NoStackTraceException("未配置webDav")
-                //更新书籍最后更新时间,使之比远程书籍的时间新
+                bookWebDav?.upload(book) ?: throw NoStackTraceException("未配置webDav")
                 book.lastCheckTime = System.currentTimeMillis()
                 viewModel.saveBook(book)
             } catch (e: Exception) {
@@ -479,18 +605,17 @@ class BookInfoActivity :
         }
     }
 
-    private fun showBook(book: Book) = binding.run {
-        showCover(book)
-        tvName.text = book.name
-        tvAuthor.text = getString(R.string.author_show, book.getRealAuthor())
-        tvOrigin.text = getString(R.string.origin_show, book.originName)
-        tvLasted.text = getString(R.string.lasted_show, book.latestChapterTitle)
+    private fun showBook(book: Book) {
+        uiBookName = book.name
+        uiAuthor = getString(R.string.author_show, book.getRealAuthor())
+        uiOrigin = getString(R.string.origin_show, book.originName)
+        uiLatestChapter = getString(R.string.lasted_show, book.latestChapterTitle)
         showBookIntro(book)
         if (book.isWebFile) {
-            llToc.gone()
-            tvLasted.text = getString(R.string.lasted_show, "下载中...")
+            uiTocVisible = false
+            uiLatestChapter = getString(R.string.lasted_show, "下载中...")
         } else {
-            llToc.visible()
+            uiTocVisible = true
         }
         menuCustomBtn?.isVisible = viewModel.hasCustomBtn
         upTvBookshelf()
@@ -509,14 +634,11 @@ class BookInfoActivity :
                 return when (uri.scheme) {
                     "http", "https" -> false
                     "legado", "yuedu" -> {
-                        startActivity<OnLineImportActivity> {
-                            data = uri
-                        }
+                        startActivity<OnLineImportActivity> { data = uri }
                         true
                     }
-
                     else -> {
-                        binding.root.longSnackbar(R.string.jump_to_another_app, R.string.confirm) {
+                        window.decorView.longSnackbar(R.string.jump_to_another_app, R.string.confirm) {
                             openUrl(uri)
                         }
                         true
@@ -525,15 +647,15 @@ class BookInfoActivity :
             }
             return true
         }
+
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             super.onPageStarted(view, url, favicon)
             view?.evaluateJavascript(jsStr, null)
         }
+
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-            view?.post {
-                binding.tvIntroContainer.requestLayout()
-            }
+            view?.post { introContainer.requestLayout() }
         }
     }
 
@@ -546,7 +668,7 @@ class BookInfoActivity :
                 return
             }
             val html = intro.substring(8, lastIndex)
-            val pooledWebView = this.pooledWebView ?: let{
+            val pooledWebView = this.pooledWebView ?: let {
                 val pooledWebView = WebViewPool.acquire(this)
                 val webView = pooledWebView.realWebView
                 webView.onResume()
@@ -563,8 +685,8 @@ class BookInfoActivity :
             if (initIntroView || this.pooledWebView == null) {
                 initIntroView = false
                 this.pooledWebView = pooledWebView
-                binding.tvIntroContainer.removeAllViews()
-                binding.tvIntroContainer.addView(webView)
+                introContainer.removeAllViews()
+                introContainer.addView(webView)
             }
             val bookUrl = viewModel.getBook()?.bookUrl
                 ?.takeIf { it.startsWith("http", true) }
@@ -574,8 +696,8 @@ class BookInfoActivity :
         }
         if (!initIntroView || pooledWebView != null) {
             destroyWeb()
-            binding.tvIntroContainer.removeAllViews()
-            binding.tvIntroContainer.addView(introTextView)
+            introContainer.removeAllViews()
+            introContainer.addView(introTextView)
         }
         if (intro.isNullOrBlank()) {
             return
@@ -596,7 +718,7 @@ class BookInfoActivity :
                     showDialogFragment(PhotoDialog(it, viewModel.bookSource?.bookSourceUrl))
                 },
                 imgOnClickListener = {
-                    viewModel.onButtonClick(this@BookInfoActivity, "info image" , it)
+                    viewModel.onButtonClick(this@BookInfoActivity, "info image", it)
                 }
             )
         } else if (intro.startsWith("<md>")) {
@@ -642,7 +764,7 @@ class BookInfoActivity :
         }
     }
 
-    private fun upKinds(book: Book) = binding.run {
+    private fun upKinds(book: Book) {
         lifecycleScope.launch {
             var kinds = book.getKindList()
             if (book.isLocal) {
@@ -654,242 +776,49 @@ class BookInfoActivity :
                     }
                 }
             }
-            if (kinds.isEmpty()) {
-                lbKind.gone()
-            } else {
-                lbKind.visible()
-                val source = viewModel.bookSource
-                if (source == null) {
-                    lbKind.setLabels(kinds)
-                    return@launch
-                }
-                lbKind.setLabels(
-                    kinds,
-                    { kind ->
-                        SourceCallBack.callBackBtn(
-                            this@BookInfoActivity,
-                            SourceCallBack.CLICK_BOOK_LABEL,
-                            source,
-                            book,
-                            null,
-                            result = kind
-                        ) {
-                            SearchActivity.start(this@BookInfoActivity, source, kind)
-                        }
-                    },
-                    { kind ->
-                        SourceCallBack.callBackBtn(
-                            this@BookInfoActivity,
-                            SourceCallBack.LONG_CLICK_BOOK_LABEL,
-                            source,
-                            book,
-                            null,
-                            result = kind
-                        )
-                        true
-                    }
-                )
-            }
-        }
-    }
-
-    private fun showCover(book: Book) {
-        binding.ivCover.load(book, false) {
-            if (!AppConfig.isEInkMode) {
-                BookCover.loadBlur(this, book.getDisplayCover(), false, book.origin)
-                    .into(binding.bgBook)
-            }
+            uiKinds.clear()
+            uiKinds.addAll(kinds)
         }
     }
 
     private fun upLoading(isLoading: Boolean, chapterList: List<BookChapter>? = null) {
         when {
             isLoading -> {
-                binding.tvToc.text = getString(R.string.toc_s, getString(R.string.loading))
+                uiTocText = getString(R.string.toc_s, getString(R.string.loading))
             }
-
             chapterList.isNullOrEmpty() -> {
-                binding.tvToc.text = getString(
-                    R.string.toc_s,
-                    getString(R.string.error_load_toc)
-                )
-                binding.tvLasted.text = getString(R.string.lasted_show, book?.latestChapterTitle)
+                uiTocText = getString(R.string.toc_s, getString(R.string.error_load_toc))
+                uiLatestChapter = getString(R.string.lasted_show, book?.latestChapterTitle)
             }
-
             else -> {
                 book?.let {
-                    binding.tvToc.text = getString(R.string.toc_s, it.durChapterTitle)
-                    binding.tvLasted.text = getString(R.string.lasted_show, it.latestChapterTitle)
+                    uiTocText = getString(R.string.toc_s, it.durChapterTitle)
+                    uiLatestChapter = getString(R.string.lasted_show, it.latestChapterTitle)
                 }
             }
         }
     }
 
     private fun upTvBookshelf() {
-        if (viewModel.inBookshelf) {
-            binding.tvShelf.text = getString(R.string.remove_from_bookshelf)
+        uiShelfText = if (viewModel.inBookshelf) {
+            getString(R.string.remove_from_bookshelf)
         } else {
-            binding.tvShelf.text = getString(R.string.add_to_bookshelf)
+            getString(R.string.add_to_bookshelf)
         }
         editMenuItem?.isVisible = viewModel.inBookshelf
     }
 
     private fun upGroup(groupId: Long) {
         viewModel.loadGroup(groupId) {
-            if (it.isNullOrEmpty()) {
-                binding.tvGroup.text = if (book?.isLocal == true) {
+            uiGroupText = if (it.isNullOrEmpty()) {
+                if (book?.isLocal == true) {
                     getString(R.string.group_s, getString(R.string.local_no_group))
                 } else {
                     getString(R.string.group_s, getString(R.string.no_group))
                 }
             } else {
-                binding.tvGroup.text = getString(R.string.group_s, it)
+                getString(R.string.group_s, it)
             }
-        }
-    }
-
-    private fun initViewEvent() = binding.run {
-        ivCover.setOnClickListener {
-            viewModel.getBook()?.let {
-                showDialogFragment(
-                    ChangeCoverDialog(it.name, it.author)
-                )
-            }
-        }
-        ivCover.setOnLongClickListener {
-            viewModel.getBook()?.getDisplayCover()?.let { path ->
-                showDialogFragment(PhotoDialog(path, isBook = true))
-            }
-            true
-        }
-        tvRead.setOnClickListener {
-            viewModel.getBook()?.let { book ->
-                if (book.isWebFile) {
-                    showWebFileDownloadAlert {
-                        readBook(it)
-                    }
-                } else {
-                    readBook(book)
-                }
-            }
-        }
-        tvShelf.setOnClickListener {
-            viewModel.getBook()?.let { book ->
-                if (viewModel.inBookshelf) {
-                    deleteBook()
-                } else {
-                    if (book.isWebFile) {
-                        showWebFileDownloadAlert()
-                    } else {
-                        viewModel.addToBookshelf {
-                            upTvBookshelf()
-                        }
-                    }
-                }
-            }
-        }
-        tvOrigin.setOnClickListener {
-            viewModel.getBook()?.let { book ->
-                if (book.isLocal) return@let
-                if (!appDb.bookSourceDao.has(book.origin)) {
-                    toastOnUi(R.string.error_no_source)
-                    return@let
-                }
-                editSourceResult.launch {
-                    putExtra("sourceUrl", book.origin)
-                }
-            }
-        }
-        tvChangeSource.setOnClickListener {
-            viewModel.getBook()?.let { book ->
-                showDialogFragment(ChangeBookSourceDialog(book.name, book.author))
-            }
-        }
-        tvTocView.setOnClickListener {
-            if (viewModel.chapterListData.value.isNullOrEmpty()) {
-                toastOnUi(R.string.chapter_list_empty)
-                return@setOnClickListener
-            }
-            viewModel.getBook()?.let { book ->
-                if (!viewModel.inBookshelf) {
-                    viewModel.saveBook(book) { //点击目录会保存book
-                        viewModel.saveChapterList {
-                            openChapterList()
-                        }
-                    }
-                } else {
-                    openChapterList()
-                }
-            }
-        }
-        tvChangeGroup.setOnClickListener {
-            viewModel.getBook()?.let {
-                showDialogFragment(
-                    GroupSelectDialog(it.group)
-                )
-            }
-        }
-        tvAuthor.setOnClickListener {
-            viewModel.getBook(false)?.let { book ->
-                SourceCallBack.callBackBtn(
-                    this@BookInfoActivity,
-                    SourceCallBack.CLICK_AUTHOR,
-                    viewModel.bookSource,
-                    book,
-                    null,
-                    result = book.author
-                ) {
-                    SearchActivity.start(this@BookInfoActivity, book.author)
-                }
-            }
-        }
-        tvAuthor.setOnLongClickListener {
-            viewModel.getBook(false)?.let { book ->
-                SourceCallBack.callBackBtn(
-                    this@BookInfoActivity,
-                    SourceCallBack.LONG_CLICK_AUTHOR,
-                    viewModel.bookSource,
-                    book,
-                    null,
-                    result = book.author
-                ) {
-                    SearchActivity.start(this@BookInfoActivity, book.author)
-                }
-            }
-            true
-        }
-        tvName.setOnClickListener {
-            viewModel.getBook(false)?.let { book ->
-                SourceCallBack.callBackBtn(
-                    this@BookInfoActivity,
-                    SourceCallBack.CLICK_BOOK_NAME,
-                    viewModel.bookSource,
-                    book,
-                    null,
-                    result = book.name
-                ) {
-                    SearchActivity.start(this@BookInfoActivity, book.name)
-                }
-            }
-        }
-        tvName.setOnLongClickListener {
-            viewModel.getBook(false)?.let { book ->
-                SourceCallBack.callBackBtn(
-                    this@BookInfoActivity,
-                    SourceCallBack.LONG_CLICK_BOOK_NAME,
-                    viewModel.bookSource,
-                    book,
-                    null,
-                    result = book.name
-                ) {
-                    SearchActivity.start(this@BookInfoActivity, book.name)
-                }
-            }
-            true
-        }
-        refreshLayout?.setOnRefreshListener {
-            refreshLayout.isRefreshing = false
-            refreshBook()
         }
     }
 
@@ -953,7 +882,6 @@ class BookInfoActivity :
     private fun deleteBook() {
         viewModel.getBook()?.let { book ->
             if (LocalConfig.bookInfoDeleteAlert) {
-                // 捕获当前页面作为玻璃对话框的 backdrop 采样源，使其在原页面上弹出
                 val pageBitmap = try {
                     val rootView = window.decorView
                     if (rootView.width > 0 && rootView.height > 0) {
@@ -981,15 +909,17 @@ class BookInfoActivity :
                         if (book.isLocal) {
                             LocalConfig.deleteBookOriginal = checkBoxChecked
                         }
-                        SourceCallBack.callBackBook(SourceCallBack.DEL_BOOK_SHELF, viewModel.bookSource, book)
+                        SourceCallBack.callBackBook(
+                            SourceCallBack.DEL_BOOK_SHELF,
+                            viewModel.bookSource,
+                            book
+                        )
                         viewModel.delBook(LocalConfig.deleteBookOriginal) {
                             setResult(RESULT_OK)
                             finish()
                         }
                     },
-                    onCancel = {
-                        // 取消操作
-                    }
+                    onCancel = {}
                 )
                 dialog.show(supportFragmentManager, "glass_delete_dialog")
             } else {
@@ -1003,9 +933,7 @@ class BookInfoActivity :
     }
 
     private fun openChapterList() {
-        viewModel.getBook()?.let {
-            tocActivityResult.launch(it.bookUrl)
-        }
+        viewModel.getBook()?.let { tocActivityResult.launch(it.bookUrl) }
     }
 
     private fun showWebFileDownloadAlert(
@@ -1016,23 +944,14 @@ class BookInfoActivity :
             toastOnUi("Unexpected webFileData")
             return
         }
-        selector(
-            R.string.download_and_import_file,
-            webFiles
-        ) { _, webFile, _ ->
+        selector(R.string.download_and_import_file, webFiles) { _, webFile, _ ->
             if (webFile.isSupported) {
-                /* import */
-                viewModel.importOrDownloadWebFile<Book>(webFile) {
-                    onClick?.invoke(it)
-                }
+                viewModel.importOrDownloadWebFile<Book>(webFile) { onClick?.invoke(it) }
             } else if (webFile.isSupportDecompress) {
-                /* 解压筛选后再选择导入项 */
                 viewModel.importOrDownloadWebFile<Uri>(webFile) { uri ->
                     viewModel.getArchiveFilesName(uri) { fileNames ->
                         if (fileNames.size == 1) {
-                            viewModel.importArchiveBook(uri, fileNames[0]) {
-                                onClick?.invoke(it)
-                            }
+                            viewModel.importArchiveBook(uri, fileNames[0]) { onClick?.invoke(it) }
                         } else {
                             showDecompressFileImportAlert(uri, fileNames, onClick)
                         }
@@ -1044,10 +963,7 @@ class BookInfoActivity :
                     message = getString(R.string.file_not_supported, webFile.name)
                 ) {
                     neutralButton(R.string.open_fun) {
-                        /* download only */
-                        viewModel.importOrDownloadWebFile<Uri>(webFile) {
-                            openFileUri(it, "*/*")
-                        }
+                        viewModel.importOrDownloadWebFile<Uri>(webFile) { openFileUri(it, "*/*") }
                     }
                     noButton()
                 }
@@ -1064,13 +980,8 @@ class BookInfoActivity :
             toastOnUi(R.string.unsupport_archivefile_entry)
             return
         }
-        selector(
-            R.string.import_select_book,
-            fileNames
-        ) { _, name, _ ->
-            viewModel.importArchiveBook(archiveFileUri, name) {
-                success?.invoke(it)
-            }
+        selector(R.string.import_select_book, fileNames) { _, name, _ ->
+            viewModel.importArchiveBook(archiveFileUri, name) { success?.invoke(it) }
         }
     }
 
@@ -1078,14 +989,10 @@ class BookInfoActivity :
         if (!viewModel.inBookshelf) {
             book.addType(BookType.notShelf)
             viewModel.saveBook(book) {
-                viewModel.saveChapterList {
-                    startReadActivity(book)
-                }
+                viewModel.saveChapterList { startReadActivity(book) }
             }
         } else {
-            viewModel.saveBook(book) {
-                startReadActivity(book)
-            }
+            viewModel.saveBook(book) { startReadActivity(book) }
         }
     }
 
@@ -1096,7 +1003,6 @@ class BookInfoActivity :
                     .putExtra("bookUrl", book.bookUrl)
                     .putExtra("inBookshelf", viewModel.inBookshelf)
             )
-
             else -> readBookResult.launch(
                 Intent(
                     this,
@@ -1120,7 +1026,8 @@ class BookInfoActivity :
     override fun coverChangeTo(coverUrl: String) {
         viewModel.bookData.value?.let { book ->
             book.customCoverUrl = coverUrl
-            showCover(book)
+            // 触发 Compose 重新加载封面
+            viewModel.bookData.postValue(book)
             if (viewModel.inBookshelf) {
                 viewModel.saveBook(book)
             }
@@ -1134,9 +1041,7 @@ class BookInfoActivity :
             if (viewModel.inBookshelf) {
                 viewModel.saveBook(book)
             } else if (groupId > 0) {
-                viewModel.addToBookshelf {
-                    upTvBookshelf()
-                }
+                viewModel.addToBookshelf { upTvBookshelf() }
             }
         }
     }
@@ -1153,19 +1058,19 @@ class BookInfoActivity :
         }
     }
 
-     override fun onStart() {
-         super.onStart()
-         if (initGetter) {
-             glideImageGetter.start()
-         }
-     }
+    override fun onStart() {
+        super.onStart()
+        if (initGetter) {
+            glideImageGetter.start()
+        }
+    }
 
-     override fun onStop() {
-         super.onStop()
-         if (initGetter) {
-             glideImageGetter.stop()
-         }
-     }
+    override fun onStop() {
+        super.onStop()
+        if (initGetter) {
+            glideImageGetter.stop()
+        }
+    }
 
     override fun onDestroy() {
         destroyWeb()
@@ -1179,5 +1084,4 @@ class BookInfoActivity :
         pooledWebView?.let { WebViewPool.release(it) }
         pooledWebView = null
     }
-
 }
