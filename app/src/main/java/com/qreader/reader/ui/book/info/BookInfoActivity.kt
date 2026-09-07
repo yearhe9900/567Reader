@@ -416,6 +416,7 @@ class BookInfoActivity :
                         }
                     }
                 },
+                onBack = { finish() },
                 onRefresh = { refreshBook() },
             )
         }

@@ -22,7 +22,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -82,6 +88,7 @@ import com.qreader.reader.ui.widget.image.CoverImageView
  * @param onAuthorLongClick 作者长按
  * @param onLabelClick     标签点击（用于搜索）
  * @param onLabelLongClick 标签长按（用于 SourceCallBack）
+ * @param onBack           返回按钮点击
  * @param onRefresh        下拉刷新
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,6 +119,7 @@ fun BookInfoScreen(
     onAuthorLongClick: (() -> Unit)?,
     onLabelClick: ((String) -> Unit)?,
     onLabelLongClick: ((String) -> Unit)?,
+    onBack: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -123,6 +131,28 @@ fun BookInfoScreen(
     var isRefreshing by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
+        // ── 顶部标题栏（透明背景，深色主题）──
+        TopAppBar(
+            title = {
+                BasicText(
+                    text = stringResource(R.string.book_info),
+                    style = TextStyle(Color.White, 18.sp),
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        tint = Color.White,
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+            ),
+        )
+
         // ── 可滚动内容区（支持拉动刷新）──
         PullToRefreshBox(
             isRefreshing = isRefreshing,
