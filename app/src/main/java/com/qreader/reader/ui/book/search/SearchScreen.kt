@@ -19,24 +19,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,22 +52,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
-import com.qreader.reader.lib.theme.ThemeStore
+import com.qreader.reader.lib.theme.isDarkTheme
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import kotlinx.coroutines.flow.distinctUntilChanged
 import splitties.init.appCtx
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
@@ -74,33 +86,42 @@ fun SearchScreen(
     onBookshelfBookClick: (Book) -> Unit,
     onSearchScopeClick: () -> Unit,
     onSourceManageClick: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isSearching by viewModel.isSearchLiveData.observeAsState(false)
     val searchBooks by viewModel.searchBookLiveData.observeAsState(emptyList())
-    val searchScopeState by viewModel.searchScope.stateLiveData.observeAsState("")
-    val searchFinishEmpty by viewModel.searchFinishLiveData.observeAsState(false)
 
     val context = LocalContext.current
-    val primaryColor = Color(ThemeStore.primaryColor(context))
-    val accentColor = Color(ThemeStore.accentColor(context))
-    val bgColor = Color(ThemeStore.backgroundColor(context))
+    val isDark = context.isDarkTheme
+    val primaryColor = Color(android.graphics.Color.parseColor(
+        String.format("#%06X", 0xFFFFFF and com.qreader.reader.lib.theme.ThemeStore.primaryColor(context))
+    ))
+    val focusManager = LocalFocusManager.current
 
     var query by remember { mutableStateOf("") }
     var showInputHelp by remember { mutableStateOf(true) }
     var historyKeywords by remember { mutableStateOf(emptyList<SearchKeyword>()) }
     var matchedBooks by remember { mutableStateOf(emptyList<Book>()) }
+    val backdrop = rememberLayerBackdrop()
+
+    fun doSearch(key: String) {
+        val trimmed = key.trim()
+        if (trimmed.isNotEmpty()) {
+            viewModel.saveSearchKey(trimmed)
+            viewModel.searchKey = ""
+            viewModel.search(trimmed)
+            showInputHelp = false
+            focusManager.clearFocus()
+        }
+    }
 
     // 收集搜索历史
     LaunchedEffect(query) {
         if (query.isBlank()) {
-            appDb.searchKeywordDao.flowByTime().collect {
-                historyKeywords = it
-            }
+            appDb.searchKeywordDao.flowByTime().collect { historyKeywords = it }
         } else {
-            appDb.searchKeywordDao.flowSearch(query).collect {
-                historyKeywords = it
-            }
+            appDb.searchKeywordDao.flowSearch(query).collect { historyKeywords = it }
         }
     }
 
@@ -109,9 +130,7 @@ fun SearchScreen(
         if (query.isBlank()) {
             matchedBooks = emptyList()
         } else {
-            appDb.bookDao.flowSearch(query).collect {
-                matchedBooks = it
-            }
+            appDb.bookDao.flowSearch(query).collect { matchedBooks = it }
         }
     }
 
@@ -131,74 +150,14 @@ fun SearchScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // 搜索栏
-            SearchBar(
-                query = query,
-                onQueryChange = { newQuery ->
-                    query = newQuery
-                    viewModel.stop()
-                    showInputHelp = true
-                },
-                onSearch = { searchKey ->
-                    searchKey.trim().let { key ->
-                        if (key.isNotEmpty()) {
-                            viewModel.saveSearchKey(key)
-                            viewModel.searchKey = ""
-                            viewModel.search(key)
-                            showInputHelp = false
-                        }
-                    }
-                },
-                active = showInputHelp,
-                onActiveChange = { active ->
-                    if (!active && searchBooks.isNotEmpty() && query.isNotBlank()) {
-                        showInputHelp = false
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.search_book_key)) },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                },
-                trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = {
-                            query = ""
-                            viewModel.stop()
-                            showInputHelp = true
-                        }) {
-                            Icon(Icons.Default.Close, contentDescription = null)
-                        }
-                    }
-                },
-                colors = SearchBarDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                // 输入帮助区域（搜索历史 + 书架匹配）
-                InputHelpContent(
-                    historyKeywords = historyKeywords,
-                    matchedBooks = matchedBooks,
-                    bgColor = bgColor,
-                    onHistoryClick = { keyword ->
-                        query = keyword
-                        viewModel.saveSearchKey(keyword)
-                        viewModel.searchKey = ""
-                        viewModel.search(keyword)
-                        showInputHelp = false
-                    },
-                    onHistoryDelete = { keyword ->
-                        viewModel.deleteHistory(keyword)
-                    },
-                    onClearHistory = {
-                        viewModel.clearHistory()
-                    },
-                    onBookClick = { book ->
-                        onBookshelfBookClick(book)
-                    }
-                )
-            }
+        // ── 背景内容层（作为玻璃态采样源）──
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .layerBackdrop(backdrop)
+        ) {
+            // 为标题栏留空间
+            Spacer(modifier = Modifier.height(56.dp + 48.dp))
 
             // 搜索进度条
             AnimatedVisibility(
@@ -212,11 +171,24 @@ fun SearchScreen(
                 )
             }
 
-            // 搜索结果列表
-            if (!showInputHelp) {
+            // 输入帮助（搜索历史 + 书架匹配）或搜索结果
+            if (showInputHelp) {
+                InputHelpContent(
+                    historyKeywords = historyKeywords,
+                    matchedBooks = matchedBooks,
+                    onHistoryClick = { keyword ->
+                        query = keyword
+                        doSearch(keyword)
+                    },
+                    onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
+                    onClearHistory = { viewModel.clearHistory() },
+                    onBookClick = { book -> onBookshelfBookClick(book) },
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                // 搜索结果列表
                 Box(modifier = Modifier.weight(1f)) {
                     if (searchBooks.isEmpty() && !isSearching) {
-                        // 空状态
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -268,7 +240,122 @@ fun SearchScreen(
             }
         }
 
-        // 开始/停止按钮
+        // ── 玻璃态标题栏（悬浮在顶部）──
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RoundedCornerShape(0.dp) },
+                    effects = {
+                        vibrancy()
+                        blur(GlassConfig.blur.toPx())
+                        lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                    },
+                    onDrawSurface = { drawRect(GlassConfig.containerColor(!isDark)) }
+                )
+                .statusBarsPadding()
+                .height(56.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        tint = Color.White,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.search_book_key),
+                    style = TextStyle(Color.White, 18.sp),
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
+        }
+
+        // ── 搜索输入框（标题栏下方，用 BasicTextField 不会全屏展开）──
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(top = 56.dp)
+                .drawBackdrop(
+                    backdrop = backdrop,
+                    shape = { RoundedCornerShape(0.dp) },
+                    effects = {
+                        blur(GlassConfig.blur.toPx())
+                    },
+                    onDrawSurface = { drawRect(GlassConfig.containerColor(!isDark)) }
+                )
+                .height(48.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(alpha = 0.15f))
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                BasicTextField(
+                    value = query,
+                    onValueChange = { newQuery ->
+                        query = newQuery
+                        viewModel.stop()
+                        showInputHelp = true
+                    },
+                    modifier = Modifier.weight(1f),
+                    textStyle = TextStyle(Color.White, 15.sp),
+                    cursorBrush = SolidColor(Color.White),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { doSearch(query) }),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (query.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.search_book_key),
+                                    style = TextStyle(Color.White.copy(alpha = 0.5f), 15.sp)
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+                if (query.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            query = ""
+                            viewModel.stop()
+                            showInputHelp = true
+                        },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // 开始/停止 FAB
         AnimatedVisibility(
             visible = !showInputHelp && (isSearching || (viewModel.hasMore && viewModel.searchKey.isNotEmpty())),
             modifier = Modifier
@@ -278,15 +365,11 @@ fun SearchScreen(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            FloatingActionButton(
+            androidx.compose.material3.FloatingActionButton(
                 onClick = {
-                    if (isSearching) {
-                        viewModel.stop()
-                    } else {
-                        viewModel.search("")
-                    }
+                    if (isSearching) viewModel.stop() else viewModel.search("")
                 },
-                containerColor = accentColor
+                containerColor = primaryColor
             ) {
                 Icon(
                     imageVector = if (isSearching) Icons.Default.Close else Icons.Default.Search,
@@ -302,16 +385,15 @@ fun SearchScreen(
 private fun InputHelpContent(
     historyKeywords: List<SearchKeyword>,
     matchedBooks: List<Book>,
-    bgColor: Color,
     onHistoryClick: (String) -> Unit,
     onHistoryDelete: (SearchKeyword) -> Unit,
     onClearHistory: () -> Unit,
-    onBookClick: (Book) -> Unit
+    onBookClick: (Book) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(bgColor)
+        modifier = modifier
+            .fillMaxWidth()
             .navigationBarsPadding(),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
@@ -416,7 +498,6 @@ private fun SearchBookItem(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            // 书名 + 在书架标记
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = searchBook.name,
@@ -433,10 +514,7 @@ private fun SearchBookItem(
                         style = MaterialTheme.typography.labelSmall,
                         color = primaryColor,
                         modifier = Modifier
-                            .background(
-                                primaryColor.copy(alpha = 0.1f),
-                                RoundedCornerShape(4.dp)
-                            )
+                            .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
@@ -444,7 +522,6 @@ private fun SearchBookItem(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // 作者
             Text(
                 text = stringResource(R.string.author_show, searchBook.author),
                 style = MaterialTheme.typography.bodySmall,
@@ -453,7 +530,6 @@ private fun SearchBookItem(
                 overflow = TextOverflow.Ellipsis
             )
 
-            // 最新章节
             val latestChapter = searchBook.latestChapterTitle
             if (!latestChapter.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -466,7 +542,6 @@ private fun SearchBookItem(
                 )
             }
 
-            // 简介
             val intro = searchBook.intro
             if (!intro.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -480,7 +555,6 @@ private fun SearchBookItem(
             }
         }
 
-        // 来源数
         if (searchBook.origins.size > 1) {
             Spacer(modifier = Modifier.width(8.dp))
             Box(

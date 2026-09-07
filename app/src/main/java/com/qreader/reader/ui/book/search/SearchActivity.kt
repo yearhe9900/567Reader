@@ -78,7 +78,8 @@ class SearchActivity : VMBaseActivity<ActivityBookSearchBinding, SearchViewModel
                 },
                 onSourceManageClick = {
                     startActivity<BookSourceActivity>()
-                }
+                },
+                onBack = { finish() }
             )
         }
     }
