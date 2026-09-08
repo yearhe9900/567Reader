@@ -7,7 +7,7 @@
 [![Gradle](https://img.shields.io/badge/Gradle-9.7.1-02303A?logo=gradle)](https://gradle.org)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE)
 
-**567Reader** 是一款基于 [Legado（阅读）](https://github.com/gedoor/legado) 二次开发的 Android 阅读器。在继承 Legado 完整书源体系与阅读能力的基础上，重新设计了主界面架构（Jetpack Compose 全页迁移），落地了**液态玻璃（Liquid Glass）**主题系统，并针对墨水屏设备做了专项适配。
+**567Reader**（应用显示名「阅读567」，包名 `com.qreader.reader`）是一款基于 [Legado（阅读）](https://github.com/gedoor/legado) 二次开发的 Android 阅读器，由 legado-E（阅读 Sigma）fork 而来。在继承 Legado 完整书源体系与阅读能力的基础上，重做了主界面架构（Jetpack Compose 全页迁移），落地了**液态玻璃（Liquid Glass）**主题系统，并针对墨水屏设备做了专项适配。
 
 > 软件本身不提供任何内容，书籍内容均来自用户自行添加的第三方书源或本地文件。
 
@@ -91,15 +91,17 @@
 
 ### Compose 化进度
 
-主界面已完成 Compose 化（15 个 `@Composable` 文件 / ~4,600 行），包括：
+核心页面已完成 Compose 化，全部复用同一套液态玻璃主题系统：
 
-- **MainScreen**：HorizontalPager + 玻璃态底部导航栏 + 玻璃标题栏
-- **BookshelfPage**：书架页（RecyclerView 经 AndroidView 桥接）
+- **MainScreen**：HorizontalPager 三页（书架 / 发现 / 设置）+ 玻璃态底部导航栏 + 玻璃标题栏
+- **BookshelfPage**：书架页（RecyclerView 经 AndroidView 桥接，逻辑不变）
 - **ExplorePage**：发现页（书源浏览）
-- **MySettingsScreen**：设置页（玻璃态分组卡片）
-- **玻璃弹框系统**：LiquidGlassDialog、SortDialogOverlay、GroupEditOverlay、GroupDrawerOverlay
+- **SearchScreen**：搜索页（还原 legado-E 原生 UI 与搜索逻辑）
+- **BookInfoScreen**：书籍信息页（封面 / 标签 / 简介经 AndroidView 桥接）
+- **MySettingsScreen**：设置页（玻璃态分组卡片 + 玻璃态开关）
+- **玻璃弹框系统**：LiquidGlassDialog、SortDialogOverlay、GroupEditOverlay、GroupDrawerOverlay，以及编辑分组、删除书籍、主题模式等弹框统一玻璃态
 
-暂不迁移的模块：阅读器（Canvas 手绘翻页 14,878 行）、漫画阅读器、WebView。
+暂不迁移的模块：阅读器（Canvas 手绘翻页）、漫画阅读器、WebView。
 
 ---
 
@@ -108,7 +110,7 @@
 ```
 567Reader/
 ├── app/                          # 主应用模块
-│   ├── src/main/java/            # Kotlin/Java 源码（840+ .kt 文件，~134,000 行）
+│   ├── src/main/java/            # Kotlin/Java 源码（800+ .kt 文件）
 │   │   └── com/qreader/reader/
 │   │       ├── ui/main/          # 主界面 Compose 页面
 │   │       │   ├── MainScreen.kt        # 主界面壳（Pager + 导航栏 + 标题栏）
@@ -118,6 +120,9 @@
 │   │       │   ├── SortDialogOverlay.kt # 排序弹框
 │   │       │   ├── GroupDrawerOverlay.kt # 分组抽屉
 │   │       │   └── bookshelf/           # 书架 ViewModel + Adapter
+│   │       ├── ui/book/          # 书籍相关 Compose 页面
+│   │       │   ├── search/SearchScreen.kt   # 搜索页（还原 legado-E UI）
+│   │       │   └── info/BookInfoScreen.kt   # 书籍信息页
 │   │       ├── ui/compose/       # Compose 通用组件
 │   │       │   ├── glass/        # 玻璃态组件（LiquidGlassDialog、GlassDialogTokens）
 │   │       │   └── liquid/       # 液态导航栏组件
@@ -238,7 +243,7 @@ legado://import/{path}?src={url}
 
 ## 开源协议与致谢
 
-本项目继承自 [Legado（开源阅读）](https://github.com/gedoor/legado)，遵循其开源协议精神。
+本项目由 legado-E（阅读 Sigma）fork 而来，上游继承自 [Legado（开源阅读）](https://github.com/gedoor/legado)，遵循其开源协议精神。
 
 ### 核心依赖
 
