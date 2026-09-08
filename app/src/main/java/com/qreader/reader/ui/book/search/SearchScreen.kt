@@ -32,7 +32,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -78,6 +79,7 @@ import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
 import com.qreader.reader.help.config.AppConfig
+import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.compose.glass.GlassConfig
@@ -107,6 +109,7 @@ fun SearchScreen(
     // 与 MainScreen 一致：以主色深浅判断明暗主题（仅用于玻璃容器色 / 标题栏前景色）
     val isLightTheme = ColorUtils.isColorLight(context.primaryColor)
     val primaryColor = Color(context.primaryColor)
+    val accentColor = Color(context.accentColor)
     val bgColor = Color(context.backgroundColor)
     val containerColor = GlassConfig.containerColor(isLightTheme)
     val contentColor = if (isLightTheme) Color.Black else Color.White
@@ -116,6 +119,9 @@ fun SearchScreen(
 
     var query by remember { mutableStateOf(initialKey) }
     var showInputHelp by remember { mutableStateOf(initialKey.isBlank()) }
+    // 是否为用户手动停止（对齐 legado SearchActivity.isManualStopSearch：
+    // 手动停止后不再显示「继续搜索」，自然结束且还有更多时才显示）
+    var manualStopSearch by remember { mutableStateOf(false) }
     var historyKeywords by remember { mutableStateOf(emptyList<SearchKeyword>()) }
     var matchedBooks by remember { mutableStateOf(emptyList<Book>()) }
     val backdrop = rememberLayerBackdrop()
@@ -123,6 +129,7 @@ fun SearchScreen(
     fun doSearch(key: String) {
         val trimmed = key.trim()
         if (trimmed.isNotEmpty()) {
+            manualStopSearch = false
             viewModel.saveSearchKey(trimmed)
             viewModel.searchKey = ""
             viewModel.search(trimmed)
@@ -359,9 +366,12 @@ fun SearchScreen(
             }
         }
 
-        // 开始/停止 FAB
+        // 开始/停止 FAB（对齐 legado activity_book_search.xml#fb_start_stop：
+        // fabSize=mini、底色 accentColor、搜索中 ic_stop_black_24dp / 可继续 ic_play_24dp、
+        // 手动停止后隐藏，自然结束且还有更多时显示「继续」）
         AnimatedVisibility(
-            visible = !showInputHelp && (isSearching || (viewModel.hasMore && viewModel.searchKey.isNotEmpty())),
+            visible = !showInputHelp && (isSearching ||
+                (!manualStopSearch && viewModel.hasMore && viewModel.searchKey.isNotEmpty())),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
@@ -369,15 +379,25 @@ fun SearchScreen(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            androidx.compose.material3.FloatingActionButton(
+            SmallFloatingActionButton(
                 onClick = {
-                    if (isSearching) viewModel.stop() else viewModel.search("")
+                    if (isSearching) {
+                        manualStopSearch = true
+                        viewModel.stop()
+                    } else {
+                        manualStopSearch = false
+                        viewModel.search("")
+                    }
                 },
-                containerColor = primaryColor
+                containerColor = accentColor
             ) {
                 Icon(
-                    imageVector = if (isSearching) Icons.Default.Close else Icons.Default.Search,
-                    contentDescription = if (isSearching) stringResource(R.string.stop) else "继续搜索"
+                    painter = painterResource(
+                        if (isSearching) R.drawable.ic_stop_black_24dp else R.drawable.ic_play_24dp
+                    ),
+                    contentDescription = stringResource(R.string.stop),
+                    // 与 legado 的 setImageResource 一致：不做 tint，保留图标自身配色
+                    tint = Color.Unspecified
                 )
             }
         }
