@@ -292,8 +292,7 @@ fun SearchScreen(
                                     isInBookshelf = viewModel.isInBookShelf(searchBook),
                                     onClick = {
                                         onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
-                                    },
-                                    onFillKind = { viewModel.fillKindOne(it) }
+                                    }
                                 )
                             }
                         }
@@ -620,18 +619,15 @@ private fun SearchBookItem(
     searchBook: SearchBook,
     isInBookshelf: Boolean,
     onClick: () -> Unit,
-    onFillKind: (SearchBook) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
     val coverWidth = with(density) { 80.dp.roundToPx() }
     val coverHeight = with(density) { 110.dp.roundToPx() }
-    val kinds = remember(searchBook.kind) { searchBook.getKindList() }
+    val kinds = remember(searchBook.kind) {
+        if (searchBook.kind.isNullOrBlank()) emptyList() else searchBook.getKindList()
+    }
     val originCount = searchBook.origins.size
-
-    // 条目进入 LazyColumn 组合窗口（即将可见、点击前）即预抓书源详情页补全分类。
-    // fillKindOne 内部已按 kind 是否空 + bookUrl 去重，重复进入不会重复请求。
-    LaunchedEffect(Unit) { onFillKind(searchBook) }
 
     Row(
         modifier = modifier

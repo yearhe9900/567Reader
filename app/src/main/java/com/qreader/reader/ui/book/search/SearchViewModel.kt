@@ -8,22 +8,16 @@ import androidx.lifecycle.viewModelScope
 import com.qreader.reader.base.BaseViewModel
 import com.qreader.reader.constant.AppLog
 import com.qreader.reader.data.appDb
-import com.qreader.reader.data.entities.BookSource
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
 import com.qreader.reader.help.book.isNotShelf
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.model.webBook.SearchModel
-import com.qreader.reader.model.webBook.WebBook
 import com.qreader.reader.utils.ConflateLiveData
 import com.qreader.reader.utils.toastOnUi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import java.util.concurrent.ConcurrentHashMap
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,11 +32,6 @@ class SearchViewModel(application: Application) : BaseViewModel(application) {
     var searchKey: String = ""
     var hasMore = true
     private var searchID = 0L
-    // 搜索结果分类补全：对 kind 为空的 SearchBook 预抓书源详情页拿到真实分类。
-    // 仅在条目进入 LazyColumn 组合窗口时触发（SearchScreen 的 LaunchedEffect），
-    // 并发上限 4、按 bookUrl 去重避免重复请求；条目离屏再回来时 kind 已非空会直接跳过。
-    private val fillingKinds = ConcurrentHashMap.newKeySet<String>()
-    private val kindSemaphore = Semaphore(4)
     private val searchModel = SearchModel(viewModelScope, object : SearchModel.CallBack {
 
         override fun getSearchScope(): SearchScope {
@@ -112,8 +101,6 @@ class SearchViewModel(application: Application) : BaseViewModel(application) {
                 searchModel.cancelSearch()
                 searchID = System.currentTimeMillis()
                 searchBookLiveData.postValue(emptyList())
-                // 新一轮显式搜索（非加载更多）重置分类补全去重，允许重新预抓
-                if (key.isNotEmpty()) fillingKinds.clear()
                 searchKey = key
                 hasMore = true
             }
@@ -129,41 +116,6 @@ class SearchViewModel(application: Application) : BaseViewModel(application) {
      */
     fun stop() {
         searchModel.cancelSearch()
-    }
-
-    /**
-     * 为单条搜索结果补全分类：预抓书源详情页（WebBook.getBookInfoAwait）拿到真实 kind，
-     * 写回当前结果列表触发重绘。由 SearchScreen 在条目进入组合窗口时调用（点击前的预抓）。
-     */
-    fun fillKindOne(sb: SearchBook) {
-        if (!sb.kind.isNullOrBlank()) return
-        val key = sb.bookUrl
-        if (!fillingKinds.add(key)) return
-        viewModelScope.launch(Dispatchers.IO) {
-            kindSemaphore.withPermit {
-                runCatching {
-                    val source = appDb.bookSourceDao.getBookSource(sb.origin) ?: return@runCatching
-                    val fetched = WebBook.getBookInfoAwait(source, sb.toBook())
-                    val kind = fetched.kind
-                    if (kind.isNullOrBlank()) {
-                        fillingKinds.remove(key)
-                        return@runCatching
-                    }
-                    val current = searchBookLiveData.value ?: return@withPermit
-                    if (current.none { it.bookUrl == sb.bookUrl && it.origin == sb.origin }) {
-                        return@withPermit
-                    }
-                    val updated = sb.copy(kind = kind, wordCount = fetched.wordCount ?: sb.wordCount)
-                    searchBookLiveData.postValue(
-                        current.map { b ->
-                            if (b.bookUrl == sb.bookUrl && b.origin == sb.origin) updated else b
-                        }
-                    )
-                }.onFailure {
-                    fillingKinds.remove(key)
-                }
-            }
-        }
     }
 
     fun pause() {
