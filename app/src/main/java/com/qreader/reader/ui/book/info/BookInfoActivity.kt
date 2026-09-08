@@ -642,7 +642,6 @@ class BookInfoActivity :
                 }
             }
         }
-        return super.onCompatOptionsItemSelected(item)
     }
 
     override fun observeLiveBus() {
