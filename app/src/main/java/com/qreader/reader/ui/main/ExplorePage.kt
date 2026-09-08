@@ -49,6 +49,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.RoundedRectangle
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
 import com.qreader.reader.ui.compose.glass.glassDialogColors
 import com.qreader.reader.R
@@ -62,7 +63,6 @@ import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.main.explore.ExploreAdapter
 import com.qreader.reader.ui.main.explore.ExploreDiffItemCallBack
 import com.qreader.reader.ui.main.explore.ExploreViewModel
-import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.flowWithLifecycleAndDatabaseChangeFirst
 import com.qreader.reader.utils.setEdgeEffectColor
 import kotlinx.coroutines.CoroutineScope
@@ -192,7 +192,7 @@ fun ExplorePage(
 
     // 标题栏背景：与书架内容区（页面主题背景 backgroundColor）保持一致，文字色随背景深浅反色
     val barBg = Color(context.backgroundColor)
-    val barContentColor = if (ColorUtils.isColorLight(context.backgroundColor)) Color.Black else Color.White
+    val barContentColor = GlassConfig.contentColor(GlassConfig.isLightTheme(context))
 
     // ── UI ──
     Column(modifier = modifier.fillMaxSize()) {
@@ -228,7 +228,7 @@ fun ExplorePage(
         val isEInkMode = AppConfig.isEInkMode
         val colors = glassDialogColors(
             isEInkMode,
-            ColorUtils.isColorLight(context.backgroundColor)
+            GlassConfig.isLightTheme(context)
         )
         val contentColor = colors.contentColor
         val accentColor = colors.accentColor

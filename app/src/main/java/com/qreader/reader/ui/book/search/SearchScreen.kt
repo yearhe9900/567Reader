@@ -85,7 +85,6 @@ import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 import com.qreader.reader.ui.widget.text.BadgeView
 import com.qreader.reader.ui.widget.anima.RefreshProgressBar
-import com.qreader.reader.utils.ColorUtils
 import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -115,12 +114,12 @@ fun SearchScreen(
 
     val context = LocalContext.current
     // 与 MainScreen 一致：玻璃明暗跟随背景而非主色（主色通常为深色强调色，会误判为暗色 → 玻璃永远深灰）
-    val isLightTheme = ColorUtils.isColorLight(context.backgroundColor)
+    val isLightTheme = GlassConfig.isLightTheme(context)
     val primaryColor = Color(context.primaryColor)
     val accentColor = Color(context.accentColor)
     val bgColor = Color(context.backgroundColor)
     val containerColor = GlassConfig.containerColor(isLightTheme)
-    val contentColor = if (isLightTheme) Color.Black else Color.White
+    val contentColor = GlassConfig.contentColor(isLightTheme)
     // 正文颜色一律走 legado 的日/夜资源色，不自己算 alpha
     val primaryTextColor = colorResource(R.color.primaryText)
     val focusManager = LocalFocusManager.current

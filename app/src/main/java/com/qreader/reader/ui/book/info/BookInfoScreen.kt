@@ -63,10 +63,8 @@ import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.lib.theme.accentColor
-import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.ui.compose.glass.GlassConfig
-import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 import kotlinx.coroutines.delay
@@ -145,9 +143,9 @@ fun BookInfoScreen(
 ) {
     val context = LocalContext.current
     // 标题栏玻璃明暗跟随背景（与 MainScreen / SearchScreen 一致：以 backgroundColor 判定而非主色）
-    val isBookInfoLightTheme = ColorUtils.isColorLight(context.backgroundColor)
+    val isBookInfoLightTheme = GlassConfig.isLightTheme(context)
     val barContainerColor = GlassConfig.containerColor(isBookInfoLightTheme)
-    val barContentColor = if (isBookInfoLightTheme) Color.Black else Color.White
+    val barContentColor = GlassConfig.contentColor(isBookInfoLightTheme)
     val bgColor = Color(context.getColor(R.color.background))
     val bottomBg = Color(context.getColor(R.color.background_menu))
     val textColor = Color(context.getColor(R.color.primaryText))

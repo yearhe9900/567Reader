@@ -52,12 +52,11 @@ import com.kyant.shapes.Capsule
 import com.qreader.reader.R
 import com.qreader.reader.data.entities.BookGroup
 import com.qreader.reader.help.config.AppConfig
-import com.qreader.reader.lib.theme.backgroundColor
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 import com.qreader.reader.ui.compose.glass.glassDialogColors
 import com.qreader.reader.ui.file.HandleFileContract
 import com.qreader.reader.ui.widget.image.CoverImageView
-import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.FileUtils
 import com.qreader.reader.utils.MD5Utils
 import com.qreader.reader.utils.externalFiles
@@ -89,7 +88,7 @@ fun GroupEditOverlay(
     // 删除确认 AlertDialog 在 LiquidGlassDialog 槽位之外，单独解析配色（与弹框内一致，E-Ink / 亮色回退）
     val dialogColors = glassDialogColors(
         AppConfig.isEInkMode,
-        ColorUtils.isColorLight(context.backgroundColor)
+        GlassConfig.isLightTheme(context)
     )
 
     var name by remember { mutableStateOf(target?.groupName ?: "") }

@@ -134,9 +134,9 @@ fun MainScreen(
     // 玻璃与文字的明暗跟随「背景」而非主色：玻璃浮在背景之上，且主色通常是用户选的强调色
     // （亮色背景 + 深色主色是常态），若按主色判断会把浅背景误判为暗色，玻璃永远走深灰 =
     // 用户看到的「浅灰色」。改按 backgroundColor 判断后，浅背景 → 玻璃白、文字黑。
-    val isLightTheme = ColorUtils.isColorLight(context.backgroundColor)
+    val isLightTheme = GlassConfig.isLightTheme(context)
     val accentColor = Color(context.accentColor)
-    val contentColor = if (isLightTheme) Color.Black else Color.White
+    val contentColor = GlassConfig.contentColor(isLightTheme)
     val containerColor = GlassConfig.containerColor(isLightTheme)
     val bgColor = Color(context.backgroundColor)
 

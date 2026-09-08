@@ -10,7 +10,8 @@ import androidx.compose.ui.unit.dp
  * 共享的配色与玻璃效果参数，避免在各处重复硬编码同一套数值。
  *
  * 设计约定（与用户确认的玻璃弹框风格一致）：
- *  - 弹框固定使用**深色主题**风格（白字、深灰半透明卡片、深灰蒙板），不随系统浅色模式变化；
+ *  - 弹框随 legado 主题的明暗变化（亮色主题 = 白卡黑字、暗色主题 = 深灰卡白字），
+ *    明暗判定统一走 [GlassConfig.isLightTheme]；
  *  - E-Ink（墨水屏）模式下回退为黑白高对比，由 [glassDialogColors] 按 `isEInkMode` 解析。
  *
  * 玻璃效果数值含义：
@@ -20,17 +21,18 @@ import androidx.compose.ui.unit.dp
 object GlassDialogTokens {
 
     // ── 深色固定配色（非 E-Ink 且暗色主题路径）──
-    val contentColor = Color.White
+    // 共用的容器色 / 内容色直接引用 GlassConfig（单一真源），不在此二次定义。
+    val contentColor = GlassConfig.darkContentColor
     val accentColor = Color(0xFF0091FF)
-    val containerColor = Color(0xFF121212).copy(alpha = 0.4f)
+    val containerColor = GlassConfig.darkContainerColor
     val dimColor = Color(0xFF121212).copy(alpha = 0.56f)
     val scrimColor = Color.Black.copy(alpha = 0.5f)
 
     // ── 亮色配色（非 E-Ink 且亮色主题路径）──
-    // 暖白卡黑字：与 bar 类玻璃一致用 #FFFDF8（ARGB 0xFFFFFDF8）@0.9f；蒙板用白雾 + 极淡暗压，
-    // 让白色卡片在浅背景上依然能突出，又不像暗色蒙板那样压黑。
-    val lightContentColor = Color.Black
-    val lightContainerColor = Color(0xFFFFFDF8).copy(alpha = 0.9f)
+    // 暖白卡黑字：容器色与 bar 类玻璃一致（GlassConfig.lightContainerColor = #FFFDF8@0.9f）；
+    // 蒙板用白雾 + 极淡暗压，让白色卡片在浅背景上依然能突出，又不像暗色蒙板那样压黑。
+    val lightContentColor = GlassConfig.lightContentColor
+    val lightContainerColor = GlassConfig.lightContainerColor
     val lightDimColor = Color(0xFF202020).copy(alpha = 0.10f)
     val lightScrimColor = Color.White.copy(alpha = 0.55f)
 
