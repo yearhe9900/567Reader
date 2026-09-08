@@ -3,6 +3,7 @@ package com.qreader.reader.ui.book.info
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -223,6 +225,24 @@ fun BookInfoScreen(
                                 .size(110.dp, 160.dp)
                                 .clip(RoundedCornerShape(5.dp))
                         )
+
+                        // 弧形装饰（仿 legado ArcView, arcDirectionTop=true, arcHeight=36dp）
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp)
+                        ) {
+                            val w = size.width
+                            val h = size.height
+                            drawPath(
+                                path = Path().apply {
+                                    moveTo(0f, h)
+                                    quadraticBezierTo(w / 2f, 0f, w, h)
+                                    close()
+                                },
+                                color = bgColor
+                            )
+                        }
 
                         // ── 信息区 ──
                         Column(
