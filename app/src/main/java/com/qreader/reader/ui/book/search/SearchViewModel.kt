@@ -19,6 +19,7 @@ import com.qreader.reader.utils.ConflateLiveData
 import com.qreader.reader.utils.toastOnUi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.sync.Semaphore
