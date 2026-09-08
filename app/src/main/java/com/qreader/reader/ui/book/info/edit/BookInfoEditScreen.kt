@@ -62,6 +62,7 @@ import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.compose.glass.GlassConfig.pseudoGlass
 import com.qreader.reader.ui.widget.image.CoverImageView
 
 /**

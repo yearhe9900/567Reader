@@ -64,6 +64,7 @@ import com.qreader.reader.ui.compose.liquid.LiquidToggle
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
+import com.qreader.reader.ui.compose.glass.GlassConfig
 
 /**
  * 「我的」设置页 —— Compose 实现
