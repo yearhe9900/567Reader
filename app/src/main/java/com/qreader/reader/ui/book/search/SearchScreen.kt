@@ -88,6 +88,15 @@ import com.qreader.reader.ui.widget.image.CoverImageView
 import com.qreader.reader.ui.widget.text.BadgeView
 import com.qreader.reader.utils.ColorUtils
 import kotlinx.coroutines.flow.distinctUntilChanged
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import com.qreader.reader.constant.PreferKey
+import com.qreader.reader.utils.getPrefBoolean
+import com.qreader.reader.utils.putPrefBoolean
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import splitties.init.appCtx
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -124,7 +133,11 @@ fun SearchScreen(
     var manualStopSearch by remember { mutableStateOf(false) }
     var historyKeywords by remember { mutableStateOf(emptyList<SearchKeyword>()) }
     var matchedBooks by remember { mutableStateOf(emptyList<Book>()) }
+    // 搜索结果为空弹窗（对齐 legado searchFinishLiveData 观察）
+    var showEmptyDialog by remember { mutableStateOf(false) }
+    val searchFinishEmpty by viewModel.searchFinishLiveData.observeAsState(false)
     val backdrop = rememberLayerBackdrop()
+    val scope = rememberCoroutineScope()
 
     fun doSearch(key: String) {
         val trimmed = key.trim()
@@ -174,6 +187,27 @@ fun SearchScreen(
             }
     }
 
+    // 搜索结果为空提示（对齐 legado observeLiveBus：搜索结束为空且非全部分组时弹窗）
+    LaunchedEffect(searchFinishEmpty) {
+        if (searchFinishEmpty && !viewModel.searchScope.isAll()) {
+            showEmptyDialog = true
+        }
+    }
+
+    // 搜索范围变化后自动重搜（对齐 legado searchScope.stateLiveData 观察：
+    // 输入帮助隐藏时把当前 query 重新提交，触发换源搜索）
+    val searchScope by viewModel.searchScope.stateLiveData.observeAsState(viewModel.searchScope.toString())
+    var firstScopeEmit by remember { mutableStateOf(true) }
+    LaunchedEffect(searchScope) {
+        if (firstScopeEmit) {
+            firstScopeEmit = false
+            return@LaunchedEffect
+        }
+        if (!showInputHelp && query.isNotBlank()) {
+            doSearch(query)
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         // ── 内容层（作为玻璃态采样源）──
         Column(
@@ -203,8 +237,21 @@ fun SearchScreen(
                     historyKeywords = historyKeywords,
                     matchedBooks = matchedBooks,
                     onHistoryClick = { keyword ->
-                        query = keyword
-                        doSearch(keyword)
+                        // 对齐 legado SearchActivity.searchHistory：点历史关键词时，
+                        // 若该书已在书架则只回填不重搜（直接呈现「已知书架」匹配），
+                        // 否则（或当前 query 已是该词）才发起网络搜索。
+                        scope.launch {
+                            val inShelf = withContext(Dispatchers.IO) {
+                                appDb.bookDao.findByName(keyword).isNotEmpty()
+                            }
+                            if (query == keyword || !inShelf) {
+                                query = keyword
+                                doSearch(keyword)
+                            } else {
+                                query = keyword
+                                showInputHelp = true
+                            }
+                        }
                     },
                     onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
                     onClearHistory = { viewModel.clearHistory() },
@@ -403,6 +450,44 @@ fun SearchScreen(
                     tint = Color.Unspecified
                 )
             }
+        }
+
+        // 搜索结果为空弹窗（对齐 legado observeLiveBus：
+        // 精准搜索分组为空 → 提示关闭精准搜索；普通分组为空 → 提示切换到全部分组）
+        if (showEmptyDialog) {
+            AlertDialog(
+                onDismissRequest = { showEmptyDialog = false },
+                title = { Text(text = "搜索结果为空", color = primaryTextColor) },
+                text = {
+                    val precision = appCtx.getPrefBoolean(PreferKey.precisionSearch)
+                    Text(
+                        text = if (precision)
+                            "${viewModel.searchScope.display}分组搜索结果为空，是否关闭精准搜索？"
+                        else
+                            "${viewModel.searchScope.display}分组搜索结果为空，是否切换到全部分组？",
+                        color = primaryTextColor
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showEmptyDialog = false
+                        if (appCtx.getPrefBoolean(PreferKey.precisionSearch)) {
+                            appCtx.putPrefBoolean(PreferKey.precisionSearch, false)
+                            viewModel.searchKey = ""
+                            viewModel.search(query)
+                        } else {
+                            viewModel.searchScope.update("")
+                        }
+                    }) {
+                        Text(text = stringResource(R.string.sure), color = primaryTextColor)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEmptyDialog = false }) {
+                        Text(text = stringResource(R.string.cancel), color = primaryTextColor)
+                    }
+                }
+            )
         }
     }
 }
