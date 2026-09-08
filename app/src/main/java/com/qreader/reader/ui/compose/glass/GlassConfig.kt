@@ -1,15 +1,23 @@
 package com.qreader.reader.ui.compose.glass
 
 import android.content.Context
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.qreader.reader.lib.theme.backgroundColor
-import com.qreader.reader.utils.ColorUtils
 import android.app.Activity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.RoundedCornerShape
+import androidx.compose.ui.unit.Dp
 import androidx.core.view.WindowCompat
+import com.qreader.reader.lib.theme.backgroundColor
+import com.qreader.reader.utils.ColorUtils
 
 /**
  * 全局玻璃态统一配置（单一真源）。
@@ -44,6 +52,47 @@ object GlassConfig {
     // 玻璃上承载的文字 / 图标色：亮色黑、暗色白（与背景反色）。
     val lightContentColor = Color.Black
     val darkContentColor = Color.White
+
+    // ── 玻璃按钮 / 菜单项通用参数（标题栏图标按钮、下拉菜单项、搜索按钮等）──
+
+    /** 玻璃按钮/菜单项的表面透明度（0.6 = 60% 不透明度，让 blur/lens 效果透出）。 */
+    val glassButtonSurfaceAlpha = 0.6f
+
+    /** 玻璃按钮/菜单项的圆角半径（图标按钮等小尺寸玻璃组件）。 */
+    val glassButtonCornerRadius: Dp = 12.dp
+
+    /** 玻璃标题栏高度（不含 statusBarsPadding，仅纯内容高度）。 */
+    val titleBarHeight: Dp = 56.dp
+
+    // ── 伪玻璃按钮参数（捕获层内部不能用 drawBackdrop 时的近似方案）──
+
+    /** 伪玻璃按钮渐变高光颜色（白→透明，叠加在容器色上产生玻璃光泽）。 */
+    val pseudoGlassHighlight = listOf(
+        Color.White.copy(alpha = 0.16f),
+        Color.White.copy(alpha = 0.04f),
+    )
+
+    /** 伪玻璃按钮边框颜色。 */
+    val pseudoGlassBorderColor = Color.White.copy(alpha = 0.14f)
+
+    /** 伪玻璃按钮边框宽度。 */
+    val pseudoGlassBorderWidth: Dp = 1.dp
+
+    /**
+     * 伪玻璃修饰符：容器色背景 + 白色渐变高光 + 半透明边框。
+     *
+     * 适用于 [com.kyant.backdrop.backdrops.layerBackdrop] 捕获层内部的小组件（按钮/标签/菜单项），
+     * 在不能用 [com.kyant.backdrop.drawBackdrop]（会循环捕获崩溃）时提供玻璃质感近似。
+     * 搜索页「清除」按钮、编辑页封面操作按钮均使用此修饰符。
+     */
+    fun Modifier.pseudoGlass(
+        isLightTheme: Boolean,
+        shape: Shape = RoundedCornerShape(8.dp),
+    ): Modifier = this
+        .clip(shape)
+        .background(containerColor(isLightTheme), shape)
+        .background(Brush.verticalGradient(pseudoGlassHighlight), shape)
+        .border(pseudoGlassBorderWidth, pseudoGlassBorderColor, shape)
 
     /**
      * 判定当前是否亮色主题。

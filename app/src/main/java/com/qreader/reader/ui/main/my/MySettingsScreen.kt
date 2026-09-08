@@ -441,7 +441,7 @@ private fun ActionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(GlassConfig.titleBarHeight)
             // 使用无涟漪效果（indication = null）的点击，模拟 iOS 简约风格
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -514,7 +514,7 @@ private fun ToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(GlassConfig.titleBarHeight)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

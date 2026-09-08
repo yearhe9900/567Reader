@@ -557,7 +557,7 @@ fun BookInfoScreen(
                     onDrawSurface = { drawRect(barContainerColor) }
                 )
                 .statusBarsPadding()
-                .height(56.dp),
+                .height(GlassConfig.titleBarHeight),
         ) {
             Row(
                 modifier = Modifier

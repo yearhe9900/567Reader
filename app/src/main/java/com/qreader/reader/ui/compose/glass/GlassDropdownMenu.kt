@@ -88,7 +88,7 @@ fun GlassDropdownMenu(
                             blur(GlassConfig.blur.toPx())
                             lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                     )
                     .padding(vertical = 8.dp),
                 content = content,

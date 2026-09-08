@@ -613,7 +613,7 @@ private fun EInkBottomBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(GlassConfig.titleBarHeight)
             .background(bgColor, RoundedCornerShape(28.dp))
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -623,7 +623,7 @@ private fun EInkBottomBar(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(56.dp)
+                    .height(GlassConfig.titleBarHeight)
                     .clickable { onTabSelected(item.position) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -790,13 +790,13 @@ private fun BookshelfGlassTitleBar(
                     .padding(start = 8.dp)
                     .drawBackdrop(
                         backdrop = backdrop,
-                        shape = { RoundedCornerShape(12.dp) },
+                        shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
                         effects = {
                             vibrancy()
                             blur(GlassConfig.blur.toPx())
                             lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                     )
                     .size(40.dp),
                 contentAlignment = Alignment.Center,
@@ -816,13 +816,13 @@ private fun BookshelfGlassTitleBar(
                     .padding(start = 8.dp)
                     .drawBackdrop(
                         backdrop = backdrop,
-                        shape = { RoundedCornerShape(12.dp) },
+                        shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
                         effects = {
                             vibrancy()
                             blur(GlassConfig.blur.toPx())
                             lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                     )
                     .size(40.dp),
                 contentAlignment = Alignment.Center,
@@ -842,13 +842,13 @@ private fun BookshelfGlassTitleBar(
                     .padding(start = 8.dp)
                     .drawBackdrop(
                         backdrop = backdrop,
-                        shape = { RoundedCornerShape(12.dp) },
+                        shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
                         effects = {
                             vibrancy()
                             blur(GlassConfig.blur.toPx())
                             lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                     )
                     .size(40.dp),
                 contentAlignment = Alignment.Center,
@@ -908,13 +908,13 @@ private fun ExploreGlassTitleBar(
                     .weight(1f)
                     .drawBackdrop(
                         backdrop = backdrop,
-                        shape = { RoundedCornerShape(12.dp) },
+                        shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
                         effects = {
                             vibrancy()
                             blur(GlassConfig.blur.toPx())
                             lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                     )
                     .height(40.dp),
                 contentAlignment = Alignment.CenterStart,
@@ -948,13 +948,13 @@ private fun ExploreGlassTitleBar(
                     .padding(start = 8.dp)
                     .drawBackdrop(
                         backdrop = backdrop,
-                        shape = { RoundedCornerShape(12.dp) },
+                        shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
                         effects = {
                             vibrancy()
                             blur(GlassConfig.blur.toPx())
                             lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                         },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                        onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                     )
                     .size(40.dp),
                 contentAlignment = Alignment.Center,

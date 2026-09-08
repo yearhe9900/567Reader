@@ -224,7 +224,7 @@ private fun GlassButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(GlassConfig.titleBarHeight)
             .drawBackdrop(
                 backdrop = backdrop,
                 shape = { Capsule() },

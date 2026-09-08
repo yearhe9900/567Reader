@@ -38,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -132,7 +131,7 @@ fun BookInfoEditScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .statusBarsPadding()
-                    .padding(top = 56.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
+                    .padding(top = GlassConfig.titleBarHeight, start = 5.dp, end = 5.dp, bottom = 5.dp)
                     .navigationBarsPadding()
                     .imePadding()
             ) {
@@ -278,7 +277,7 @@ fun BookInfoEditScreen(
                     onDrawSurface = { drawRect(barContainerColor) }
                 )
                 .statusBarsPadding()
-                .height(56.dp)
+                .height(GlassConfig.titleBarHeight)
         ) {
             Row(
                 modifier = Modifier
@@ -423,19 +422,12 @@ private fun ActionTextButton(
 ) {
     val context = LocalContext.current
     val isLightTheme = GlassConfig.isLightTheme(context)
-    val containerColor = GlassConfig.containerColor(isLightTheme)
-    val highlightColors = listOf(
-        Color.White.copy(alpha = 0.16f),
-        Color.White.copy(alpha = 0.04f),
-    )
+    // 伪玻璃（在捕获层内部不能用 drawBackdrop，用 GlassConfig 全局配置近似）
     BasicText(
         text = text,
         style = TextStyle(textColor, 14.sp),
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(containerColor)
-            .background(Brush.verticalGradient(highlightColors))
-            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
+            .pseudoGlass(isLightTheme)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 6.dp)
     )

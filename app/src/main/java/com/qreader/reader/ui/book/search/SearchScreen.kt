@@ -348,7 +348,7 @@ fun SearchScreen(
                                 blur(GlassConfig.blur.toPx())
                                 lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                             },
-                            onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
+                            onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) }
                         )
                         .height(40.dp)
                         .padding(horizontal = 12.dp),
