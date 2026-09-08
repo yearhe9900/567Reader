@@ -65,3 +65,32 @@
 * 移除视频播放器模块（ui/video、help/gsyVideo、VideoPlayService、model/VideoPlay）及 GSYVideo / 弹幕库依赖。
 * ContentHelp 性能优化：makeDict 字典从 ArrayList 改 HashSet，contains 从 O(m) 降到 O(1)。
 * 清理 style1/style2 书架死代码（~1,300 行）；移除缓存/导出、分组管理、导出书单、导入书单菜单项；移除冗余的「更新目录」菜单（下拉刷新已覆盖）。
+
+**2026/09/05**
+
+* 移除设置页「文件管理」入口。
+* Web 服务开关改为玻璃态胶囊开关：参考 AndroidLiquidGlass 真玻璃态重写（自建 `trackBackdrop` 采样轨道内容），替代原 Material Switch。
+* 优化页面切换卡顿：下调 HorizontalPager `beyondViewportPageCount`，减少同时驻留的页面。
+
+**2026/09/06**
+
+* LiquidToggle 完整移植官方实现：拖拽/点击手势、`awaitPointerEvent` 手动跟踪、玻璃参数与官方对齐；修复 `rememberUpdatedState` 缺失导致的 stale closure（开关无法关闭）。
+* 修复设置页闪退：`layerBackdrop` 改为条件性启用，主题模式弹框移到捕获层之外渲染。
+* 页面切换性能：程序化滚动期间暂停 `layerBackdrop`；点击切页统一「瞬跳 + 淡入」，移除 `animateScrollToPage`。
+* 修复 LiquidToggle 点击时看不到滑块放大与玻璃态：放大动画走慢弹簧（~400ms）而快速点击仅 ~100ms 即反向，`DampedDragAnimation` 新增 `minHoldDuration`（本组件传 130ms）补齐按压时长后再回弹。
+* 书架「更多」溢出菜单恢复「分组管理」入口（`BookshelfMenuAction.GroupManage`，复用既有 GroupManageDialog）。
+
+**2026/09/07**
+
+* 书籍信息界面迁移到 Compose：新增 `BookInfoScreen.kt` + 最小桥接布局 `activity_book_info_compose.xml`，保留 `VMBaseActivity`（ViewBinding → ComposeView.setContent）；CoverImageView / LabelsBar / WebView 简介经 `AndroidView` 包装，ViewModel 与 XML 菜单保持不变。
+* 书籍信息页标题栏玻璃态化（与发现页同机制），封面与信息区布局多轮调整避让标题栏；下拉刷新改为 `PullToRefreshBox` 并加 5 秒超时。
+* 删除书籍弹框改为 Compose 玻璃态；移除书籍信息页分享按钮。
+* 删除 RSS UI 层（Activity / Fragment / ViewModel / Adapter / Dialog 及相关资源，数据层与导入导出保留）；清理 AboutActivity、AboutFragment、AppLogDialog 等死代码。
+* 搜索页 Compose 化（SearchActivity 混合模式）：新增 `androidx.compose.runtime:runtime-livedata` 依赖供 `observeAsState` 使用；按 legado-E 原版 UI 还原标题栏（胶囊搜索框 + 提交箭头 + 三点菜单），用 `BasicTextField` 替代会全屏展开的 Material3 `SearchBar`。
+* README 新增实机截图预览（图片放 `assets/screenshot.jpg` 外部引用，避免内联 base64 撑大文件）。
+
+**2026/09/08**
+
+* 搜索页标题栏玻璃态化并对齐发现页：内容层挂 `layerBackdrop` 作采样源、标题栏 `drawBackdrop + vibrancy/blur/lens` 悬浮 100dp，保留返回、放大镜、提交箭头、三点菜单；支持 `initialKey`（从书源带关键词跳转时直接展示结果）。
+* 搜索页样式按 legado-E 源码还原，不再自定：结果项照 `item_search.xml` + `SearchAdapter`（80×110 CoverImageView 封面走 Glide / 8dp 绿点标记已在书架 / `BadgeView` 源数量 / 书名 16sp、作者·最新章节·简介 12sp / `LabelsBar` 分类标签）；历史标签照 `item_fillet_text.xml`（3dp 外边距、上下 4dp 左右 12dp 内边距、14sp、`btn_bg_press` 背景）；「清除」按钮照 `tv_clear_history`（padding 6dp + 水波纹）并叠加 `drawBackdrop` 真玻璃。
+* 修复搜索页文字在暗色下看不清：根因为 Compose 内容未包 `MaterialTheme`、`colorScheme.*` 走默认浅色，且内容层没设背景。改为内容层显式 `.background(ThemeStore.backgroundColor)`，配色统一走资源色 `primaryText` / `btn_bg_press`（已配日夜与墨水屏），不再自算 alpha。
