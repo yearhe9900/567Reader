@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -53,32 +52,39 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import android.widget.FrameLayout
 import com.qreader.reader.R
 import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
+import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.widget.LabelsBar
+import com.qreader.reader.ui.widget.image.CoverImageView
+import com.qreader.reader.ui.widget.text.BadgeView
 import com.qreader.reader.utils.ColorUtils
 import kotlinx.coroutines.flow.distinctUntilChanged
 import splitties.init.appCtx
@@ -99,16 +105,14 @@ fun SearchScreen(
     val searchBooks by viewModel.searchBookLiveData.observeAsState(emptyList<SearchBook>())
 
     val context = LocalContext.current
-    // 与 MainScreen 一致：以主色深浅判断明暗主题
+    // 与 MainScreen 一致：以主色深浅判断明暗主题（仅用于玻璃容器色 / 标题栏前景色）
     val isLightTheme = ColorUtils.isColorLight(context.primaryColor)
     val primaryColor = Color(context.primaryColor)
     val bgColor = Color(context.backgroundColor)
     val containerColor = GlassConfig.containerColor(isLightTheme)
     val contentColor = if (isLightTheme) Color.Black else Color.White
-    // 正文 / 次要文字：跟随主题，避免沿用 Material 默认浅色配色导致暗色下看不清
-    val textColor = contentColor
-    val subTextColor = contentColor.copy(alpha = 0.65f)
-    val chipColor = contentColor.copy(alpha = 0.10f)
+    // 正文颜色一律走 legado 的日/夜资源色，不自己算 alpha
+    val primaryTextColor = colorResource(R.color.primaryText)
     val focusManager = LocalFocusManager.current
 
     var query by remember { mutableStateOf(initialKey) }
@@ -196,9 +200,8 @@ fun SearchScreen(
                     onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
                     onClearHistory = { viewModel.clearHistory() },
                     onBookClick = { book -> onBookshelfBookClick(book) },
-                    textColor = textColor,
-                    chipColor = chipColor,
-                    containerColor = containerColor,
+                    isLightTheme = isLightTheme,
+                    backdrop = backdrop,
                     modifier = Modifier.weight(1f)
                 )
             } else {
@@ -211,7 +214,7 @@ fun SearchScreen(
                             Text(
                                 text = stringResource(R.string.empty),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = subTextColor
+                                color = primaryTextColor
                             )
                         }
                     } else {
@@ -227,9 +230,6 @@ fun SearchScreen(
                                 SearchBookItem(
                                     searchBook = searchBook,
                                     isInBookshelf = viewModel.isInBookShelf(searchBook),
-                                    primaryColor = primaryColor,
-                                    textColor = textColor,
-                                    subTextColor = subTextColor,
                                     onClick = {
                                         onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
                                     }
@@ -396,9 +396,8 @@ private fun InputHelpContent(
     onHistoryDelete: (SearchKeyword) -> Unit,
     onClearHistory: () -> Unit,
     onBookClick: (Book) -> Unit,
-    textColor: Color,
-    chipColor: Color,
-    containerColor: Color,
+    isLightTheme: Boolean,
+    backdrop: Backdrop,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -407,70 +406,57 @@ private fun InputHelpContent(
             .navigationBarsPadding(),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        // 书架匹配
+        // 书架匹配（对应 legado ll_input_help 里的 tv_book_show + rv_bookshelf_search）
         if (matchedBooks.isNotEmpty()) {
             item {
                 Text(
                     text = stringResource(R.string.bookshelf),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = textColor,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    fontSize = 14.sp,
+                    color = colorResource(R.color.primaryText),
+                    modifier = Modifier.padding(6.dp)
                 )
             }
             item {
-                FlowRow(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                FlowRow(modifier = Modifier.padding(horizontal = 3.dp)) {
                     matchedBooks.forEach { book ->
                         FilletText(
                             text = book.name,
-                            textColor = textColor,
-                            chipColor = chipColor,
                             onClick = { onBookClick(book) }
                         )
                     }
                 }
             }
-            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
 
-        // 搜索历史
+        // 搜索历史（对应 legado 固定的「搜索历史 / 清除」标题行 + 可滚动 rv_history_key）
         if (historyKeywords.isNotEmpty()) {
             item {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = stringResource(R.string.searchHistory),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = textColor
+                        fontSize = 14.sp,
+                        color = colorResource(R.color.primaryText),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(6.dp)
                     )
                     GlassClearButton(
                         onClick = onClearHistory,
-                        contentColor = textColor,
-                        containerColor = containerColor
+                        backdrop = backdrop,
+                        isLightTheme = isLightTheme,
+                        modifier = Modifier.padding(end = 6.dp)
                     )
                 }
             }
             item {
-                FlowRow(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                FlowRow(modifier = Modifier.padding(horizontal = 3.dp)) {
                     historyKeywords.forEach { keyword ->
                         FilletText(
                             text = keyword.word,
-                            textColor = textColor,
-                            chipColor = chipColor,
                             onClick = { onHistoryClick(keyword.word) },
                             onLongClick = { onHistoryDelete(keyword) }
                         )
@@ -484,155 +470,176 @@ private fun InputHelpContent(
 /**
  * 玻璃态「清除」按钮。
  *
- * 注意：本按钮位于 layerBackdrop 捕获层**内部**，不能再对该 backdrop 调用 drawBackdrop
- * （会递归捕获导致崩溃）。页面底色为纯色，对纯色做模糊与半透明叠加视觉等价，
- * 因此这里用「半透明渐变 + 高光描边」的伪玻璃实现，观感与真玻璃一致。
+ * 基础样式对齐 legado 的 `activity_book_search.xml#tv_clear_history`：
+ * 文字走 `primaryText`、内边距 6dp、点击有水波纹（selectableItemBackground）。
+ * 玻璃部分复用页面主 [Backdrop]，用与发现页/标题栏同一套
+ * `drawBackdrop + blur + lens + GlassConfig.containerColor` 实现。
  */
 @Composable
 private fun GlassClearButton(
     onClick: () -> Unit,
-    contentColor: Color,
-    containerColor: Color,
+    backdrop: Backdrop,
+    isLightTheme: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(50)
     Box(
         modifier = modifier
-            .clip(shape)
-            .background(containerColor)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        contentColor.copy(alpha = 0.16f),
-                        contentColor.copy(alpha = 0.04f)
-                    )
-                )
+            .clip(RoundedCornerShape(16.dp))
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(16.dp) },
+                effects = {
+                    vibrancy()
+                    blur(GlassConfig.blur.toPx())
+                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                },
+                onDrawSurface = { drawRect(GlassConfig.containerColor(isLightTheme)) }
             )
-            .border(1.dp, contentColor.copy(alpha = 0.14f), shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = stringResource(R.string.clear),
-            style = MaterialTheme.typography.labelLarge,
-            color = contentColor
+            color = colorResource(R.color.primaryText),
+            fontSize = 14.sp,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }
 }
 
+/**
+ * 圆角标签，对齐 legado `item_fillet_text.xml`：
+ * 外边距 3dp、内边距 上下4dp/左右12dp、14sp、`primaryText` 文字色、
+ * 背景 `selector_fillet_btn_bg`（16dp 圆角 + btn_bg_press）。
+ * 点击搜索，长按删除（对齐 HistoryKeyAdapter 的点击/长按语义）。
+ */
 @Composable
 private fun FilletText(
     text: String,
-    textColor: Color,
-    chipColor: Color,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null
 ) {
-    val shape = RoundedCornerShape(16.dp)
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = textColor,
+        color = colorResource(R.color.primaryText),
+        fontSize = 14.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .clip(shape)
-            .background(chipColor)
-            .border(1.dp, textColor.copy(alpha = 0.08f), shape)
+            .padding(3.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(colorResource(R.color.btn_bg_press))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     )
 }
 
+/**
+ * 搜索结果条目，对齐 legado `item_search.xml` + `SearchAdapter.bind()`：
+ * 封面 80×110（CoverImageView centerCrop）| 已在书架 8dp 绿点 | 书名 16sp |
+ * 右上角 BadgeView 源数量 | 作者 / 分类 LabelsBar / 最新章节 / 简介 均 12sp。
+ */
 @Composable
 private fun SearchBookItem(
     searchBook: SearchBook,
     isInBookshelf: Boolean,
-    primaryColor: Color,
-    textColor: Color,
-    subTextColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val density = LocalDensity.current
+    val coverWidth = with(density) { 80.dp.roundToPx() }
+    val coverHeight = with(density) { 110.dp.roundToPx() }
+    val kinds = remember(searchBook.kind) { searchBook.getKindList() }
+    val originCount = searchBook.origins.size
+
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(8.dp)
     ) {
-        Spacer(modifier = Modifier.width(12.dp))
+        // 封面（iv_cover）
+        AndroidView(
+            factory = { ctx ->
+                CoverImageView(ctx).apply {
+                    layoutParams = FrameLayout.LayoutParams(coverWidth, coverHeight)
+                    scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                    setImageResource(R.drawable.image_cover_default)
+                }
+            },
+            update = { view -> view.load(searchBook, AppConfig.loadCoverOnlyWifi) },
+            modifier = Modifier.size(80.dp, 110.dp)
+        )
 
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp, top = 3.dp)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // 已在书架（iv_in_bookshelf：8dp 绿点）
+                if (isInBookshelf) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(colorResource(R.color.md_green_600), CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
                     text = searchBook.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = textColor,
+                    color = colorResource(R.color.primaryText),
+                    fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
-                if (isInBookshelf) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "已收藏",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = primaryColor,
-                        modifier = Modifier
-                            .background(primaryColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.width(8.dp))
+                // 源数量（bv_originCount，count<=0 时 BadgeView 自动隐藏）
+                AndroidView(
+                    factory = { ctx -> BadgeView(ctx).apply { setBadgeCount(originCount) } },
+                    update = { view -> view.setBadgeCount(originCount) }
+                )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
+            // 作者（tv_author）
             Text(
                 text = stringResource(R.string.author_show, searchBook.author),
-                style = MaterialTheme.typography.bodySmall,
-                color = subTextColor,
+                color = colorResource(R.color.primaryText),
+                fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
+            // 分类（ll_kind）
+            if (kinds.isNotEmpty()) {
+                AndroidView(
+                    factory = { ctx -> LabelsBar(ctx).apply { setLabels(kinds) } },
+                    update = { view -> view.setLabels(kinds) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // 最新章节（tv_lasted）
             val latestChapter = searchBook.latestChapterTitle
             if (!latestChapter.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(R.string.lasted_show, latestChapter),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = subTextColor,
+                    color = colorResource(R.color.primaryText),
+                    fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            val intro = searchBook.intro
-            if (!intro.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
+            // 简介（tv_introduce）
+            if (!searchBook.intro.isNullOrEmpty()) {
                 Text(
                     text = searchBook.trimIntro(appCtx),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = subTextColor.copy(alpha = 0.75f),
-                    maxLines = 2,
+                    color = colorResource(R.color.primaryText),
+                    fontSize = 12.sp,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-
-        if (searchBook.origins.size > 1) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(primaryColor, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "${searchBook.origins.size}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontSize = 10.sp
                 )
             }
         }
