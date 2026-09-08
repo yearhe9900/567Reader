@@ -1,5 +1,6 @@
 package com.qreader.reader.ui.book.read
 
+import android.widget.ImageView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -12,14 +13,15 @@ import com.qreader.reader.ui.book.read.page.ReadView
 /**
  * 阅读页 Compose 根布局。
  *
- * Phase 1：ReadView 用 AndroidView 承载，菜单 overlay 先留空。
+ * Phase 1：ReadView + 光标用 AndroidView 承载，菜单 overlay 先留空。
  * Phase 2+：逐步替换为 Compose 玻璃 overlay。
  */
 @Composable
 fun ReadBookScreen(
     state: ReadPageOverlayState,
-    readViewFactory: (android.content.Context) -> ReadView,
-    onReadViewCreated: (ReadView) -> Unit,
+    readView: ReadView,
+    cursorLeft: ImageView,
+    cursorRight: ImageView,
     modifier: Modifier = Modifier,
 ) {
     val readBackdrop = rememberLayerBackdrop()
@@ -32,11 +34,13 @@ fun ReadBookScreen(
                 .layerBackdrop(readBackdrop)
         ) {
             AndroidView(
-                factory = { ctx ->
-                    readViewFactory(ctx).also { onReadViewCreated(it) }
-                },
+                factory = { readView },
                 modifier = Modifier.fillMaxSize(),
             )
+
+            // 光标（暂时保留为 AndroidView，Phase 6 改为 Compose）
+            AndroidView(factory = { cursorLeft })
+            AndroidView(factory = { cursorRight })
         }
 
         // ── ReadMenu 覆盖层（Phase 2 实现）──

@@ -280,6 +280,8 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        // 在 Compose 工厂之前同步创建 ReadView，确保 register(this) 回调可访问
+        readView = ReadView(this)
         // 初始化光标
         cursorLeft = ImageView(this).apply {
             setImageResource(R.drawable.ic_cursor_left)
@@ -300,8 +302,9 @@ class ReadBookActivity : BaseReadBookActivity(),
         binding.composeView.setContent {
             ReadBookScreen(
                 state = readPageState,
-                readViewFactory = { ReadView(it) },
-                onReadViewCreated = { readView = it },
+                readView = readView,
+                cursorLeft = cursorLeft,
+                cursorRight = cursorRight,
             )
         }
         window.setBackgroundDrawable(null)
