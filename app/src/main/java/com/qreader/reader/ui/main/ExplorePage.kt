@@ -224,9 +224,12 @@ fun ExplorePage(
 
     // ── 删除确认弹窗（玻璃态，与主题弹框风格一致）──
     showDeleteDialog?.let { source ->
-        // 颜色统一走 GlassDialogTokens（含 E-Ink 回退），与主题弹框/删除书籍弹框一致
+        // 颜色统一走 GlassDialogTokens（含 E-Ink / 亮色回退），与主题弹框/删除书籍弹框一致
         val isEInkMode = AppConfig.isEInkMode
-        val colors = glassDialogColors(isEInkMode)
+        val colors = glassDialogColors(
+            isEInkMode,
+            ColorUtils.isColorLight(context.backgroundColor)
+        )
         val contentColor = colors.contentColor
         val accentColor = colors.accentColor
         val containerColor = colors.containerColor

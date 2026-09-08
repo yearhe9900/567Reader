@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.Backdrop
@@ -25,6 +26,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.help.config.AppConfig
+import com.qreader.reader.utils.ColorUtils
 
 /**
  * 通用 Compose 液态玻璃弹框（kyant drawBackdrop 真·毛玻璃）。
@@ -66,7 +68,8 @@ fun LiquidGlassDialog(
     content: @Composable ColumnScope.(colors: GlassDialogColors) -> Unit
 ) {
     val isEInkMode = AppConfig.isEInkMode
-    val colors = glassDialogColors(isEInkMode)
+    val isLightTheme = ColorUtils.isColorLight(LocalContext.current.backgroundColor)
+    val colors = glassDialogColors(isEInkMode, isLightTheme)
     val containerColor = colors.containerColor
     val dimColor = colors.dimColor
     val scrimColor = colors.scrimColor

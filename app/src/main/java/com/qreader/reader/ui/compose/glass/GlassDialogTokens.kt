@@ -19,12 +19,20 @@ import androidx.compose.ui.unit.dp
  */
 object GlassDialogTokens {
 
-    // ── 深色固定配色（非 E-Ink 路径）──
+    // ── 深色固定配色（非 E-Ink 且暗色主题路径）──
     val contentColor = Color.White
     val accentColor = Color(0xFF0091FF)
     val containerColor = Color(0xFF121212).copy(alpha = 0.4f)
     val dimColor = Color(0xFF121212).copy(alpha = 0.56f)
     val scrimColor = Color.Black.copy(alpha = 0.5f)
+
+    // ── 亮色配色（非 E-Ink 且亮色主题路径）──
+    // 白卡黑字：与 bar 类玻璃一致用 White@0.9f；蒙板用白雾 + 极淡暗压，
+    // 让白色卡片在浅背景上依然能突出，又不像暗色蒙板那样压黑。
+    val lightContentColor = Color.Black
+    val lightContainerColor = Color.White.copy(alpha = 0.9f)
+    val lightDimColor = Color(0xFF202020).copy(alpha = 0.10f)
+    val lightScrimColor = Color.White.copy(alpha = 0.55f)
 
     // ── 蒙板（scrim）玻璃效果 ──
     const val scrimBrightness = 0f
@@ -47,10 +55,14 @@ object GlassDialogTokens {
 }
 
 /**
- * 玻璃弹框配色集（按是否墨水屏解析）。
+ * 玻璃弹框配色集（按是否墨水屏 / 明暗主题解析）。
  *
- * 非 E-Ink：深色固定风格（[GlassDialogTokens] 默认值）。
- * E-Ink：黑白高对比，蒙板与 scrim 透明（不压暗，靠纯色卡片区分层级）。
+ * - E-Ink：黑白高对比，蒙板与 scrim 透明（不压暗，靠纯色卡片区分层级）；
+ * - 非 E-Ink + 亮色主题：白卡黑字（[GlassDialogTokens] 亮色常量）；
+ * - 非 E-Ink + 暗色主题：深灰卡白字固定风格（[GlassDialogTokens] 默认值）。
+ *
+ * 明暗以「背景色」为准（与 MainScreen / SearchScreen 一致），而非主色——
+ * legado 主题主色通常是深色强调色，按主色判断会把浅背景误判为暗色。
  */
 data class GlassDialogColors(
     val contentColor: Color,
@@ -60,16 +72,24 @@ data class GlassDialogColors(
     val scrimColor: Color,
 )
 
-fun glassDialogColors(isEInkMode: Boolean): GlassDialogColors = if (isEInkMode) {
-    GlassDialogColors(
+fun glassDialogColors(isEInkMode: Boolean, isLightTheme: Boolean): GlassDialogColors = when {
+    isEInkMode -> GlassDialogColors(
         contentColor = Color.Black,
         accentColor = GlassDialogTokens.accentColor,
         containerColor = Color.White,
         dimColor = Color.Transparent,
         scrimColor = Color.Transparent,
     )
-} else {
-    GlassDialogColors(
+
+    isLightTheme -> GlassDialogColors(
+        contentColor = GlassDialogTokens.lightContentColor,
+        accentColor = GlassDialogTokens.accentColor,
+        containerColor = GlassDialogTokens.lightContainerColor,
+        dimColor = GlassDialogTokens.lightDimColor,
+        scrimColor = GlassDialogTokens.lightScrimColor,
+    )
+
+    else -> GlassDialogColors(
         contentColor = GlassDialogTokens.contentColor,
         accentColor = GlassDialogTokens.accentColor,
         containerColor = GlassDialogTokens.containerColor,
