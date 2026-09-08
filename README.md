@@ -62,6 +62,28 @@
 | Compose 主界面 | 主界面三页（书架/发现/设置）全量 Compose 化，HorizontalPager 替换 ViewPager |
 | 玻璃态弹框系统 | 排序、主题模式、编辑分组、分组切换等弹框统一使用 LiquidGlassDialog 玻璃态 |
 
+#### 液态玻璃主题系统
+
+玻璃态基于 Kyant Backdrop 实现：通过 `layerBackdrop` 捕获屏幕真实内容作为采样源，在导航栏 / 标题栏 / 弹框等浮层上用 `drawBackdrop` 叠加 `vibrancy`（鲜活度）+ `blur`（模糊）+ `lens`（折射）三层效果，玻璃下方能透出被模糊与折射的真实页面内容。
+
+**可调参数（集中在 `GlassConfig`）**：模糊半径 `12dp`、透镜折射 `24×48dp`、开启色差（`chromaticAberration`），对齐官方 GlassPlayground 的 `blur / refractionHeight / refractionAmount / chromaticAberration` 四项。折射采样真实化——backdrop 挂在包裹 Pager 的层上，直接采样真实页面而非占位渐变，因此导航栏与标题栏的折射会随页面滚动实时变化。底部导航栏内置「玻璃设置」页，可实时调节上述参数并即时生效。
+
+**玻璃组件清单**：
+- `LiquidBottomTabs`：底部导航栏玻璃态胶囊栏
+- `GlassTitleBar` / `BookshelfGlassTitleBar` / `ExploreGlassTitleBar`：各页玻璃标题栏（内含玻璃态搜索框、分组 / 更多按钮）
+- `LiquidGlassDialog`：通用玻璃弹框（蒙板 + 圆角玻璃卡片），排序 / 主题模式 / 编辑分组 / 分组切换 / 删除书籍统一复用
+- `LiquidToggle`：设置页玻璃态开关
+
+主题方面，玻璃在浅色主题下为高不透明度暖白（卡片底色 `#FFFDF8`）、深色主题下为深灰；弹框配色同样跟随明暗主题，墨水屏下走黑白高对比分支。
+
+#### 墨水屏（EInk）专项降级
+
+墨水屏刷新慢、易残影，玻璃态的大面积模糊与持续重绘会严重拖累可读性与刷新，因此对该模式做专项降级：
+
+- **玻璃浮层降级为纯色**：导航栏由 `LiquidBottomTabs` 退化为纯色 `EInkBottomBar`，标题栏由 `GlassTitleBar` 退化为纯色 `EInkTitleBar`；
+- **玻璃弹框降级为黑白高对比**：弹框配色走 `glassDialogColors` 的 E-Ink 分支——卡片为纯白、蒙板与压暗层透明（不再压暗背景），仅靠纯色卡片与文字区分层级，避免玻璃模糊产生残影；
+- **深色列表 / 对话框同步适配**墨水屏刷新特性，减少动态重绘。
+
 ### 数据与互通
 
 | 特性 | 说明 |
