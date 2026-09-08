@@ -12,6 +12,7 @@ import com.bumptech.glide.load.Transformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.CenterInside
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
@@ -179,9 +180,15 @@ object BookCover {
         path: String?,
         loadOnlyWifi: Boolean = false,
         sourceOrigin: String? = null,
+        fitCenter: Boolean = false,
     ): RequestBuilder<Drawable> {
+        val blurTransform = if (fitCenter) {
+            arrayOf<Transformation<Bitmap>>(BlurTransformation(25), CenterInside())
+        } else {
+            arrayOf(BlurTransformation(25), CenterCrop())
+        }
         val loadBlur = ImageLoader.load(context, defaultDrawable)
-            .transform(BlurTransformation(25), CenterCrop())
+            .transform(*blurTransform)
         if (AppConfig.useDefaultCover) {
             return loadBlur
         }
@@ -191,7 +198,7 @@ object BookCover {
         }
         return ImageLoader.load(context, path)
             .apply(options)
-            .transform(BlurTransformation(25), CenterCrop())
+            .transform(*blurTransform)
             .transition(DrawableTransitionOptions.withCrossFade(1500))
             .thumbnail(loadBlur)
     }

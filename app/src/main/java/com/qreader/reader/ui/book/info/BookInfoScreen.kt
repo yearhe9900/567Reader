@@ -151,13 +151,13 @@ fun BookInfoScreen(
         AndroidView(
             factory = { ctx ->
                 ImageView(ctx).apply {
-                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    scaleType = ImageView.ScaleType.CENTER_INSIDE
                     setImageResource(R.drawable.image_cover_default)
                 }
             },
             update = { view ->
                 book?.let { b ->
-                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
+                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin, fitCenter = true)
                         .into(view)
                 }
             },
