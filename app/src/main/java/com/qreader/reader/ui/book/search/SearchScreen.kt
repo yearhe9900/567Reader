@@ -177,7 +177,12 @@ fun SearchScreen(
             .collect { layoutInfo ->
                 val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()
                 if (lastVisible != null && lastVisible.index >= layoutInfo.totalItemsCount - 3) {
-                    if (!manualStopSearch && !isSearching &&
+                    // 仿 legado RecyclerView.OnScrollListener：仅在用户实际滚动时
+                    // （onScrolled / isScrollInProgress）才触发 scrollToBottom。
+                    // 数据首次到达 / 加载更多插入新条目时不触发，避免「单书源全可见 →
+                    // 滚动到底自动加载 → 下一页同样全可见 → 再次触发」的搜索停止/开始循环。
+                    if (listState.isScrollInProgress &&
+                        !manualStopSearch && !isSearching &&
                         viewModel.searchKey.isNotEmpty() && viewModel.hasMore
                     ) {
                         viewModel.search("")
