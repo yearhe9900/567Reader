@@ -105,7 +105,7 @@ fun ReadMenuOverlay(
                         .height(GlassConfig.titleBarHeight)
                         .drawBackdrop(
                             backdrop = backdrop,
-                            shape = RoundedCornerShape(0.dp),
+                            shape = { RoundedCornerShape(0.dp) },
                             effects = {
                                 blur(GlassConfig.blur.toPx())
                                 lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
@@ -155,7 +155,7 @@ fun ReadMenuOverlay(
                         .navigationBarsPadding()
                         .drawBackdrop(
                             backdrop = backdrop,
-                            shape = RoundedCornerShape(0.dp),
+                            shape = { RoundedCornerShape(0.dp) },
                             effects = {
                                 blur(GlassConfig.blur.toPx())
                                 lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
