@@ -26,6 +26,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.help.config.AppConfig
+import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.utils.ColorUtils
 
 /**
