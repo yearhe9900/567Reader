@@ -32,8 +32,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -83,26 +81,26 @@ import com.qreader.reader.utils.ColorUtils
 import kotlin.math.abs
 
 /**
- * 主界�? —�? Compose 实现（整页迁移）
+ * 主界面 —— Compose 实现（整页迁移）
  *
- * 页面结构�?
- *  - 底层主题背景（作�? Liquid Glass backdrop 的捕获源�?
- *  - 内容区：HorizontalPager（书�?/发现/设置三个 Compose 页面�?
+ * 页面结构：
+ *  - 底层主题背景（作为 Liquid Glass backdrop 的捕获源）
+ *  - 内容区：HorizontalPager（书架/发现/设置三个 Compose 页面）
  *  - 底部导航栏：LiquidBottomTabs 玻璃态胶囊栏（EInk 墨水屏模式降级为纯色栏）
  *
- * 三个页面均为 Compose 函数，backdrop 可直接捕获滚动内容，玻璃折射效果自然作用于真实内容�?
+ * 三个页面均为 Compose 函数，backdrop 可直接捕获滚动内容，玻璃折射效果自然作用于真实内容。
  *
- * @param selectedTabIndex       当前选中 tab 的读取函�?
- * @param onTabSelected          切换到指�? position 的回�?
- * @param badgeCount             书架 tab 的角标数字（待更新书籍数），0 表示不显�?
- * @param showDiscovery          是否显示「发现」tab（对应页面数 2 �? 3�?
- * @param isEInkMode             是否墨水屏模式，�? true 时导航栏降级为纯色栏
- * @param bookshelfPage          书架页面 composable（接收注�? gotoTop / back 回调�?
- * @param explorePage            发现页面 composable（接收注�? compressExplore 回调�?
+ * @param selectedTabIndex       当前选中 tab 的读取函数
+ * @param onTabSelected          切换到指定 position 的回调
+ * @param badgeCount             书架 tab 的角标数字（待更新书籍数），0 表示不显示
+ * @param showDiscovery          是否显示「发现」tab（对应页面数 2 或 3）
+ * @param isEInkMode             是否墨水屏模式，为 true 时导航栏降级为纯色栏
+ * @param bookshelfPage          书架页面 composable（接收注册 gotoTop / back 回调）
+ * @param explorePage            发现页面 composable（接收注册 compressExplore 回调）
  * @param settingsPage           设置页面 composable
- * @param themeDialogOpen        主题模式弹框是否打开（打开时隐藏底部导航栏�?
+ * @param themeDialogOpen        主题模式弹框是否打开（打开时隐藏底部导航栏）
  * @param onThemeDialogOpenChange 主题模式弹框打开状态变化回调（由设置页内弹框上抛）
- * @param registerBookshelfBack  �? MainActivity 暴露书架 back 回调（供返回键使用）
+ * @param registerBookshelfBack  向 MainActivity 暴露书架 back 回调（供返回键使用）
  */
 @Composable
 fun MainScreen(
@@ -133,9 +131,9 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
-    // 玻璃与文字的明暗跟随「背景」而非主色：玻璃浮在背景之上，且主色通常是用户选的强调�?
-    // （亮色背�? + 深色主色是常态），若按主色判断会把浅背景误判为暗色，玻璃永远走深�? =
-    // 用户看到的「浅灰色」。改�? backgroundColor 判断后，浅背�? �? 玻璃白、文字黑�?
+    // 玻璃与文字的明暗跟随「背景」而非主色：玻璃浮在背景之上，且主色通常是用户选的强调色
+    // （亮色背景 + 深色主色是常态），若按主色判断会把浅背景误判为暗色，玻璃永远走深灰 =
+    // 用户看到的「浅灰色」。改按 backgroundColor 判断后，浅背景 → 玻璃白、文字黑。
     val isLightTheme = GlassConfig.isLightTheme(context)
     val accentColor = Color(context.accentColor)
     val contentColor = GlassConfig.contentColor(isLightTheme)
@@ -146,14 +144,14 @@ fun MainScreen(
     // （单一真源，避免各页重复 SideEffect 样板）。亮色玻璃→深色图标，暗色→浅色图标。
     GlassConfig.SyncStatusBarToGlassTheme(isLightTheme = isLightTheme)
 
-    // 玻璃导航栏的 backdrop 捕获源（捕获真实页面内容，供 lens 折射 / blur 作用其上�?
+    // 玻璃导航栏的 backdrop 捕获源（捕获真实页面内容，供 lens 折射 / blur 作用其上）
     val backdrop = rememberLayerBackdrop()
 
-    // 编辑分组玻璃弹框状态（仅书架页长按入口触发；其�? XML 入口仍用�? GroupEditDialog�?
+    // 编辑分组玻璃弹框状态（仅书架页长按入口触发；其余 XML 入口仍用原 GroupEditDialog）
     var groupEditTarget by remember { mutableStateOf<BookGroup?>(null) }
     var groupEditOpen by remember { mutableStateOf(false) }
 
-    // 排序玻璃弹框状态（排序值提升到 MainScreen，供 SortDialogOverlay 选择后回�? BookshelfPage�?
+    // 排序玻璃弹框状态（排序值提升到 MainScreen，供 SortDialogOverlay 选择后回写 BookshelfPage）
     var bookshelfSort by remember { mutableIntStateOf(AppConfig.bookshelfSort) }
     var sortDialogOpen by remember { mutableStateOf(false) }
 
@@ -166,15 +164,19 @@ fun MainScreen(
         buildTabItems(context, showDiscovery)
     }
 
-    // ── 页面动作（由各页�? composable 注册）──
+    // ── 页面动作（由各页面 composable 注册）──
     var bookshelfGotoTop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var bookshelfBack by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var bookshelfMenuAction by remember { mutableStateOf<((BookshelfMenuAction) -> Unit)?>(null) }
     var bookshelfMenuOpen by remember { mutableStateOf(false) }
     var exploreCompress by remember { mutableStateOf<(() -> Unit)?>(null) }
 
-    // ── 发现页搜索状态（提升�? MainScreen 供玻璃标题栏使用）──
+    // ── 发现页搜索状态（提升到 MainScreen 供玻璃标题栏使用）──
     var exploreSearchQuery by remember { mutableStateOf("") }
+    // 发现页分组菜单：开关状态 + 分组列表（菜单本体以玻璃下拉渲染在最外层）
+    var exploreGroupMenuOpen by remember { mutableStateOf(false) }
+    val exploreGroups by appDb.bookSourceDao.flowExploreGroups()
+        .collectAsState(initial = emptyList())
 
     // ── 重选计时（双击触发 gotoTop / compressExplore）──
     var bookshelfReselected by remember { mutableLongStateOf(0L) }
@@ -184,53 +186,53 @@ fun MainScreen(
     val pageCount = tabItems.size
     val pagerState = rememberPagerState(initialPage = selectedTabIndex()) { pageCount }
 
-    // 同步 pager �? onTabSelected（用户滑动翻页时通知 MainActivity�?
+    // 同步 pager → onTabSelected（用户滑动翻页时通知 MainActivity）
     LaunchedEffect(pagerState.settledPage) {
         onTabSelected(pagerState.settledPage)
     }
 
-    // 兜底：翻页后强制复位主题弹框开关�?
+    // 兜底：翻页后强制复位主题弹框开关。
     //
-    // 「主题模式」弹框由设置页（Pager 内的某一页）承载，�? themeDialogOpen 状态由上层持有�?
-    // 且标题栏/导航栏的显隐�? AnimatedVisibility(visible = !themeDialogOpen)�?
-    // 一旦在弹框打开时发生翻页，该页会被 HorizontalPager 销�? �? 弹框随之消失�?
-    // 但开关状态不会自动复位，标题栏与导航栏就会被永久隐藏。此处确保任何翻页都复位开关�?
+    // 「主题模式」弹框由设置页（Pager 内的某一页）承载，而 themeDialogOpen 状态由上层持有，
+    // 且标题栏/导航栏的显隐是 AnimatedVisibility(visible = !themeDialogOpen)。
+    // 一旦在弹框打开时发生翻页，该页会被 HorizontalPager 销毁 → 弹框随之消失，
+    // 但开关状态不会自动复位，标题栏与导航栏就会被永久隐藏。此处确保任何翻页都复位开关。
     LaunchedEffect(pagerState.currentPage) {
         if (themeDialogOpen) onThemeDialogOpenChange(false)
     }
 
-    // 用户是否正在用手指拖�? pager�?
-    // 兜底保护：确保任何程序化滚动都不会在用户手势进行中插手�?
+    // 用户是否正在用手指拖动 pager。
+    // 兜底保护：确保任何程序化滚动都不会在用户手势进行中插手。
     // （真正的回环已在 LiquidBottomTabs 侧切断，此处防止其他时序下的边界情况。）
-    // 注意：它只覆盖「手指按住」阶段，松手后的 fling 惯性阶段为 false，故不能作为唯一手段�?
+    // 注意：它只覆盖「手指按住」阶段，松手后的 fling 惯性阶段为 false，故不能作为唯一手段。
     val isUserDragging by pagerState.interactionSource.collectIsDraggedAsState()
 
-    // 程序化滚动期间禁�? backdrop GPU 效果，避�? animateScrollToPage �? backdrop 离屏渲染双重 GPU 压力
+    // 程序化滚动期间禁用 backdrop GPU 效果，避免 animateScrollToPage 与 backdrop 离屏渲染双重 GPU 压力
     var isProgrammaticScroll by remember { mutableStateOf(false) }
 
-    // 跨页切换�?0�?2）时整页的淡入进度�?
-    // 只在 draw 阶段�? graphicsLayer 读取，因此动画期间只重绘、不触发重组�?
+    // 跨页切换（0↔2）时整页的淡入进度。
+    // 只在 draw 阶段被 graphicsLayer 读取，因此动画期间只重绘、不触发重组。
     val pageFade = remember { Animatable(1f) }
 
-    // 同步 selectedTabIndex �? pager（外部设�? selectedTab 时切换到对应页）
+    // 同步 selectedTabIndex → pager（外部设置 selectedTab 时切换到对应页）
     //
-    // 分两种策略：相邻页做滑动动画，跨页瞬�? + 淡入�?
+    // 分两种策略：相邻页做滑动动画，跨页瞬跳 + 淡入。
     //
-    // 之所以跨页不滑动：HorizontalPager �? 0 �? 2 必然经过中间的发现页(1)�?
-    // 用户反馈「快速掠过发现页」观感不好，因此改为瞬跳，并用淡入补足过渡感�?
-    // （此前「跨页卡在发现页」是导航栏回环把目标页改写成�? 1，已在上游切断，
-    //   与本处的瞬跳选择无关——瞬跳纯粹是为了观感，不�? workaround。）
-    // 回环链路备忘：跨页动画过中点 �? currentPage=1 �? LiquidBottomTabs 反向回调
-    // onTabSelected(1) �? selectedTab 被改写为 1 �? �? LaunchedEffect �? key 变化
-    // �? 旧动画被取消 �? 页面停在发现页�?
+    // 之所以跨页不滑动：HorizontalPager 从 0 到 2 必然经过中间的发现页(1)，
+    // 用户反馈「快速掠过发现页」观感不好，因此改为瞬跳，并用淡入补足过渡感。
+    // （此前「跨页卡在发现页」是导航栏回环把目标页改写成了 1，已在上游切断，
+    //   与本处的瞬跳选择无关——瞬跳纯粹是为了观感，不是 workaround。）
+    // 回环链路备忘：跨页动画过中点 → currentPage=1 → LiquidBottomTabs 反向回调
+    // onTabSelected(1) → selectedTab 被改写为 1 → 本 LaunchedEffect 的 key 变化
+    // → 旧动画被取消 → 页面停在发现页。
 
     LaunchedEffect(selectedTabIndex()) {
-        if (isUserDragging) return@LaunchedEffect // 手势滑动中不干预，交给用�?
+        if (isUserDragging) return@LaunchedEffect // 手势滑动中不干预，交给用户
         val target = selectedTabIndex()
         if (pagerState.settledPage == target) return@LaunchedEffect
         isProgrammaticScroll = true
         try {
-            // 所有点击切换统一瞬跳 + 淡入，避�? animateScrollToPage 的程序驱动滚动卡�?
+            // 所有点击切换统一瞬跳 + 淡入，避免 animateScrollToPage 的程序驱动滚动卡顿
             pagerState.scrollToPage(target)
             pageFade.snapTo(CROSS_PAGE_FADE_START)
             pageFade.animateTo(
@@ -242,7 +244,7 @@ fun MainScreen(
         }
     }
 
-    // Tab 点击处理（含双击重选逻辑�?
+    // Tab 点击处理（含双击重选逻辑）
     fun handleTabClick(position: Int) {
         if (position == selectedTabIndex()) {
             when (position) {
@@ -268,7 +270,7 @@ fun MainScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 玻璃 backdrop 捕获源：底色 + 真实页面内容（导航栏玻璃折射/模糊作用其上�?
+        // 玻璃 backdrop 捕获源：底色 + 真实页面内容（导航栏玻璃折射/模糊作用其上）
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -281,7 +283,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer { alpha = pageFade.value },
-                beyondViewportPageCount = 1, // 预组合相�? 1 页，平衡内存与切换流畅度
+                beyondViewportPageCount = 1, // 预组合相邻 1 页，平衡内存与切换流畅度
             ) { page ->
                 when (page) {
                     0 -> bookshelfPage(
@@ -313,8 +315,8 @@ fun MainScreen(
             }
         }
 
-        // 书架更多选项玻璃下拉：放在标题栏 Box 之前，使其位于标题栏之下�?
-        // 标题栏点击不�? tap-outside 拦截，菜单按钮可正常切换开关�?
+        // 书架更多选项玻璃下拉：放在标题栏 Box 之前，使其位于标题栏之下，
+        // 标题栏点击不被 tap-outside 拦截，菜单按钮可正常切换开关。
         if (pagerState.currentPage == 0) {
             GlassDropdownMenu(
                 expanded = bookshelfMenuOpen,
@@ -337,7 +339,7 @@ fun MainScreen(
             }
         }
 
-        // 玻璃标题栏：悬浮在顶部（overlay，不占内容流�?
+        // 玻璃标题栏：悬浮在顶部（overlay，不占内容流）
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -379,6 +381,7 @@ fun MainScreen(
                         onSearchQueryChange = { exploreSearchQuery = it },
                         containerColor = containerColor,
                         contentColor = contentColor,
+                        onGroups = { exploreGroupMenuOpen = true },
                     )
                 } else {
                     GlassTitleBar(
@@ -391,7 +394,38 @@ fun MainScreen(
             }
         }
 
-        // 底部导航栏：悬浮透明胶囊栏（overlay，不占内容流�?
+        // 发现页分组玻璃下拉：与书架菜单共用 GlassDropdownMenu，
+        // 必须放在全屏外层 Box（backdrop 捕获层之外）才能正确采样与点击穿透。
+        if (pagerState.currentPage == 1 && showDiscovery) {
+            GlassDropdownMenu(
+                expanded = exploreGroupMenuOpen,
+                onDismissRequest = { exploreGroupMenuOpen = false },
+                backdrop = backdrop,
+                containerColor = containerColor,
+                contentColor = contentColor,
+            ) {
+                if (exploreGroups.isEmpty()) {
+                    GlassDropdownMenuItem(
+                        text = context.getString(R.string.no_group),
+                        contentColor = contentColor,
+                        onClick = { exploreGroupMenuOpen = false },
+                    )
+                } else {
+                    exploreGroups.forEach { group ->
+                        GlassDropdownMenuItem(
+                            text = group,
+                            contentColor = contentColor,
+                            onClick = {
+                                exploreGroupMenuOpen = false
+                                exploreSearchQuery = "group:$group"
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
+        // 底部导航栏：悬浮透明胶囊栏（overlay，不占内容流）
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -452,9 +486,9 @@ fun MainScreen(
                 }
             }
         }
-    // 编辑分组玻璃弹框覆盖层（真·毛玻璃，采样真实书架页�?
-    // 注意：必须作为「全屏外�? Box」的直接子节点，不能嵌套进底部导航栏那种 align+fillMaxWidth 的小 Box�?
-    // 否则 fillMaxSize 至多只填满底部条，蒙板只会盖住一小块区域�?
+    // 编辑分组玻璃弹框覆盖层（真·毛玻璃，采样真实书架页）
+    // 注意：必须作为「全屏外层 Box」的直接子节点，不能嵌套进底部导航栏那种 align+fillMaxWidth 的小 Box，
+    // 否则 fillMaxSize 至多只填满底部条，蒙板只会盖住一小块区域。
     AnimatedVisibility(
         visible = groupEditOpen,
         modifier = Modifier.fillMaxSize(),
@@ -468,7 +502,7 @@ fun MainScreen(
         )
     }
 
-    // 排序玻璃弹框覆盖层（�? GroupEditOverlay 同：全屏外层 Box 直接子节点，采样真实书架页）
+    // 排序玻璃弹框覆盖层（与 GroupEditOverlay 同：全屏外层 Box 直接子节点，采样真实书架页）
     AnimatedVisibility(
         visible = sortDialogOpen,
         modifier = Modifier.fillMaxSize(),
@@ -487,7 +521,7 @@ fun MainScreen(
         )
     }
 
-    // 分组抽屉玻璃弹框覆盖层（右边缘滑出，�? GroupEditOverlay 同模式）
+    // 分组抽屉玻璃弹框覆盖层（右边缘滑出，与 GroupEditOverlay 同模式）
     AnimatedVisibility(
         visible = groupDrawerOpen,
         modifier = Modifier.fillMaxSize(),
@@ -509,7 +543,7 @@ fun MainScreen(
 }
 
 /**
- * 单个 tab 的图�? + 可选角�?
+ * 单个 tab 的图标 + 可选角标
  */
 @Composable
 private fun TabIconWithBadge(
@@ -540,7 +574,7 @@ private fun TabIconWithBadge(
 }
 
 /**
- * 角标：accentColor 背景胶囊 + �?/黑数字�?
+ * 角标：accentColor 背景胶囊 + 白/黑数字。
  */
 @Composable
 private fun BadgeDot(
@@ -564,7 +598,7 @@ private fun BadgeDot(
 }
 
 /**
- * EInk 墨水屏模式的降级导航栏：纯色背景 + 图标 + 文字，不使用玻璃效果�?
+ * EInk 墨水屏模式的降级导航栏：纯色背景 + 图标 + 文字，不使用玻璃效果。
  */
 @Composable
 private fun EInkBottomBar(
@@ -614,10 +648,10 @@ private fun EInkBottomBar(
 }
 
 /**
- * 跨页切换（书�? �? 设置）瞬跳后，目标页淡入的起始透明度�?
+ * 跨页切换（书架 ↔ 设置）瞬跳后，目标页淡入的起始透明度。
  *
- * �? 0.35 而非 0：淡入期间始终能看到内容轮廓，不会闪出底层背景色�?
- * 若希望完全无过渡，把 [MainScreen] �? pageFade �? snapTo / animateTo 两行删掉即可�?
+ * 取 0.35 而非 0：淡入期间始终能看到内容轮廓，不会闪出底层背景色。
+ * 若希望完全无过渡，把 [MainScreen] 中 pageFade 的 snapTo / animateTo 两行删掉即可。
  */
 private const val CROSS_PAGE_FADE_START = 0.35f
 
@@ -661,10 +695,10 @@ private fun buildTabItems(context: Context, showDiscovery: Boolean): List<Bottom
 }
 
 /**
- * 玻璃态标题栏：使�? Liquid Glass 效果（vibrancy + blur + lens）模糊背后页面内容�?
+ * 玻璃态标题栏：使用 Liquid Glass 效果（vibrancy + blur + lens）模糊背后页面内容。
  *
- * 与底部导航栏（LiquidBottomTabs）共享同一�? [backdrop]，视觉风格统一�?
- * 形状�? Capsule（胶囊），高�? 56dp，与原标题栏一致�?
+ * 与底部导航栏（LiquidBottomTabs）共享同一个 [backdrop]，视觉风格统一。
+ * 形状为 Capsule（胶囊），高度 56dp，与原标题栏一致。
  */
 @Composable
 private fun GlassTitleBar(
@@ -699,11 +733,11 @@ private fun GlassTitleBar(
 }
 
 /**
- * 书架页玻璃态标题栏：标题（左） + 玻璃态搜索按�? + 玻璃态「更多」溢出菜单（右）�?
+ * 书架页玻璃态标题栏：标题（左） + 玻璃态搜索按钮 + 玻璃态「更多」溢出菜单（右）。
  *
- * 复用�? [ExploreGlassTitleBar] 相同�? drawBackdrop 玻璃按钮 + DropdownMenu 模式�?
- * 菜单项对应原�? R.menu.main_bookshelf 的溢出菜单（BookshelfMenuAction）�?
- * 不渲染分组切�? Tab（按需求不需要分�? tab 功能），仅保留功能入口�?
+ * 复用与 [ExploreGlassTitleBar] 相同的 drawBackdrop 玻璃按钮 + DropdownMenu 模式，
+ * 菜单项对应原版 R.menu.main_bookshelf 的溢出菜单（BookshelfMenuAction）。
+ * 不渲染分组切换 Tab（按需求不需要分组 tab 功能），仅保留功能入口。
  */
 @Composable
 private fun BookshelfGlassTitleBar(
@@ -832,8 +866,8 @@ private fun BookshelfGlassTitleBar(
 }
 
 /**
- * 发现页玻璃态标题栏：液态玻璃搜索栏 + 分组按钮�?
- * 搜索栏替�?"发现"文字位于左下角，自带 drawBackdrop 玻璃效果�?
+ * 发现页玻璃态标题栏：液态玻璃搜索栏 + 分组按钮。
+ * 搜索栏替代"发现"文字位于左下角，自带 drawBackdrop 玻璃效果。
  */
 @Composable
 private fun ExploreGlassTitleBar(
@@ -842,12 +876,10 @@ private fun ExploreGlassTitleBar(
     onSearchQueryChange: (String) -> Unit,
     containerColor: Color,
     contentColor: Color,
+    onGroups: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val groups by appDb.bookSourceDao.flowExploreGroups()
-        .collectAsState(initial = emptyList())
-    var showGroupMenu by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -870,7 +902,7 @@ private fun ExploreGlassTitleBar(
                 .padding(start = 16.dp, end = 8.dp, bottom = 12.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            // 液态玻璃搜索栏（左下角�?
+            // 液态玻璃搜索栏（左下角）
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -900,7 +932,7 @@ private fun ExploreGlassTitleBar(
                         Box(modifier = Modifier.fillMaxWidth()) {
                             if (searchQuery.isEmpty()) {
                                 BasicText(
-                                    text = "搜索书源�?",
+                                    text = "搜索书源…",
                                     style = TextStyle(contentColor.copy(0.5f), 14.sp)
                                 )
                             }
@@ -927,33 +959,13 @@ private fun ExploreGlassTitleBar(
                     .size(40.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                IconButton(onClick = { showGroupMenu = true }) {
+                // 分组菜单由上层（MainScreen）以玻璃下拉渲染，此处只负责触发
+                IconButton(onClick = onGroups) {
                     Icon(
                         painter = painterResource(R.drawable.ic_groups),
                         contentDescription = "分组",
                         tint = contentColor,
                     )
-                }
-                DropdownMenu(
-                    expanded = showGroupMenu,
-                    onDismissRequest = { showGroupMenu = false },
-                ) {
-                    if (groups.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { BasicText("无分�?") },
-                            onClick = { showGroupMenu = false },
-                        )
-                    } else {
-                        groups.forEach { group ->
-                            DropdownMenuItem(
-                                text = { BasicText(group) },
-                                onClick = {
-                                    onSearchQueryChange("group:$group")
-                                    showGroupMenu = false
-                                },
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -961,7 +973,7 @@ private fun ExploreGlassTitleBar(
 }
 
 /**
- * EInk 墨水屏模式的降级标题栏：纯色背景 + 标题文字，不使用玻璃效果�?
+ * EInk 墨水屏模式的降级标题栏：纯色背景 + 标题文字，不使用玻璃效果。
  */
 @Composable
 private fun EInkTitleBar(
