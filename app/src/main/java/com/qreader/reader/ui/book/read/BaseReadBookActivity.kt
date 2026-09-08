@@ -10,9 +10,6 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.activity.viewModels
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
-import androidx.core.view.updateLayoutParams
 import com.qreader.reader.R
 import com.qreader.reader.base.VMBaseActivity
 import com.qreader.reader.constant.AppConst.charsets
@@ -26,8 +23,6 @@ import com.qreader.reader.help.config.LocalConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.dialogs.selector
-import com.qreader.reader.lib.theme.ThemeStore
-import com.qreader.reader.lib.theme.bottomBackground
 import com.qreader.reader.model.CacheBook
 import com.qreader.reader.model.ReadBook
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog
@@ -39,11 +34,9 @@ import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.FileDoc
 import com.qreader.reader.utils.find
 import com.qreader.reader.utils.getPrefString
-import com.qreader.reader.utils.gone
 import com.qreader.reader.utils.isTv
 import com.qreader.reader.utils.setLightStatusBar
 import com.qreader.reader.utils.setNavigationBarColorAuto
-import com.qreader.reader.utils.setOnApplyWindowInsetsListenerCompat
 import com.qreader.reader.utils.showDialogFragment
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
 import java.time.LocalDate
@@ -57,8 +50,12 @@ abstract class BaseReadBookActivity :
 
     override val binding by viewBinding(ActivityBookReadBinding::inflate)
     override val viewModel by viewModels<ReadBookViewModel>()
+
+    /** 阅读页浮层状态（由子类持有，传入 Compose） */
+    val readPageState = ReadPageOverlayState()
+
     protected val menuLayoutIsVisible
-        get() = bottomDialog > 0 || binding.readMenu.isVisible || binding.searchMenu.bottomMenuVisible
+        get() = bottomDialog > 0 || readPageState.menuLayoutIsVisible
 
     var bottomDialog = 0
         set(value) {
@@ -84,17 +81,9 @@ abstract class BaseReadBookActivity :
         setOrientation()
         upLayoutInDisplayCutoutMode()
         super.onCreate(savedInstanceState)
-        binding.navigationBar.setOnApplyWindowInsetsListenerCompat { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updateLayoutParams {
-                height = insets.bottom
-            }
-            windowInsets
-        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
-        binding.navigationBar.setBackgroundColor(bottomBackground)
         viewModel.permissionDenialLiveData.observe(this) {
             selectBookFolderResult.launch {
                 mode = HandleFileContract.DIR_SYS
@@ -219,10 +208,9 @@ abstract class BaseReadBookActivity :
     }
 
     override fun upNavigationBarColor() {
-        upNavigationBar()
         when {
-            binding.readMenu.isVisible -> super.upNavigationBarColor()
-            binding.searchMenu.bottomMenuVisible -> super.upNavigationBarColor()
+            readPageState.menuVisible -> super.upNavigationBarColor()
+            readPageState.searchMenuVisible -> super.upNavigationBarColor()
             bottomDialog > 0 -> super.upNavigationBarColor()
             !AppConfig.immNavigationBar -> super.upNavigationBarColor()
             else -> setNavigationBarColorAuto(ReadBookConfig.bgMeanColor)
@@ -231,7 +219,7 @@ abstract class BaseReadBookActivity :
 
     @SuppressLint("RtlHardcoded")
     private fun upNavigationBar() {
-        binding.navigationBar.gone(!menuLayoutIsVisible)
+        // Compose 化后由 Modifier.navigationBarsPadding() 处理，不再需要手动显隐
     }
 
     /**
