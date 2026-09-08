@@ -25,7 +25,7 @@ object GlassConfig {
     val chromaticAberration = true
 
     // 容器半透明底色（透明度固定 0.4f，与官方 LiquidBottomTabs 一致）
-    val lightContainerColor = Color(0xFFFAFAFA).copy(alpha = 0.4f)
+    val lightContainerColor = Color.White.copy(alpha = 0.4f)
     val darkContainerColor = Color(0xFF121212).copy(alpha = 0.4f)
 
     /** 根据明暗主题返回玻璃容器背景色。 */
