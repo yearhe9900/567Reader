@@ -4,7 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +42,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +53,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -74,6 +76,7 @@ import com.qreader.reader.data.appDb
 import com.qreader.reader.data.entities.Book
 import com.qreader.reader.data.entities.SearchBook
 import com.qreader.reader.data.entities.SearchKeyword
+import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.utils.ColorUtils
@@ -99,8 +102,13 @@ fun SearchScreen(
     // 与 MainScreen 一致：以主色深浅判断明暗主题
     val isLightTheme = ColorUtils.isColorLight(context.primaryColor)
     val primaryColor = Color(context.primaryColor)
+    val bgColor = Color(context.backgroundColor)
     val containerColor = GlassConfig.containerColor(isLightTheme)
     val contentColor = if (isLightTheme) Color.Black else Color.White
+    // 正文 / 次要文字：跟随主题，避免沿用 Material 默认浅色配色导致暗色下看不清
+    val textColor = contentColor
+    val subTextColor = contentColor.copy(alpha = 0.65f)
+    val chipColor = contentColor.copy(alpha = 0.10f)
     val focusManager = LocalFocusManager.current
 
     var query by remember { mutableStateOf(initialKey) }
@@ -158,6 +166,7 @@ fun SearchScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(bgColor)
                 .layerBackdrop(backdrop)
         ) {
             // 为悬浮玻璃标题栏留空间
@@ -187,6 +196,9 @@ fun SearchScreen(
                     onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
                     onClearHistory = { viewModel.clearHistory() },
                     onBookClick = { book -> onBookshelfBookClick(book) },
+                    textColor = textColor,
+                    chipColor = chipColor,
+                    containerColor = containerColor,
                     modifier = Modifier.weight(1f)
                 )
             } else {
@@ -199,7 +211,7 @@ fun SearchScreen(
                             Text(
                                 text = stringResource(R.string.empty),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = subTextColor
                             )
                         }
                     } else {
@@ -216,6 +228,8 @@ fun SearchScreen(
                                     searchBook = searchBook,
                                     isInBookshelf = viewModel.isInBookShelf(searchBook),
                                     primaryColor = primaryColor,
+                                    textColor = textColor,
+                                    subTextColor = subTextColor,
                                     onClick = {
                                         onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
                                     }
@@ -382,6 +396,9 @@ private fun InputHelpContent(
     onHistoryDelete: (SearchKeyword) -> Unit,
     onClearHistory: () -> Unit,
     onBookClick: (Book) -> Unit,
+    textColor: Color,
+    chipColor: Color,
+    containerColor: Color,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -395,7 +412,9 @@ private fun InputHelpContent(
             item {
                 Text(
                     text = stringResource(R.string.bookshelf),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textColor,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
@@ -408,6 +427,8 @@ private fun InputHelpContent(
                     matchedBooks.forEach { book ->
                         FilletText(
                             text = book.name,
+                            textColor = textColor,
+                            chipColor = chipColor,
                             onClick = { onBookClick(book) }
                         )
                     }
@@ -428,14 +449,15 @@ private fun InputHelpContent(
                 ) {
                     Text(
                         text = stringResource(R.string.searchHistory),
-                        style = MaterialTheme.typography.titleSmall
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textColor
                     )
-                    TextButton(onClick = onClearHistory) {
-                        Text(
-                            text = stringResource(R.string.clear),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    GlassClearButton(
+                        onClick = onClearHistory,
+                        contentColor = textColor,
+                        containerColor = containerColor
+                    )
                 }
             }
             item {
@@ -447,6 +469,8 @@ private fun InputHelpContent(
                     historyKeywords.forEach { keyword ->
                         FilletText(
                             text = keyword.word,
+                            textColor = textColor,
+                            chipColor = chipColor,
                             onClick = { onHistoryClick(keyword.word) },
                             onLongClick = { onHistoryDelete(keyword) }
                         )
@@ -457,19 +481,64 @@ private fun InputHelpContent(
     }
 }
 
+/**
+ * 玻璃态「清除」按钮。
+ *
+ * 注意：本按钮位于 layerBackdrop 捕获层**内部**，不能再对该 backdrop 调用 drawBackdrop
+ * （会递归捕获导致崩溃）。页面底色为纯色，对纯色做模糊与半透明叠加视觉等价，
+ * 因此这里用「半透明渐变 + 高光描边」的伪玻璃实现，观感与真玻璃一致。
+ */
+@Composable
+private fun GlassClearButton(
+    onClick: () -> Unit,
+    contentColor: Color,
+    containerColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(50)
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(containerColor)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        contentColor.copy(alpha = 0.16f),
+                        contentColor.copy(alpha = 0.04f)
+                    )
+                )
+            )
+            .border(1.dp, contentColor.copy(alpha = 0.14f), shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.clear),
+            style = MaterialTheme.typography.labelLarge,
+            color = contentColor
+        )
+    }
+}
+
 @Composable
 private fun FilletText(
     text: String,
+    textColor: Color,
+    chipColor: Color,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null
 ) {
+    val shape = RoundedCornerShape(16.dp)
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
+        color = textColor,
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
+            .clip(shape)
+            .background(chipColor)
+            .border(1.dp, textColor.copy(alpha = 0.08f), shape)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     )
 }
@@ -479,6 +548,8 @@ private fun SearchBookItem(
     searchBook: SearchBook,
     isInBookshelf: Boolean,
     primaryColor: Color,
+    textColor: Color,
+    subTextColor: Color,
     onClick: () -> Unit
 ) {
     Row(
@@ -496,6 +567,7 @@ private fun SearchBookItem(
                     text = searchBook.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
+                    color = textColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
@@ -518,7 +590,7 @@ private fun SearchBookItem(
             Text(
                 text = stringResource(R.string.author_show, searchBook.author),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = subTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -529,7 +601,7 @@ private fun SearchBookItem(
                 Text(
                     text = stringResource(R.string.lasted_show, latestChapter),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = subTextColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -541,7 +613,7 @@ private fun SearchBookItem(
                 Text(
                     text = searchBook.trimIntro(appCtx),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    color = subTextColor.copy(alpha = 0.75f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
