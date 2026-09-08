@@ -45,7 +45,6 @@ import com.qreader.reader.ui.book.search.SearchActivity
 import com.qreader.reader.ui.book.source.edit.BookSourceEditActivity
 import com.qreader.reader.ui.book.source.manage.BookSourceActivity
 import com.qreader.reader.ui.book.toc.rule.TxtTocRuleActivity
-import com.qreader.reader.ui.compose.GlassDemoActivity
 import com.qreader.reader.ui.config.ConfigActivity
 import com.qreader.reader.ui.config.ConfigTag
 import com.qreader.reader.ui.dict.rule.DictRuleActivity
@@ -274,7 +273,6 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
             }
             "fileManage" -> startActivity<FileManageActivity>()
             "readRecord" -> startActivity<ReadRecordActivity>()
-            "glassDemo" -> startActivity<GlassDemoActivity>()
             "appVersion" -> showAppVersion()
             "exit" -> finish()
         }

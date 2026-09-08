@@ -140,12 +140,6 @@
                 android:resource="@xml/spen_remote_actions" />
         </activity>
 
-        <!-- Liquid Glass 演示界面 -->
-        <activity
-            android:name=".ui.compose.GlassDemoActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
-
         <!-- 阅读漫画界面 -->
         <activity
             android:name=".ui.book.manga.ReadMangaActivity"
