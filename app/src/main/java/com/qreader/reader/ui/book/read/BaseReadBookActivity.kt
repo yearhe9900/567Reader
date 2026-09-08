@@ -23,6 +23,7 @@ import com.qreader.reader.help.config.LocalConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.lib.dialogs.alert
 import com.qreader.reader.lib.dialogs.selector
+import com.qreader.reader.lib.theme.ThemeStore
 import com.qreader.reader.model.CacheBook
 import com.qreader.reader.model.ReadBook
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog
