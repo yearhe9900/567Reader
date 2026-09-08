@@ -305,6 +305,36 @@ class ReadBookActivity : BaseReadBookActivity(),
                 readView = readView,
                 cursorLeft = cursorLeft,
                 cursorRight = cursorRight,
+                onBack = { finish() },
+                onPrevChapter = {
+                    readPageState.menuVisible = false
+                    ReadBook.moveToPrevChapter(upContent = true, toLast = false)
+                },
+                onNextChapter = {
+                    readPageState.menuVisible = false
+                    ReadBook.moveToNextChapter(true)
+                },
+                onSeekTo = { index -> viewModel.openChapter(index) },
+                onCatalog = {
+                    readPageState.menuVisible = false
+                    openChapterList()
+                },
+                onReadAloud = {
+                    readPageState.menuVisible = false
+                    onClickReadAloud()
+                },
+                onFont = {
+                    readPageState.menuVisible = false
+                    showReadStyle()
+                },
+                onSetting = {
+                    readPageState.menuVisible = false
+                    showMoreSetting()
+                },
+                onDismissMenu = {
+                    readPageState.menuVisible = false
+                    onMenuHide()
+                },
             )
         }
         window.setBackgroundDrawable(null)

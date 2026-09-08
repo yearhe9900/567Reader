@@ -12,9 +12,6 @@ import com.qreader.reader.ui.book.read.page.ReadView
 
 /**
  * 阅读页 Compose 根布局。
- *
- * Phase 1：ReadView + 光标用 AndroidView 承载，菜单 overlay 先留空。
- * Phase 2+：逐步替换为 Compose 玻璃 overlay。
  */
 @Composable
 fun ReadBookScreen(
@@ -22,6 +19,15 @@ fun ReadBookScreen(
     readView: ReadView,
     cursorLeft: ImageView,
     cursorRight: ImageView,
+    onBack: () -> Unit = {},
+    onPrevChapter: () -> Unit = {},
+    onNextChapter: () -> Unit = {},
+    onSeekTo: (Int) -> Unit = {},
+    onCatalog: () -> Unit = {},
+    onReadAloud: () -> Unit = {},
+    onFont: () -> Unit = {},
+    onSetting: () -> Unit = {},
+    onDismissMenu: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val readBackdrop = rememberLayerBackdrop()
@@ -38,15 +44,24 @@ fun ReadBookScreen(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            // 光标（暂时保留为 AndroidView，Phase 6 改为 Compose）
+            // 光标（Phase 6 改为 Compose）
             AndroidView(factory = { cursorLeft })
             AndroidView(factory = { cursorRight })
         }
 
-        // ── ReadMenu 覆盖层（Phase 2 实现）──
-        // ReadMenuOverlay(state = state, backdrop = readBackdrop)
-
-        // ── SearchMenu 覆盖层（Phase 3 实现）──
-        // SearchMenuOverlay(state = state, backdrop = readBackdrop)
+        // ── ReadMenu 覆盖层 ──
+        ReadMenuOverlay(
+            state = state,
+            backdrop = readBackdrop,
+            onBack = onBack,
+            onPrevChapter = onPrevChapter,
+            onNextChapter = onNextChapter,
+            onSeekTo = onSeekTo,
+            onCatalog = onCatalog,
+            onReadAloud = onReadAloud,
+            onFont = onFont,
+            onSetting = onSetting,
+            onDismiss = onDismissMenu,
+        )
     }
 }
