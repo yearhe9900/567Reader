@@ -114,8 +114,8 @@ fun SearchScreen(
     val searchBooks by viewModel.searchBookLiveData.observeAsState(emptyList<SearchBook>())
 
     val context = LocalContext.current
-    // 与 MainScreen 一致：以主色深浅判断明暗主题（仅用于玻璃容器色 / 标题栏前景色）
-    val isLightTheme = ColorUtils.isColorLight(context.primaryColor)
+    // 与 MainScreen 一致：玻璃明暗跟随背景而非主色（主色通常为深色强调色，会误判为暗色 → 玻璃永远深灰）
+    val isLightTheme = ColorUtils.isColorLight(context.backgroundColor)
     val primaryColor = Color(context.primaryColor)
     val accentColor = Color(context.accentColor)
     val bgColor = Color(context.backgroundColor)
