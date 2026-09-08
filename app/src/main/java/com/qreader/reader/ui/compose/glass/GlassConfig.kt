@@ -5,6 +5,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.utils.ColorUtils
+import android.app.Activity
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 
 /**
  * 全局玻璃态统一配置（单一真源）。
@@ -57,4 +62,28 @@ object GlassConfig {
     /** 根据明暗主题返回玻璃上承载的文字 / 图标色。 */
     fun contentColor(isLightTheme: Boolean): Color =
         if (isLightTheme) lightContentColor else darkContentColor
+
+    /**
+     * 让状态栏图标颜色跟随玻璃主题（单一真源），供各 Compose 玻璃页面在组合体内调用。
+     *
+     * 玻璃顶栏在亮色下背景接近白 → 需要深色图标（isAppearanceLightStatusBars=true）；
+     * 暗色下背景接近黑 → 浅色（白）图标（false）。即与 [isLightTheme] 同值，集中在此避免
+     * 每个页面重复写 SideEffect + WindowCompat 样板。
+     *
+     * 背景：BaseActivity.setupSystemBar 在透明状态栏时把 window.statusBarColor 设为 TRANSPARENT，
+     * 于是 isColorLight(TRANSPARENT)=false → setLightStatusBar(false) → 白图标；白图标落在接近白的
+     * 玻璃顶栏上不可见（电池/信号被「遮住」）。此处按玻璃实际背景纠正，并随主题切换重组同步。
+     */
+    @Composable
+    fun SyncStatusBarToGlassTheme(
+        context: Context = LocalContext.current,
+        isLightTheme: Boolean = isLightTheme(context),
+    ) {
+        SideEffect {
+            (context as? Activity)?.window?.let { win ->
+                WindowCompat.getInsetsController(win, win.decorView)
+                    .isAppearanceLightStatusBars = isLightTheme
+            }
+        }
+    }
 }

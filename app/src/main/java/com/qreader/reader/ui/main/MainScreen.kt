@@ -1,6 +1,5 @@
 package com.qreader.reader.ui.main
 
-import android.app.Activity
 import android.content.Context
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -46,7 +45,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -82,7 +80,6 @@ import com.qreader.reader.ui.compose.glass.GlassDropdownMenuItem
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTab
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTabs
 import com.qreader.reader.utils.ColorUtils
-import androidx.core.view.WindowCompat
 import kotlin.math.abs
 
 /**
@@ -145,17 +142,9 @@ fun MainScreen(
     val containerColor = GlassConfig.containerColor(isLightTheme)
     val bgColor = Color(context.backgroundColor)
 
-    // 状态栏图标颜色跟随玻璃主题（单一真相源 GlassConfig.isLightTheme）：
-    // 亮色玻璃顶栏背景接近白 → 需要深色图标（APPEARANCE_LIGHT_STATUS_BARS=true）；
-    // 暗色玻璃顶栏背景接近黑 → 浅色图标。BaseActivity.setupSystemBar 对透明状态栏误把背景当成
-    // 深色（Color.TRANSPARENT 的 RGB 为 0 → isColorLight=false → 白图标），在亮色模式下白图标
-    // 落在接近白的玻璃上不可见（电池/信号被「遮住」）。此处按实际玻璃背景纠正，且随主题切换重组同步。
-    SideEffect {
-        (context as? Activity)?.window?.let { win ->
-            WindowCompat.getInsetsController(win, win.decorView)
-                .isAppearanceLightStatusBars = isLightTheme
-        }
-    }
+    // 状态栏图标颜色跟随玻璃主题：集中逻辑已收敛到 GlassConfig.SyncStatusBarToGlassTheme
+    // （单一真源，避免各页重复 SideEffect 样板）。亮色玻璃→深色图标，暗色→浅色图标。
+    GlassConfig.SyncStatusBarToGlassTheme(isLightTheme = isLightTheme)
 
     // 玻璃导航栏的 backdrop 捕获源（捕获真实页面内容，供 lens 折射 / blur 作用其上�?
     val backdrop = rememberLayerBackdrop()

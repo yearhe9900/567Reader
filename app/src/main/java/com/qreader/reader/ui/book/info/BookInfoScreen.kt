@@ -174,6 +174,9 @@ fun BookInfoScreen(
     val isBookInfoLightTheme = GlassConfig.isLightTheme(context)
     val barContainerColor = GlassConfig.containerColor(isBookInfoLightTheme)
     val barContentColor = GlassConfig.contentColor(isBookInfoLightTheme)
+    // 状态栏图标颜色跟随玻璃主题（集中逻辑见 GlassConfig.SyncStatusBarToGlassTheme）：
+    // 亮色玻璃顶栏接近白 → 深色图标；暗色 → 浅色图标。复用单一真源，避免各页重复。
+    GlassConfig.SyncStatusBarToGlassTheme(isLightTheme = isBookInfoLightTheme)
     val bgColor = Color(context.getColor(R.color.background))
     val bottomBg = Color(context.getColor(R.color.background_menu))
     val textColor = Color(context.getColor(R.color.primaryText))
