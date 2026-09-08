@@ -147,37 +147,27 @@ fun BookInfoScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Box(modifier = modifier.fillMaxSize()) {
-        // ── 模糊背景（无 padding，覆盖整个区域）──
+        // ── 模糊背景（全屏，仿 legado bg_book: match_parent × match_parent + centerCrop）──
         AndroidView(
             factory = { ctx ->
                 ImageView(ctx).apply {
-                    scaleType = ImageView.ScaleType.CENTER_INSIDE
+                    scaleType = ImageView.ScaleType.CENTER_CROP
                     setImageResource(R.drawable.image_cover_default)
                 }
             },
             update = { view ->
                 book?.let { b ->
-                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin, fitCenter = true)
+                    BookCover.loadBlur(view.context, b.getDisplayCover(), false, b.origin)
                         .into(view)
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
+            modifier = Modifier.fillMaxSize()
         )
-        // 渐变遮罩
+        // 半透明遮罩（仿 legado vw_bg: #50000000，即 31% 黑色）
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.4f),
-                            bgColor,
-                        )
-                    )
-                )
+                .fillMaxSize()
+                .background(Color(0x50000000))
         )
 
         // ── 背景内容层（作为玻璃态采样源）──
