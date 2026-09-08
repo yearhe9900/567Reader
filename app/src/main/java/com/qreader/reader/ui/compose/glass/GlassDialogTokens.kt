@@ -27,10 +27,10 @@ object GlassDialogTokens {
     val scrimColor = Color.Black.copy(alpha = 0.5f)
 
     // ── 亮色配色（非 E-Ink 且亮色主题路径）──
-    // 白卡黑字：与 bar 类玻璃一致用 White@0.9f；蒙板用白雾 + 极淡暗压，
+    // 暖白卡黑字：与 bar 类玻璃一致用 #FFFDF8（ARGB 0xFFFFFDF8）@0.9f；蒙板用白雾 + 极淡暗压，
     // 让白色卡片在浅背景上依然能突出，又不像暗色蒙板那样压黑。
     val lightContentColor = Color.Black
-    val lightContainerColor = Color.White.copy(alpha = 0.9f)
+    val lightContainerColor = Color(0xFFFFFDF8).copy(alpha = 0.9f)
     val lightDimColor = Color(0xFF202020).copy(alpha = 0.10f)
     val lightScrimColor = Color.White.copy(alpha = 0.55f)
 
