@@ -8,8 +8,6 @@ import androidx.compose.runtime.setValue
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.utils.ColorUtils
-import com.qreader.reader.utils.getPrefBoolean
-import com.qreader.reader.constant.PreferKey
 
 /**
  * 阅读页所有浮层（菜单 / 搜索栏 / 弹窗）的 Compose 状态容器。
@@ -74,9 +72,8 @@ class ReadPageOverlayState {
     /** 是否自动亮度 */
     var brightnessAuto by mutableStateOf(AppConfig.readBrightness == -1)
 
-    /** 是否显示亮度条 */
-    val showBrightnessView: Boolean
-        get() = getPrefBoolean(PreferKey.showBrightnessView, true)
+    /** 是否显示亮度条（由 Activity 在 onResume 时同步） */
+    var showBrightnessView by mutableStateOf(true)
 
     // ── SearchMenu 状态 ──
 
