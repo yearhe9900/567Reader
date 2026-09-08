@@ -29,9 +29,11 @@
 
 ## 截图预览
 
-下面是 567Reader 在小米（HyperOS）设备上的实机截图，展示了液态玻璃（Liquid Glass）主题系统下的主界面、书架与底部导航栏玻璃态效果：
+下面是 567Reader 在小米（HyperOS）设备上的实机截图，展示了液态玻璃（Liquid Glass）主题系统在浅色与深色模式下的主界面、书架与底部导航栏玻璃态效果：
 
-<img src="assets/screenshot.jpg" alt="567Reader 截图预览" width="360" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.25)">
+| 浅色模式 | 深色模式 |
+|:---:|:---:|
+| <img src="assets/screenshot-light.jpg" alt="浅色模式" width="320" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12)"> | <img src="assets/screenshot-dark.jpg" alt="深色模式" width="320" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.25)"> |
 
 
 ---
