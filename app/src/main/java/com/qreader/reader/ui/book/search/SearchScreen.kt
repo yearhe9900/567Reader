@@ -65,7 +65,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -200,8 +199,6 @@ fun SearchScreen(
                     onHistoryDelete = { keyword -> viewModel.deleteHistory(keyword) },
                     onClearHistory = { viewModel.clearHistory() },
                     onBookClick = { book -> onBookshelfBookClick(book) },
-                    isLightTheme = isLightTheme,
-                    backdrop = backdrop,
                     modifier = Modifier.weight(1f)
                 )
             } else {
@@ -396,8 +393,6 @@ private fun InputHelpContent(
     onHistoryDelete: (SearchKeyword) -> Unit,
     onClearHistory: () -> Unit,
     onBookClick: (Book) -> Unit,
-    isLightTheme: Boolean,
-    backdrop: Backdrop,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -444,10 +439,8 @@ private fun InputHelpContent(
                             .weight(1f)
                             .padding(6.dp)
                     )
-                    GlassClearButton(
+                    ClearHistoryButton(
                         onClick = onClearHistory,
-                        backdrop = backdrop,
-                        isLightTheme = isLightTheme,
                         modifier = Modifier.padding(end = 6.dp)
                     )
                 }
@@ -468,43 +461,27 @@ private fun InputHelpContent(
 }
 
 /**
- * 玻璃态「清除」按钮。
+ * 「清除」按钮，对齐 legado 的 `activity_book_search.xml#tv_clear_history`：
+ * 普通文字（`primaryText`）+ 内边距 6dp + 点击水波纹（`selectableItemBackground`）。
  *
- * 基础样式对齐 legado 的 `activity_book_search.xml#tv_clear_history`：
- * 文字走 `primaryText`、内边距 6dp、点击有水波纹（selectableItemBackground）。
- * 玻璃部分复用页面主 [Backdrop]，用与发现页/标题栏同一套
- * `drawBackdrop + blur + lens + GlassConfig.containerColor` 实现。
+ * ⚠️ 这里**不能**加 `drawBackdrop`：本按钮位于内容层内部，而内容层就是
+ * `layerBackdrop(backdrop)` 的捕获层，在捕获层内对同一个 backdrop 调用 drawBackdrop
+ * 会循环捕获导致进入页面即崩溃（与排序弹框当初的坑同源）。
+ * 玻璃效果只适用于捕获层之外的元素（标题栏 / 全屏弹框）。
  */
 @Composable
-private fun GlassClearButton(
+private fun ClearHistoryButton(
     onClick: () -> Unit,
-    backdrop: Backdrop,
-    isLightTheme: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Box(
+    Text(
+        text = stringResource(R.string.clear),
+        color = colorResource(R.color.primaryText),
+        fontSize = 14.sp,
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(16.dp) },
-                effects = {
-                    vibrancy()
-                    blur(GlassConfig.blur.toPx())
-                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                },
-                onDrawSurface = { drawRect(GlassConfig.containerColor(isLightTheme)) }
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(R.string.clear),
-            color = colorResource(R.color.primaryText),
-            fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-        )
-    }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    )
 }
 
 /**
