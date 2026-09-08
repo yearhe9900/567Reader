@@ -156,7 +156,8 @@ fun SearchScreen(
         }
     }
 
-    // 滚动到底部自动加载更多
+    // 滚动到底部自动加载更多（对齐 legado SearchActivity.scrollToBottom：
+    // 手动停止后不再自动加载）
     val listState = rememberLazyListState()
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo }
@@ -164,7 +165,9 @@ fun SearchScreen(
             .collect { layoutInfo ->
                 val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()
                 if (lastVisible != null && lastVisible.index >= layoutInfo.totalItemsCount - 3) {
-                    if (!isSearching && viewModel.searchKey.isNotEmpty() && viewModel.hasMore) {
+                    if (!manualStopSearch && !isSearching &&
+                        viewModel.searchKey.isNotEmpty() && viewModel.hasMore
+                    ) {
                         viewModel.search("")
                     }
                 }
