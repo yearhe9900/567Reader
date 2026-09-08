@@ -101,8 +101,8 @@ class BookInfoEditActivity :
             book.isAudio -> 1
             else -> 0
         }
-        uiCoverUrl = book.getDisplayCover()
-        uiIntro = book.getDisplayIntro()
+        uiCoverUrl = book.getDisplayCover().orEmpty()
+        uiIntro = book.getDisplayIntro().orEmpty()
     }
 
     private fun saveData() {

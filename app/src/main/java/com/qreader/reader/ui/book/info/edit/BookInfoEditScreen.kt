@@ -113,7 +113,7 @@ fun BookInfoEditScreen(
     val density = LocalDensity.current
     val coverW = with(density) { 90.dp.toPx().toInt() }
     val coverH = with(density) { 130.dp.toPx().toInt() }
-    val typeLabels = stringArrayResource(R.array.book_type)
+    val typeLabels = stringArrayResource(R.array.book_type).toList()
 
     Box(
         modifier = Modifier
