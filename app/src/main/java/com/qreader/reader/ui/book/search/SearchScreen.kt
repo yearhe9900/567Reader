@@ -34,10 +34,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -86,6 +84,7 @@ import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 import com.qreader.reader.ui.widget.text.BadgeView
+import com.qreader.reader.ui.widget.anima.RefreshProgressBar
 import com.qreader.reader.utils.ColorUtils
 import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.material3.AlertDialog
@@ -219,15 +218,22 @@ fun SearchScreen(
             // 为悬浮玻璃标题栏留空间
             Spacer(modifier = Modifier.height(100.dp))
 
-            // 搜索进度条
+            // 搜索进度条：还原 legado 顶部 2dp 细线（RefreshProgressBar）。
+            // 与 legado SearchActivity.startSearch / searchFinally 一致——
+            // 搜索中显示并自动扫动，结束时隐藏；初始搜索与滚动到底加载更多共用同一根线。
             AnimatedVisibility(
                 visible = isSearching,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = primaryColor
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp),
+                    factory = { ctx -> RefreshProgressBar(ctx) },
+                    update = { view ->
+                        view.isAutoLoading = isSearching
+                    }
                 )
             }
 
@@ -288,22 +294,6 @@ fun SearchScreen(
                                         onBookClick(searchBook.name, searchBook.author, searchBook.bookUrl)
                                     }
                                 )
-                            }
-
-                            if (isSearching) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = primaryColor
-                                        )
-                                    }
-                                }
                             }
                         }
                     }

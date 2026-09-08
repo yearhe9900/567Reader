@@ -87,6 +87,8 @@
 * 删除书籍弹框改为 Compose 玻璃态；移除书籍信息页分享按钮。
 * 删除 RSS UI 层（Activity / Fragment / ViewModel / Adapter / Dialog 及相关资源，数据层与导入导出保留）；清理 AboutActivity、AboutFragment、AppLogDialog 等死代码。
 * 搜索页 Compose 化（SearchActivity 混合模式）：新增 `androidx.compose.runtime:runtime-livedata` 依赖供 `observeAsState` 使用；按 legado-E 原版 UI 还原标题栏（胶囊搜索框 + 提交箭头 + 三点菜单），用 `BasicTextField` 替代会全屏展开的 Material3 `SearchBar`。
+* 搜索逻辑忠实还原 legado：点历史关键词时若该书已在书架则只回填不重搜（经 `appDb.bookDao.findByName` 判定，呈现「已知书架」匹配）；搜索结果为空且非全范围时弹 AlertDialog，按 `precisionSearch` 偏好分支（关闭精确搜索并重搜 / 清空搜索范围重搜）；搜索范围变更时自动用当前关键词重搜。
+* 搜索页进度条样式统一：移除原顶部 `LinearProgressIndicator`（搜索中）+ 底部 `CircularProgressIndicator`（加载更多）的混用，改为顶部 2dp `RefreshProgressBar`（`AndroidView` 包裹，搜索中自动扫动、结束隐藏），与 legado `activity_book_search.xml` / `SearchActivity.startSearch·searchFinally` 一致；全页仅一根进度线，忠实 legado。
 * README 新增实机截图预览（图片放 `assets/screenshot.jpg` 外部引用，避免内联 base64 撑大文件）。
 
 **2026/09/08**
