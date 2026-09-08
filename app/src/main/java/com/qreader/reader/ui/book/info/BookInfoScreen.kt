@@ -202,6 +202,7 @@ fun BookInfoScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .fillMaxSize() // 内容少时信息区仍占满视口，遮住下方模糊背景
                             .padding(top = 40.dp), // 微调与模糊背景的间距
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
