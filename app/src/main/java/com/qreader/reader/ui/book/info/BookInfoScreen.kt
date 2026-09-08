@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -193,19 +196,26 @@ fun BookInfoScreen(
                     .weight(1f)
                     .padding(top = 70.dp), // 为标题栏留空间，刷新指示器在此之下
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    // ── 封面 + 信息整体区域 ──
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val viewportHeight = maxHeight
+                    val density = LocalDensity.current
+                    var contentHeight by remember { mutableStateOf(0.dp) }
+                    var introHeight by remember { mutableStateOf(0.dp) }
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxSize() // 内容少时信息区仍占满视口，遮住下方模糊背景
-                            .padding(top = 40.dp), // 微调与模糊背景的间距
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
                     ) {
+                        // ── 封面 + 信息整体区域 ──
+                        // 注意：在 verticalScroll 内 fillMaxSize 拿到的是无限高度约束，
+                        // 不会填满视口，必须用 onSizeChanged 实测内容高度再补底。
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged { contentHeight = with(density) { it.height.toDp() } }
+                                .padding(top = 40.dp), // 微调与模糊背景的间距
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
                         // 封面
                         AndroidView(
                             factory = { ctx ->
@@ -422,10 +432,24 @@ fun BookInfoScreen(
                             factory = { introContainer },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .onSizeChanged { introHeight = with(density) { it.height.toDp() } }
                                 .background(bgColor)
                                 .padding(horizontal = 8.dp),
                         )
                     }
+
+                    // ── 底部填充：内容不足一屏时用背景色补满剩余空间，遮住模糊背景 ──
+                    // contentHeight 为封面+信息区实测高度（含顶部 40dp padding），introHeight 为简介区实测高度
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(
+                                (viewportHeight - contentHeight - introHeight)
+                                    .coerceAtLeast(0.dp)
+                            )
+                            .background(bgColor)
+                    )
+                }
                 }
             }
 
