@@ -65,6 +65,8 @@ import com.qreader.reader.data.entities.Book
 import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.model.BookCover
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.compose.glass.GlassDropdownMenu
+import com.qreader.reader.ui.compose.glass.GlassDropdownMenuItem
 import com.qreader.reader.ui.widget.LabelsBar
 import com.qreader.reader.ui.widget.image.CoverImageView
 import kotlinx.coroutines.delay
@@ -103,7 +105,28 @@ import kotlinx.coroutines.launch
  * @param onLabelLongClick 标签长按（用于 SourceCallBack）
  * @param onBack           返回按钮点击
  * @param onRefresh        下拉刷新
+ * @param editVisible      「编辑」按钮是否可见（仅书籍已在书架时，对齐 legado 的 menu_edit 可见性）
+ * @param onEditClick      编辑按钮点击（打开书籍信息编辑页）
+ * @param menuActions      更多选项菜单项（由宿主按当前书源/书籍状态动态计算可见项）
+ * @param onMenuPrepare    展开更多选项前的准备回调（宿主在此刷新 [menuActions]）
+ * @param onMenuAction     更多选项菜单项点击（回调 R.id.menu_xxx）
  */
+/**
+ * 书籍信息页「更多选项」菜单项模型。
+ *
+ * 对应 legado `R.menu.book_info` 的溢出菜单：宿主（Activity）按需计算可见性与勾选状态后传入，
+ * Compose 只负责渲染。
+ *
+ * @param id      原 menu 资源 id（如 R.id.menu_refresh），点击时原样回传给宿主处理
+ * @param title   菜单项文案
+ * @param checked 可勾选项（canUpdate / splitLongChapter / deleteAlert）的勾选状态，非勾选项为 null
+ */
+data class BookInfoMenuAction(
+    val id: Int,
+    val title: String,
+    val checked: Boolean? = null,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookInfoScreen(
@@ -134,6 +157,11 @@ fun BookInfoScreen(
     onLabelLongClick: ((String) -> Unit)?,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    editVisible: Boolean = false,
+    onEditClick: () -> Unit = {},
+    menuActions: List<BookInfoMenuAction> = emptyList(),
+    onMenuPrepare: () -> Unit = {},
+    onMenuAction: (Int) -> Unit = {},
     deleteDialogOpen: Boolean = false,
     deleteDialogShowCheckBox: Boolean = false,
     deleteDialogCheckBoxChecked: Boolean = false,
@@ -151,6 +179,7 @@ fun BookInfoScreen(
     val textColor = Color(context.getColor(R.color.primaryText))
     val summaryColor = Color(context.getColor(R.color.tv_text_summary))
     var isRefreshing by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
     val backdrop = rememberLayerBackdrop()
     val coroutineScope = rememberCoroutineScope()
 
@@ -543,7 +572,53 @@ fun BookInfoScreen(
                 BasicText(
                     text = stringResource(R.string.book_info),
                     style = TextStyle(barContentColor, 18.sp),
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                )
+                // 编辑（对齐 legado R.menu.book_info 的 menu_edit，仅书架内书籍可见）
+                if (editVisible) {
+                    IconButton(onClick = onEditClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_edit),
+                            contentDescription = stringResource(R.string.edit),
+                            tint = barContentColor,
+                        )
+                    }
+                }
+                // 更多选项（对齐 legado 的溢出菜单）
+                IconButton(onClick = {
+                    onMenuPrepare()
+                    menuExpanded = true
+                }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_more_vert),
+                        contentDescription = null,
+                        tint = barContentColor,
+                    )
+                }
+            }
+        }
+
+        // ── 更多选项玻璃下拉菜单（与标题栏同 surface，必须在捕获层之外）──
+        GlassDropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+            backdrop = backdrop,
+            containerColor = barContainerColor,
+            contentColor = barContentColor,
+            topPadding = 112.dp,
+            panelWidth = 200.dp,
+        ) {
+            menuActions.forEach { action ->
+                GlassDropdownMenuItem(
+                    text = action.title,
+                    contentColor = barContentColor,
+                    checked = action.checked,
+                    onClick = {
+                        menuExpanded = false
+                        onMenuAction(action.id)
+                    },
                 )
             }
         }

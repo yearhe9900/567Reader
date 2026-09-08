@@ -17,6 +17,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -126,6 +127,9 @@ class BookInfoActivity :
     private var uiTocVisible by mutableStateOf(true)
     private var uiShelfText by mutableStateOf("")
     private val uiKinds = mutableStateListOf<String>()
+    // 标题栏「编辑」按钮可见性（仅书架内书籍）+ 「更多选项」菜单项
+    private var uiEditVisible by mutableStateOf(false)
+    private val uiMenuActions = mutableStateListOf<BookInfoMenuAction>()
 
     // ── 删除弹框状态 ──
     private var deleteDialogOpen by mutableStateOf(false)
@@ -242,6 +246,10 @@ class BookInfoActivity :
     private val waitDialog by lazy { WaitDialog(this) }
     private var editMenuItem: MenuItem? = null
     private var menuCustomBtn: MenuItem? = null
+    // 供 Compose 标题栏「更多选项」使用的菜单副本（与原生 options menu 同源 R.menu.book_info）
+    private val composeMenu by lazy {
+        MenuBuilder(this).also { menuInflater.inflate(R.menu.book_info, it) }
+    }
     private val book get() = viewModel.getBook(false)
 
     @SuppressLint("PrivateResource")
@@ -420,6 +428,23 @@ class BookInfoActivity :
                 },
                 onBack = { finish() },
                 onRefresh = { refreshBook() },
+                editVisible = uiEditVisible,
+                onEditClick = {
+                    viewModel.getBook()?.let {
+                        infoEditResult.launch {
+                            putExtra("bookUrl", it.bookUrl)
+                        }
+                    }
+                },
+                menuActions = uiMenuActions.toList(),
+                onMenuPrepare = {
+                    uiMenuActions.clear()
+                    uiMenuActions.addAll(buildBookInfoMenuActions())
+                },
+                onMenuAction = { id ->
+                    val checked = uiMenuActions.firstOrNull { it.id == id }?.checked ?: false
+                    handleMenuAction(id, checked)
+                },
                 deleteDialogOpen = deleteDialogOpen,
                 deleteDialogShowCheckBox = deleteDialogShowCheckBox,
                 deleteDialogCheckBoxChecked = deleteDialogCheckBoxChecked,
@@ -461,6 +486,14 @@ class BookInfoActivity :
     }
 
     override fun onMenuOpened(featureId: Int, menu: Menu): Boolean {
+        upMenuState(menu)
+        return super.onMenuOpened(featureId, menu)
+    }
+
+    /**
+     * 刷新菜单项的可见性与勾选状态（原生 options menu 与 Compose「更多选项」共用）。
+     */
+    private fun upMenuState(menu: Menu) {
         menu.findItem(R.id.menu_can_update)?.isChecked =
             viewModel.bookData.value?.canUpdate ?: true
         menu.findItem(R.id.menu_split_long_chapter)?.isChecked =
@@ -479,11 +512,44 @@ class BookInfoActivity :
             viewModel.bookData.value?.isLocal ?: false
         menu.findItem(R.id.menu_delete_alert)?.isChecked =
             LocalConfig.bookInfoDeleteAlert
-        return super.onMenuOpened(featureId, menu)
+    }
+
+    /**
+     * 构建 Compose 标题栏「更多选项」下拉的菜单项。
+     *
+     * 复用 [upMenuState] 的可见性/勾选计算，保证与原生菜单一致；
+     * `menu_edit` 已作为独立图标按钮显示在标题栏，此处不再重复。
+     */
+    private fun buildBookInfoMenuActions(): List<BookInfoMenuAction> {
+        // 自定义按钮的可见性在原生流程里由 onCompatCreateOptionsMenu 设置，此处需单独同步
+        composeMenu.findItem(R.id.menu_custom_btn)?.isVisible = viewModel.hasCustomBtn
+        upMenuState(composeMenu)
+        return buildList {
+            composeMenu.visibleItems.forEach { item ->
+                if (item.itemId == R.id.menu_edit) return@forEach
+                add(
+                    BookInfoMenuAction(
+                        id = item.itemId,
+                        title = item.title?.toString().orEmpty(),
+                        checked = if (item.isCheckable) item.isChecked else null,
+                    )
+                )
+            }
+        }
     }
 
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
+        handleMenuAction(item.itemId, item.isChecked)
+        return super.onCompatOptionsItemSelected(item)
+    }
+
+    /**
+     * 统一处理书籍信息菜单动作：原生 options menu 与 Compose「更多选项」共用同一分支逻辑。
+     *
+     * @param checked 可勾选项**当前**是否已勾选（原生取 MenuItem.isChecked，Compose 取菜单模型的值）
+     */
+    private fun handleMenuAction(id: Int, checked: Boolean) {
+        when (id) {
             R.id.menu_custom_btn -> {
                 viewModel.bookSource?.customButton?.let {
                     viewModel.getBook()?.let { book ->
@@ -558,13 +624,13 @@ class BookInfoActivity :
             R.id.menu_split_long_chapter -> {
                 upLoading(true)
                 viewModel.getBook()?.let {
-                    it.setSplitLongChapter(!item.isChecked)
+                    it.setSplitLongChapter(!checked)
                     viewModel.loadBookInfo(it, false)
                 }
-                item.isChecked = !item.isChecked
-                if (!item.isChecked) longToastOnUi(R.string.need_more_time_load_content)
+                // 取消「拆分长章节」后需要重新加载正文，提示耗时
+                if (checked) longToastOnUi(R.string.need_more_time_load_content)
             }
-            R.id.menu_delete_alert -> LocalConfig.bookInfoDeleteAlert = !item.isChecked
+            R.id.menu_delete_alert -> LocalConfig.bookInfoDeleteAlert = !checked
             R.id.menu_upload -> {
                 viewModel.getBook()?.let { book ->
                     book.getRemoteUrl()?.let {
@@ -840,6 +906,7 @@ class BookInfoActivity :
             getString(R.string.add_to_bookshelf)
         }
         editMenuItem?.isVisible = viewModel.inBookshelf
+        uiEditVisible = viewModel.inBookshelf
     }
 
     private fun upGroup(groupId: Long) {
