@@ -75,6 +75,8 @@ import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.compose.glass.GlassDropdownMenu
+import com.qreader.reader.ui.compose.glass.GlassDropdownMenuItem
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTab
 import com.qreader.reader.ui.compose.liquid.LiquidBottomTabs
 import com.qreader.reader.utils.ColorUtils
@@ -821,98 +823,6 @@ private fun BookshelfGlassTitleBar(
                     )
                 }
             }
-        }
-    }
-}
-
-/**
- * 玻璃态下拉菜单项：图标 + 文字，整行可点。
- *
- * 不使用 Material3 DropdownMenuItem（其 background/shape 不可玻璃化），
- * 整行通过 [Modifier.clickable] 触发 [onClick]。
- */
-@Composable
-private fun GlassDropdownMenuItem(
-    text: String,
-    iconRes: Int,
-    contentColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = contentColor.copy(alpha = 0.75f),
-            modifier = Modifier.size(24.dp),
-        )
-        BasicText(
-            text = text,
-            style = TextStyle(contentColor, 16.sp),
-            modifier = Modifier.padding(start = 12.dp),
-        )
-    }
-}
-
-/**
- * 通用玻璃态下拉菜单 overlay。
- *
- * 必须由调用方放在**全屏外层 Box**（与 backdrop 捕获源同 surface），否则 fillMaxSize/tap-outside 会失效。
- * 结构：透明全屏 tap-outside 层（indication=null 无波纹）+ 顶部右对齐玻璃面板（距顶 108dp 避开标题栏）。
- * 面板内容由 [content] 槽位提供（通常传入若干 [GlassDropdownMenuItem]）。
- */
-@Composable
-private fun GlassDropdownMenu(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    backdrop: Backdrop,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    AnimatedVisibility(
-        visible = expanded,
-        modifier = modifier.fillMaxSize(),
-        enter = fadeIn(tween(160)),
-        exit = fadeOut(tween(120))
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // 透明全屏 tap-outside 层：点击面板外区域触发关闭
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onDismissRequest
-                    )
-            )
-            // 玻璃面板：顶部右对齐，距顶 108dp 避开 100dp 标题栏
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 108.dp, end = 8.dp)
-                    .width(200.dp)
-                    .drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { RoundedCornerShape(16.dp) },
-                        effects = {
-                            vibrancy()
-                            blur(GlassConfig.blur.toPx())
-                            lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                        },
-                        onDrawSurface = { drawRect(containerColor.copy(alpha = 0.6f)) }
-                    )
-                    .padding(vertical = 8.dp),
-                content = content,
-            )
         }
     }
 }
