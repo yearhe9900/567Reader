@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -130,7 +131,8 @@ fun BookInfoEditScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(5.dp)
+                    .statusBarsPadding()
+                    .padding(top = 56.dp, start = 5.dp, end = 5.dp, bottom = 5.dp)
                     .navigationBarsPadding()
                     .imePadding()
             ) {
@@ -221,7 +223,7 @@ fun BookInfoEditScreen(
                     singleLine = false
                 )
 
-                // ── 三个封面操作（原 StrokeTextView，保持 clickable + 边框视觉接近）──
+                // ── 三个封面操作（伪玻璃按钮，与搜索页「清除」同模式）──
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -409,7 +411,9 @@ private fun TypeDropdown(
 }
 
 /**
- * 三个封面操作的描边文字按钮：保持原 StrokeTextView 的「可点击 + 边框」外观与点击交互。
+ * 三个封面操作的玻璃态按钮（伪玻璃）：
+ * 在捕获层内部无法使用 drawBackdrop（会循环捕获崩溃），故用玻璃容器色 + 白色渐变高光近似，
+ * 与搜索页「清除」按钮同模式。文字色沿用主题资源（日/夜自动）。
  */
 @Composable
 private fun ActionTextButton(
@@ -417,12 +421,22 @@ private fun ActionTextButton(
     onClick: () -> Unit,
     textColor: Color,
 ) {
+    val context = LocalContext.current
+    val isLightTheme = GlassConfig.isLightTheme(context)
+    val containerColor = GlassConfig.containerColor(isLightTheme)
+    val highlightColors = listOf(
+        Color.White.copy(alpha = 0.16f),
+        Color.White.copy(alpha = 0.04f),
+    )
     BasicText(
         text = text,
         style = TextStyle(textColor, 14.sp),
         modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(containerColor)
+            .background(Brush.verticalGradient(highlightColors))
+            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
-            .border(1.dp, textColor.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
-            .padding(horizontal = 5.dp, vertical = 5.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp)
     )
 }
