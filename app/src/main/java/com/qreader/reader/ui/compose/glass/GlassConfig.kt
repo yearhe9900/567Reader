@@ -27,7 +27,7 @@ object GlassConfig {
     // 容器半透明底色
     // 亮色用 0.8f 不透明度白——0.4f 时 vibrancy/blur 结果占 60%，整体偏灰；
     // 深色保持 0.4f（深灰底 + 低透明度 = 恰好出暗玻璃感）。
-    val lightContainerColor = Color.White.copy(alpha = 0.8f)
+    val lightContainerColor = Color.White.copy(alpha = 0.9f)
     val darkContainerColor = Color(0xFF121212).copy(alpha = 0.4f)
 
     /** 根据明暗主题返回玻璃容器背景色。 */
