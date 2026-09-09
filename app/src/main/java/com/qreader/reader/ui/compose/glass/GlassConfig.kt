@@ -78,6 +78,29 @@ object GlassConfig {
     /** 面板水平内边距。 */
     val sheetHorizontalPadding: Dp = 0.dp
 
+    // ── 玻璃 Toggle（设置页 Web 服务 / 阅读页设置 Switch 等）──
+
+    /** 轨道尺寸。 */
+    val toggleWidth: Dp = 64.dp
+    val toggleHeight: Dp = 28.dp
+
+    /** 轨道底色：亮色浅灰、暗色深灰。 */
+    val toggleTrackLight = Color(0xFF787878).copy(alpha = 0.2f)
+    val toggleTrackDark = Color(0xFF787880).copy(alpha = 0.36f)
+
+    /** 打开态轨道强调色（iOS 风格绿）。 */
+    val toggleAccentLight = Color(0xFF34C759)
+    val toggleAccentDark = Color(0xFF30D158)
+
+    /** 滑块最短按压保持时长（ms），保证快速点击也能跑出放大动画。 */
+    const val toggleMinHoldDurationMs = 130L
+
+    fun toggleTrackColor(isLightTheme: Boolean): Color =
+        if (isLightTheme) toggleTrackLight else toggleTrackDark
+
+    fun toggleAccentColor(isLightTheme: Boolean): Color =
+        if (isLightTheme) toggleAccentLight else toggleAccentDark
+
     // ── 伪玻璃按钮参数（捕获层内部不能用 drawBackdrop 时的近似方案）──
 
     /** 伪玻璃按钮渐变高光颜色（白→透明，叠加在容器色上产生玻璃光泽）。 */

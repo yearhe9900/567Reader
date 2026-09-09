@@ -42,6 +42,7 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -49,15 +50,11 @@ fun LiquidToggle(
     selected: () -> Boolean,
     onSelect: (Boolean) -> Unit,
     backdrop: Backdrop,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLightTheme: Boolean = !isSystemInDarkTheme(),
 ) {
-    val isLightTheme = !isSystemInDarkTheme()
-    val accentColor =
-        if (isLightTheme) Color(0xFF34C759)
-        else Color(0xFF30D158)
-    val trackColor =
-        if (isLightTheme) Color(0xFF787878).copy(0.2f)
-        else Color(0xFF787880).copy(0.36f)
+    val accentColor = GlassConfig.toggleAccentColor(isLightTheme)
+    val trackColor = GlassConfig.toggleTrackColor(isLightTheme)
 
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
@@ -99,7 +96,7 @@ fun LiquidToggle(
                     if (isLtr) (fraction + delta).fastCoerceIn(0f, 1f)
                     else (fraction - delta).fastCoerceIn(0f, 1f)
             },
-            minHoldDuration = 130L
+            minHoldDuration = GlassConfig.toggleMinHoldDurationMs
         )
     }
     LaunchedEffect(dampedDragAnimation) {
@@ -133,7 +130,7 @@ fun LiquidToggle(
                     val fraction = dampedDragAnimation.value
                     drawRect(lerp(trackColor, accentColor, fraction))
                 }
-                .size(64f.dp, 28f.dp)
+                .size(GlassConfig.toggleWidth, GlassConfig.toggleHeight)
         )
 
         Box(

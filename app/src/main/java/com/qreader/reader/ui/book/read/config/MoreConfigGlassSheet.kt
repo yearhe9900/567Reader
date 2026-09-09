@@ -18,8 +18,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import com.kyant.backdrop.Backdrop
+import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.compose.glass.GlassToggleHost
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
+import com.qreader.reader.utils.ColorUtils
 
 /**
  * 阅读页「设置」玻璃底部面板。
@@ -38,6 +41,13 @@ fun MoreConfigGlassSheet(
     val activity = context as? FragmentActivity ?: return
     val containerId = remember { View.generateViewId() }
     val tag = remember { "more_config_glass_sheet" }
+    val isLightPage = remember { ColorUtils.isColorLight(ReadBookConfig.bgMeanColor) }
+
+    // Preference 内的 LiquidToggle 需要采样源与明暗，组合期间挂到 Host
+    DisposableEffect(backdrop, isLightPage) {
+        GlassToggleHost.attach(backdrop, isLightPage)
+        onDispose { GlassToggleHost.detach() }
+    }
 
     LiquidGlassDialog(
         backdrop = backdrop,
