@@ -91,6 +91,9 @@ private class ReadStyleBinder(
     private var binding: DialogReadBookStyleBinding? = null
     private var styleAdapter: StyleAdapter? = null
 
+    /** attach/upView 回写 RadioGroup 时不要触发翻页动画回调（layout 中 loadContent 会卡死）。 */
+    private var suppressPageAnimCallback = false
+
     fun attach(binding: DialogReadBookStyleBinding) {
         this.binding = binding
         val adapter = StyleAdapter()
@@ -162,10 +165,14 @@ private class ReadStyleBinder(
             TipConfigDialog().show(activity.supportFragmentManager, "tipConfigDialog")
         }
         rgPageAnim.setOnCheckedChangeListener { _, checkedId ->
+            if (suppressPageAnimCallback) return@setOnCheckedChangeListener
             ReadBook.book?.setPageAnim(-1)
             ReadBookConfig.pageAnim = rgPageAnim.getIndexById(checkedId)
-            activity.upPageAnim()
-            ReadBook.loadContent(false)
+            // 勿在同步 layout/touch 回调里 loadContent；post 到下一帧，避免整页卡死
+            binding.root.post {
+                activity.upPageAnim()
+                ReadBook.loadContent(false)
+            }
         }
         cbShareLayout.onCheckedChangeListener = { _, isChecked ->
             ReadBookConfig.shareLayout = isChecked
@@ -211,10 +218,15 @@ private class ReadStyleBinder(
 
     private fun upView(binding: DialogReadBookStyleBinding) = binding.run {
         textFontWeightConverter.upUi(ReadBookConfig.textBold)
-        ReadBook.pageAnim().let {
-            if (it >= 0 && it < rgPageAnim.childCount) {
-                rgPageAnim.check(rgPageAnim.getChildAt(it).id)
+        suppressPageAnimCallback = true
+        try {
+            ReadBook.pageAnim().let {
+                if (it >= 0 && it < rgPageAnim.childCount) {
+                    rgPageAnim.check(rgPageAnim.getChildAt(it).id)
+                }
             }
+        } finally {
+            suppressPageAnimCallback = false
         }
         ReadBookConfig.let {
             dsbTextSize.progress = it.textSize - 5
