@@ -47,6 +47,8 @@ fun MoreConfigGlassSheet(
             .navigationBarsPadding(),
         cardRadius = GlassConfig.sheetCornerRadius,
         alignment = Alignment.BottomCenter,
+        // 正文保持清晰可读，不加全屏压暗/模糊蒙板
+        showScrim = false,
     ) {
         AndroidView(
             factory = { ctx ->

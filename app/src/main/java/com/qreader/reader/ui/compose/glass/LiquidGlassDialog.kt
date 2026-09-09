@@ -55,6 +55,8 @@ import com.qreader.reader.help.config.AppConfig
  * @param contentPadding      卡片内边距（绘制在玻璃表面之内），默认 0.dp（调用方可在内容里自行留白）
  * @param dismissOnScrimClick 点蒙板是否关闭，默认 true
  * @param alignment           卡片在全屏中的对齐方式，默认居中；底部面板用 [Alignment.BottomCenter]
+ * @param showScrim           是否绘制全屏玻璃蒙板（压暗/模糊正文）。阅读页设置等需要
+ *                            「正文保持清晰、只浮一块玻璃面板」的场景传 false
  * @param content             卡片内容 lambda，接收解析后的 [GlassDialogColors] 供调用方取色
  */
 @Composable
@@ -66,6 +68,7 @@ fun LiquidGlassDialog(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     dismissOnScrimClick: Boolean = true,
     alignment: Alignment = Alignment.Center,
+    showScrim: Boolean = true,
     content: @Composable ColumnScope.(colors: GlassDialogColors) -> Unit
 ) {
     val isEInkMode = AppConfig.isEInkMode
@@ -89,37 +92,39 @@ fun LiquidGlassDialog(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1) 全屏玻璃蒙板
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBackdrop(
-                    backdrop = backdrop,
-                    shape = { RoundedRectangle(0.5f.dp) },
-                    effects = {
-                        if (!isEInkMode) {
-                            colorControls(
-                                brightness = GlassDialogTokens.scrimBrightness,
-                                saturation = GlassDialogTokens.scrimSaturation
-                            )
-                            blur(GlassDialogTokens.scrimBlur.toPx())
-                            lens(
-                                GlassDialogTokens.scrimLensX.toPx(),
-                                GlassDialogTokens.scrimLensY.toPx(),
-                                depthEffect = true
-                            )
-                        }
-                    },
-                    highlight = { Highlight.Plain },
-                    onDrawSurface = { drawRect(scrimColor) }
-                )
-                .drawWithContent {
-                    drawContent()
-                    drawRect(dimColor)
-                }
-        )
+        // 1) 全屏玻璃蒙板（可选：阅读页设置等场景正文需保持清晰）
+        if (showScrim) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawBackdrop(
+                        backdrop = backdrop,
+                        shape = { RoundedRectangle(0.5f.dp) },
+                        effects = {
+                            if (!isEInkMode) {
+                                colorControls(
+                                    brightness = GlassDialogTokens.scrimBrightness,
+                                    saturation = GlassDialogTokens.scrimSaturation
+                                )
+                                blur(GlassDialogTokens.scrimBlur.toPx())
+                                lens(
+                                    GlassDialogTokens.scrimLensX.toPx(),
+                                    GlassDialogTokens.scrimLensY.toPx(),
+                                    depthEffect = true
+                                )
+                            }
+                        },
+                        highlight = { Highlight.Plain },
+                        onDrawSurface = { drawRect(scrimColor) }
+                    )
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(dimColor)
+                    }
+            )
+        }
 
-        // 2) 居中玻璃卡片层（点外部区域 = 取消）
+        // 2) 玻璃卡片层（点外部区域 = 取消）
         Box(
             modifier = Modifier
                 .fillMaxSize()
