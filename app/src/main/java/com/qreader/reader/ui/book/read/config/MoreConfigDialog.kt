@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.LinearLayout
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import com.qreader.reader.R
 import com.qreader.reader.base.BasePrefDialogFragment
@@ -20,6 +21,8 @@ import com.qreader.reader.lib.prefs.fragment.PreferenceFragment
 import com.qreader.reader.lib.theme.bottomBackground
 import com.qreader.reader.lib.theme.primaryColor
 import com.qreader.reader.model.ReadBook
+import com.qreader.reader.ui.compose.glass.GlassListDialogHost
+import com.qreader.reader.ui.compose.glass.GlassToggleHost
 import com.qreader.reader.ui.book.read.ReadBookActivity
 import com.qreader.reader.ui.book.read.page.provider.ChapterProvider
 import com.qreader.reader.utils.canvasrecorder.CanvasRecorderFactory
@@ -140,6 +143,30 @@ class MoreConfigDialog : BasePrefDialogFragment() {
                 }
             }
             return super.onPreferenceTreeClick(preference)
+        }
+
+        /**
+         * 玻璃面板内的列表选择（双页 / 进度条行为等）改为 Compose 玻璃弹框，
+         * 复用 LiquidGlassDialog + GlassConfig；无 backdrop 时仍走系统 ListPreferenceDialog。
+         */
+        override fun onDisplayPreferenceDialog(preference: Preference) {
+            val backdrop = GlassToggleHost.backdrop
+            if (backdrop != null && preference is ListPreference) {
+                val entries = preference.entries ?: emptyArray()
+                val entryValues = preference.entryValues ?: emptyArray()
+                GlassListDialogHost.show(
+                    title = preference.dialogTitle ?: preference.title ?: "",
+                    entries = entries,
+                    entryValues = entryValues,
+                    selectedValue = preference.value,
+                ) { value ->
+                    if (preference.callChangeListener(value)) {
+                        preference.value = value
+                    }
+                }
+                return
+            }
+            super.onDisplayPreferenceDialog(preference)
         }
     }
 }
