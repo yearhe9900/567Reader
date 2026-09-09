@@ -24,13 +24,12 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:tint="@color/primaryText" />
 
-    <com.qreader.reader.lib.theme.view.ThemeSeekBar
-        android:id="@+id/seek_bar"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/glass_slider"
         android:layout_width="0dp"
-        android:layout_height="25dp"
+        android:layout_height="32dp"
         android:layout_gravity="center_vertical"
-        android:layout_weight="4"
-        android:max="10" />
+        android:layout_weight="4" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_seek_plus"
