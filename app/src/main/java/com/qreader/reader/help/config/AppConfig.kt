@@ -55,7 +55,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     var editAutoWrap = appCtx.getPrefBoolean(PreferKey.editAutoWrap, true)
     var editAutoComplete = appCtx.getPrefBoolean(PreferKey.editAutoComplete, true)
     var showBoardLine = appCtx.getPrefInt(PreferKey.showBoardLine, 1)
-    var adaptSpecialStyle = appCtx.getPrefBoolean(PreferKey.adaptSpecialStyle, true)
+    /** 适配特殊样式，固定开启（设置入口已移除） */
+    var adaptSpecialStyle = true
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
@@ -64,7 +65,6 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             PreferKey.editAutoWrap -> editAutoWrap = appCtx.getPrefBoolean(PreferKey.editAutoWrap, true)
             PreferKey.editAutoComplete -> editAutoComplete = appCtx.getPrefBoolean(PreferKey.editAutoComplete, true)
             PreferKey.showBoardLine -> showBoardLine = appCtx.getPrefInt(PreferKey.showBoardLine, 1)
-            PreferKey.adaptSpecialStyle -> adaptSpecialStyle = appCtx.getPrefBoolean(PreferKey.adaptSpecialStyle, true)
 
             PreferKey.themeMode -> {
                 themeMode = appCtx.getPrefString(PreferKey.themeMode, "0")
@@ -98,8 +98,7 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             PreferKey.clickActionBR -> clickActionBR =
                 appCtx.getPrefInt(PreferKey.clickActionBR, 1)
 
-            PreferKey.useZhLayout -> ReadBookConfig.useZhLayout =
-                appCtx.getPrefBoolean(PreferKey.useZhLayout)
+            PreferKey.useZhLayout -> ReadBookConfig.useZhLayout = false
 
             PreferKey.userAgent -> userAgent = getPrefUserAgent()
 
@@ -340,8 +339,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             appCtx.putPrefBoolean(PreferKey.ttsFollowSys, value)
         }
 
-    val noAnimScrollPage: Boolean
-        get() = appCtx.getPrefBoolean(PreferKey.noAnimScrollPage, false)
+    /** 禁用滚动点击动画，固定关闭（设置入口已移除） */
+    val noAnimScrollPage: Boolean get() = false
 
     const val defaultSpeechRate = 5
 
@@ -592,8 +591,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     val volumeKeyPageOnPlay
         get() = appCtx.getPrefBoolean(PreferKey.volumeKeyPageOnPlay, true)
 
-    val mouseWheelPage
-        get() = appCtx.getPrefBoolean(PreferKey.mouseWheelPage, true)
+    /** 鼠标滚轮翻页，固定开启（设置入口已移除） */
+    val mouseWheelPage get() = true
 
     /** 填充刘海区域，固定开启（设置入口已移除） */
     val paddingDisplayCutouts get() = true
@@ -610,17 +609,11 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             appCtx.putPrefString("searchGroup", value)
         }
 
-    var pageTouchSlop: Int
-        get() = appCtx.getPrefInt(PreferKey.pageTouchSlop, 0)
-        set(value) {
-            appCtx.putPrefInt(PreferKey.pageTouchSlop, value)
-        }
+    /** 滑动翻页阈值，固定 26px（设置入口已移除） */
+    val pageTouchSlop: Int get() = 26
 
-    var pageTouchClick: Int
-        get() = appCtx.getPrefInt(PreferKey.pageTouchClick, 0)
-        set(value) {
-            appCtx.putPrefInt(PreferKey.pageTouchClick, value)
-        }
+    /** 边缘点击阈值，固定 0px（设置入口已移除） */
+    val pageTouchClick: Int get() = 0
 
     var bookshelfSort: Int
         get() = appCtx.getPrefInt(PreferKey.bookshelfSort, 0)
@@ -653,16 +646,11 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             appCtx.putPrefInt(PreferKey.imageRetainNum, value)
         }
 
-    var showReadTitleBarAddition: Boolean
-        get() = appCtx.getPrefBoolean(PreferKey.showReadTitleAddition, true)
-        set(value) {
-            appCtx.putPrefBoolean(PreferKey.showReadTitleAddition, value)
-        }
-    var readBarStyleFollowPage: Boolean
-        get() = appCtx.getPrefBoolean(PreferKey.readBarStyleFollowPage, false)
-        set(value) {
-            appCtx.putPrefBoolean(PreferKey.readBarStyleFollowPage, value)
-        }
+    /** 展示顶部工具栏附加区域，固定开启（设置入口已移除） */
+    val showReadTitleBarAddition: Boolean get() = true
+
+    /** 工具栏样式跟随页面，固定关闭（设置入口已移除） */
+    val readBarStyleFollowPage: Boolean get() = false
 
     var sourceEditMaxLine: Int
         get() {

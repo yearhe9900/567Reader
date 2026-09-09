@@ -46,7 +46,8 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
     private val menuItems: List<MenuItemImpl>
     private val visibleMenuItems = arrayListOf<MenuItemImpl>()
     private val moreMenuItems = arrayListOf<MenuItemImpl>()
-    private val expandTextMenu get() = context.getPrefBoolean(PreferKey.expandTextMenu)
+    /** 展开文本选择菜单，固定关闭（设置入口已移除） */
+    private val expandTextMenu get() = false
 
     init {
         @SuppressLint("InflateParams")
@@ -68,7 +69,7 @@ class TextActionMenu(private val context: Context, private val callBack: CallBac
         binding.recyclerView.adapter = adapter
         binding.recyclerViewMore.adapter = adapter
         setOnDismissListener {
-            if (!context.getPrefBoolean(PreferKey.expandTextMenu)) {
+            if (!expandTextMenu) {
                 binding.ivMenuMore.setImageResource(R.drawable.ic_more_vert)
                 binding.recyclerViewMore.gone()
                 adapter.setItems(visibleMenuItems)

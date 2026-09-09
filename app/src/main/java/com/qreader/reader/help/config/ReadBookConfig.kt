@@ -234,22 +234,20 @@ object ReadBookConfig {
             }
         }
 
-    /**
-     * 两端对齐
-     */
-    val textFullJustify get() = appCtx.getPrefBoolean(PreferKey.textFullJustify, true)
+    /** 文字两端对齐，固定开启（设置入口已移除） */
+    val textFullJustify get() = true
 
-    /**
-     * 底部对齐
-     */
-    val textBottomJustify get() = appCtx.getPrefBoolean(PreferKey.textBottomJustify, true)
+    /** 文字底部对齐，固定开启（设置入口已移除） */
+    val textBottomJustify get() = true
 
     /** 阅读页状态栏固定不隐藏（设置入口已移除） */
     var hideStatusBar = false
 
     /** 阅读页导航栏固定不隐藏（设置入口已移除） */
     var hideNavigationBar = false
-    var useZhLayout = appCtx.getPrefBoolean(PreferKey.useZhLayout)
+
+    /** 自定义中文分行，固定关闭（设置入口已移除） */
+    var useZhLayout = false
 
     val config get() = if (shareLayout) shareConfig else durConfig
 

@@ -21,41 +21,6 @@
         app:isBottomBackground="true" />
 
     <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="useZhLayout"
-        android:title="@string/use_zh_layout"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="true"
-        android:key="textFullJustify"
-        android:title="@string/text_full_justify"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="true"
-        android:key="textBottomJustify"
-        android:title="@string/text_bottom_justify"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="true"
-        android:key="adaptSpecialStyle"
-        android:title="@string/adapt_special_style"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="true"
-        android:key="mouseWheelPage"
-        android:title="@string/mouse_wheel_page"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
         android:defaultValue="true"
         android:key="volumeKeyPage"
         android:title="@string/volume_key_page"
@@ -73,20 +38,6 @@
         android:defaultValue="false"
         android:key="keyPageOnLongPress"
         android:title="@string/key_page_on_long_press"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.Preference
-        android:key="pageTouchSlop"
-        android:summary="@string/page_touch_slop_summary"
-        android:title="@string/page_touch_slop_title"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.Preference
-        android:key="pageTouchClick"
-        android:summary="@string/page_touch_click_summary"
-        android:title="@string/page_touch_click_title"
         app:iconSpaceReserved="false"
         app:isBottomBackground="true" />
 
@@ -108,13 +59,6 @@
         android:defaultValue="true"
         android:key="showBrightnessView"
         android:title="@string/show_brightness_view"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="noAnimScrollPage"
-        android:title="@string/no_anim_scroll_page"
         app:iconSpaceReserved="false"
         app:isBottomBackground="true" />
 
@@ -140,33 +84,9 @@
         app:iconSpaceReserved="false"
         app:isBottomBackground="true" />
 
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="disableReturnKey"
-        android:title="@string/disable_return_key"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
     <com.qreader.reader.lib.prefs.Preference
         android:key="customPageKey"
         android:title="@string/custom_page_key"
         app:iconSpaceReserved="false"
         app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="expandTextMenu"
-        android:title="@string/expand_text_menu"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="true"
-        android:key="showReadTitleAddition"
-        android:title="@string/show_read_title_addition" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="readBarStyleFollowPage"
-        android:title="@string/read_bar_style_follow_page" />
 </androidx.preference.PreferenceScreen>
