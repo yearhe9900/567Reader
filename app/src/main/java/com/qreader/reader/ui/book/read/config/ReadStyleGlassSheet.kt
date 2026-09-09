@@ -56,6 +56,8 @@ fun ReadStyleGlassSheet(
     val binder = remember { ReadStyleBinder(activity) }
     val isLightPage = remember { ColorUtils.isColorLight(ReadBookConfig.bgMeanColor) }
 
+    // 必须在 AndroidView setContent 之前 attach，否则首帧 LiquidSlider 读到 null backdrop 不绘制
+    GlassToggleHost.attach(backdrop, isLightPage)
     DisposableEffect(backdrop, isLightPage) {
         GlassToggleHost.attach(backdrop, isLightPage)
         onDispose { GlassToggleHost.detach() }
