@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -157,117 +158,132 @@ fun ReadMenuOverlay(
                 exit = slideOutVertically { it } + fadeOut(),
                 modifier = Modifier.align(Alignment.BottomCenter),
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { RoundedCornerShape(0.dp) },
-                            effects = {
-                                vibrancy()
-                                blur(GlassConfig.blur.toPx())
-                                lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                            },
-                            onDrawSurface = { drawRect(containerColor) },
+                Column(Modifier.fillMaxWidth()) {
+                    // 独立快捷 FAB 行（对齐原版 ll_floating_button，不进玻璃底栏）
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        SmallGlassFab(R.drawable.ic_search, "搜索", contentColor, containerColor, backdrop, onSearch)
+                        SmallGlassFab(
+                            if (state.autoPage) R.drawable.ic_auto_page_stop else R.drawable.ic_auto_page,
+                            if (state.autoPage) "停止自动翻页" else "自动翻页",
+                            contentColor,
+                            containerColor,
+                            backdrop,
+                            onAutoPage,
                         )
-                        .windowInsetsPadding(WindowInsets.navigationBars),
-                ) {
-                    // 消费层铺满整栏（含 padding 区），空白处吃掉点击防误关菜单；
-                    // 内容作为上层兄弟，Slider/按钮优先命中，不被 clickable 抢拖拽
+                        SmallGlassFab(
+                            R.drawable.ic_find_replace,
+                            "替换净化",
+                            contentColor,
+                            containerColor,
+                            backdrop,
+                            onReplaceRule,
+                        )
+                        SmallGlassFab(
+                            if (state.isNightTheme) R.drawable.ic_daytime else R.drawable.ic_brightness,
+                            if (state.isNightTheme) "日间模式" else "夜间模式",
+                            contentColor,
+                            containerColor,
+                            backdrop,
+                            onToggleNightTheme,
+                        )
+                    }
+
+                    // 玻璃底栏：进度 + 目录/朗读/界面/设置
                     Box(
-                        Modifier
-                            .matchParentSize()
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() },
-                                onClick = {},
-                            )
-                    )
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                        // 进度条行：上一章 / LiquidSlider / 下一章
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            BasicText(
-                                text = "上一章",
-                                style = TextStyle(
-                                    color = if (state.prevEnabled) contentColor else contentColor.copy(alpha = 0.3f),
-                                    fontSize = 14.sp,
-                                ),
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable(enabled = state.prevEnabled) { onPrevChapter() }
-                                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                            )
-                            LiquidSlider(
-                                value = { state.seekProgress.toFloat() },
-                                onValueChange = {
-                                    state.isDraggingSeek = true
-                                    state.seekProgress = it.toInt()
-                                },
-                                valueRange = 0f..state.seekMax.toFloat().coerceAtLeast(1f),
-                                visibilityThreshold = 1f,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .drawBackdrop(
                                 backdrop = backdrop,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 8.dp),
-                                onValueChangeFinished = {
-                                    state.isDraggingSeek = false
-                                    onSeekTo(state.seekProgress)
+                                shape = { RoundedCornerShape(0.dp) },
+                                effects = {
+                                    vibrancy()
+                                    blur(GlassConfig.blur.toPx())
+                                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                                 },
+                                onDrawSurface = { drawRect(containerColor) },
                             )
-                            BasicText(
-                                text = "下一章",
-                                style = TextStyle(
-                                    color = if (state.nextEnabled) contentColor else contentColor.copy(alpha = 0.3f),
-                                    fontSize = 14.sp,
-                                ),
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable(enabled = state.nextEnabled) { onNextChapter() }
-                                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                            )
-                        }
+                            .windowInsetsPadding(WindowInsets.navigationBars),
+                    ) {
+                        // 消费层铺满整栏（含 padding 区），空白处吃掉点击防误关菜单；
+                        // 内容作为上层兄弟，Slider/按钮优先命中，不被 clickable 抢拖拽
+                        Box(
+                            Modifier
+                                .matchParentSize()
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    onClick = {},
+                                )
+                        )
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                            // 进度条行：上一章 / LiquidSlider / 下一章
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                BasicText(
+                                    text = "上一章",
+                                    style = TextStyle(
+                                        color = if (state.prevEnabled) contentColor else contentColor.copy(alpha = 0.3f),
+                                        fontSize = 14.sp,
+                                    ),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable(enabled = state.prevEnabled) { onPrevChapter() }
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                                )
+                                LiquidSlider(
+                                    value = { state.seekProgress.toFloat() },
+                                    onValueChange = {
+                                        state.isDraggingSeek = true
+                                        state.seekProgress = it.toInt()
+                                    },
+                                    valueRange = 0f..state.seekMax.toFloat().coerceAtLeast(1f),
+                                    visibilityThreshold = 1f,
+                                    backdrop = backdrop,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(horizontal = 8.dp),
+                                    onValueChangeFinished = {
+                                        state.isDraggingSeek = false
+                                        onSeekTo(state.seekProgress)
+                                    },
+                                )
+                                BasicText(
+                                    text = "下一章",
+                                    style = TextStyle(
+                                        color = if (state.nextEnabled) contentColor else contentColor.copy(alpha = 0.3f),
+                                        fontSize = 14.sp,
+                                    ),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable(enabled = state.nextEnabled) { onNextChapter() }
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                                )
+                            }
 
-                        Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(12.dp))
 
-                        // 快捷操作行：搜索 / 自动翻页 / 替换净化 / 日夜切换（对齐原版 FAB 行）
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                        ) {
-                            MenuButton(R.drawable.ic_search, "搜索", contentColor, onSearch)
-                            MenuButton(
-                                if (state.autoPage) R.drawable.ic_auto_page_stop else R.drawable.ic_auto_page,
-                                if (state.autoPage) "停止" else "自动",
-                                contentColor,
-                                onAutoPage,
-                            )
-                            MenuButton(R.drawable.ic_find_replace, "净化", contentColor, onReplaceRule)
-                            MenuButton(
-                                if (state.isNightTheme) R.drawable.ic_daytime else R.drawable.ic_brightness,
-                                if (state.isNightTheme) "日间" else "夜间",
-                                contentColor,
-                                onToggleNightTheme,
-                            )
-                        }
-
-                        Spacer(Modifier.height(8.dp))
-
-                        // 功能按钮行：目录 / 朗读 / 界面 / 设置
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                        ) {
-                            MenuButton(R.drawable.ic_toc, "目录", contentColor, onCatalog)
-                            MenuButton(
-                                if (state.isReadAloud) R.drawable.ic_stop_black_24dp else R.drawable.ic_read_aloud,
-                                if (state.isReadAloud) "停止" else "朗读",
-                                contentColor, onReadAloud
-                            )
-                            MenuButton(R.drawable.ic_interface_setting, "界面", contentColor, onFont)
-                            MenuButton(R.drawable.ic_settings, "设置", contentColor, onSetting)
+                            // 功能按钮行：目录 / 朗读 / 界面 / 设置
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                            ) {
+                                MenuButton(R.drawable.ic_toc, "目录", contentColor, onCatalog)
+                                MenuButton(
+                                    if (state.isReadAloud) R.drawable.ic_stop_black_24dp else R.drawable.ic_read_aloud,
+                                    if (state.isReadAloud) "停止" else "朗读",
+                                    contentColor, onReadAloud
+                                )
+                                MenuButton(R.drawable.ic_interface_setting, "界面", contentColor, onFont)
+                                MenuButton(R.drawable.ic_settings, "设置", contentColor, onSetting)
+                            }
                         }
                     }
                 }
@@ -300,6 +316,46 @@ private fun MenuButton(
         BasicText(
             text = label,
             style = TextStyle(color = tint, fontSize = 12.sp),
+        )
+    }
+}
+
+/** 原版 mini FAB 样式：独立小圆钮，无文字标签，浮在玻璃底栏上方。 */
+@Composable
+private fun SmallGlassFab(
+    iconRes: Int,
+    contentDescription: String,
+    tint: Color,
+    containerColor: Color,
+    backdrop: Backdrop,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { CircleShape },
+                effects = {
+                    vibrancy()
+                    blur(GlassConfig.blur.toPx())
+                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                },
+                onDrawSurface = { drawRect(containerColor) },
+            )
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = contentDescription,
+            tint = tint,
+            modifier = Modifier.size(22.dp),
         )
     }
 }
