@@ -132,18 +132,11 @@ abstract class BaseReadBookActivity :
     }
 
     /**
-     * 屏幕方向
+     * 屏幕方向：固定跟随系统（设置入口已移除）
      */
     @SuppressLint("SourceLockedOrientationActivity")
     fun setOrientation() {
-        when (AppConfig.screenOrientation) {
-            "0" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            "1" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            "2" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            "3" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
-            "4" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
-            "5" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     /**

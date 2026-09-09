@@ -1964,8 +1964,8 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
 
     private fun upScreenTimeOut() {
-        val keepLightPrefer = getPrefString(PreferKey.keepLight)?.toInt() ?: 0
-        screenTimeOut = keepLightPrefer * 1000L
+        // 屏幕超时固定默认（跟随系统），设置入口已移除；自动翻页仍可通过 screenTimeOut=-1 保持常亮
+        screenTimeOut = 0L
         screenOffTimerStart()
     }
 
