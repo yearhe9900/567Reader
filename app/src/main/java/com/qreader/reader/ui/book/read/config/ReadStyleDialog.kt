@@ -1,11 +1,14 @@
 package com.qreader.reader.ui.book.read.config
 
 import android.content.DialogInterface
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.get
 import com.github.liuyueyi.quick.transfer.constants.TransType
 import com.qreader.reader.R
@@ -19,10 +22,10 @@ import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.lib.dialogs.selector
 import com.qreader.reader.lib.theme.accentColor
-import com.qreader.reader.lib.theme.bottomBackground
 import com.qreader.reader.lib.theme.getPrimaryTextColor
 import com.qreader.reader.model.ReadBook
 import com.qreader.reader.ui.book.read.ReadBookActivity
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.font.FontSelectDialog
 import com.qreader.reader.utils.ChineseUtils
 import com.qreader.reader.utils.ColorUtils
@@ -33,6 +36,12 @@ import com.qreader.reader.utils.showDialogFragment
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
 import splitties.views.onLongClick
 
+/**
+ * 阅读页「界面」弹框。
+ *
+ * 窗口外观走 [GlassConfig]：透明窗体 + sheet 圆角 + 容器色 + 细高光边，
+ * 与阅读页设置玻璃底栏同一套视觉令牌（非 backdrop 真采样——本弹框是独立 Dialog 窗口）。
+ */
 class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
     FontSelectDialog.CallBack {
 
@@ -44,7 +53,7 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
         super.onStart()
         dialog?.window?.run {
             clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            setBackgroundDrawableResource(R.color.background)
+            setBackgroundDrawableResource(android.R.color.transparent)
             decorView.setPadding(0, 0, 0, 0)
             val attr = attributes
             attr.dimAmount = 0.0f
@@ -68,13 +77,25 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
     }
 
     private fun initView() = binding.run {
-        val bg = requireContext().bottomBackground
-        val isLight = ColorUtils.isColorLight(bg)
-        val textColor = requireContext().getPrimaryTextColor(isLight)
-        rootView.setBackgroundColor(bg)
-        tvPageAnim.setTextColor(textColor)
-        tvBgTs.setTextColor(textColor)
-        tvShareLayout.setTextColor(textColor)
+        val isLight = ColorUtils.isColorLight(ReadBookConfig.bgMeanColor)
+        val container = GlassConfig.containerColor(isLight)
+        val textColor = GlassConfig.contentColor(isLight)
+        val radiusPx = GlassConfig.sheetCornerRadius.value *
+            resources.displayMetrics.density
+        val borderPx = GlassConfig.pseudoGlassBorderWidth.value *
+            resources.displayMetrics.density
+        rootView.background = GradientDrawable().apply {
+            cornerRadii = floatArrayOf(
+                radiusPx, radiusPx, radiusPx, radiusPx,
+                0f, 0f, 0f, 0f,
+            )
+            setColor(container.toArgb())
+            setStroke(borderPx.toInt(), GlassConfig.pseudoGlassBorderColor.toArgb())
+        }
+        val textArgb = textColor.toArgb()
+        tvPageAnim.setTextColor(textArgb)
+        tvBgTs.setTextColor(textArgb)
+        tvShareLayout.setTextColor(textArgb)
         dsbTextSize.valueFormat = {
             (it + 5).toString()
         }
@@ -89,8 +110,8 @@ class ReadStyleDialog : BaseDialogFragment(R.layout.dialog_read_book_style),
             ItemReadStyleBinding.inflate(layoutInflater, it, false).apply {
                 ivStyle.setPadding(6.dpToPx(), 6.dpToPx(), 6.dpToPx(), 6.dpToPx())
                 ivStyle.setText(null)
-                ivStyle.setColorFilter(textColor)
-                ivStyle.borderColor = textColor
+                ivStyle.setColorFilter(textArgb)
+                ivStyle.borderColor = textArgb
                 ivStyle.setImageResource(R.drawable.ic_add)
                 root.setOnClickListener {
                     ReadBookConfig.configList.add(ReadBookConfig.Config())
