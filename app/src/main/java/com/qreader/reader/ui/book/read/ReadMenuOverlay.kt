@@ -19,14 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,15 +41,15 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.compose.liquid.LiquidSlider
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.text.TextStyle
 
 /**
- * 阅读页菜单覆盖层（替换原 ReadMenu FrameLayout）。
+ * 阅读页菜单覆盖层。
  *
- * 顶栏：返回 + 章节名（玻璃标题栏，与 MainScreen/BookInfoScreen 统一样式）
- * 底栏：上一章 / 进度条 / 下一章 + 目录·朗读·界面·设置（玻璃覆盖到手势栏）
- * 蒙板点击关闭菜单。
+ * 顶栏：100dp 高度（延伸到状态栏），与 MainScreen 标题栏统一。
+ * 底栏：LiquidSlider 玻璃进度条 + 目录·朗读·界面·设置，玻璃延伸到手势栏。
  */
 @Composable
 fun ReadMenuOverlay(
@@ -90,7 +87,7 @@ fun ReadMenuOverlay(
                     ) { onDismiss() }
             )
 
-            // ── 顶栏（与 MainScreen 标题栏统一：vibrancy + blur + lens，onDrawSurface 用完整 containerColor）──
+            // ── 顶栏（100dp，延伸到状态栏，与 MainScreen GlassTitleBar 统一）──
             AnimatedVisibility(
                 visible = state.menuVisible,
                 enter = slideInVertically { -it } + fadeIn(),
@@ -99,9 +96,6 @@ fun ReadMenuOverlay(
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .height(GlassConfig.titleBarHeight)
                         .drawBackdrop(
                             backdrop = backdrop,
                             shape = { RoundedCornerShape(0.dp) },
@@ -111,12 +105,15 @@ fun ReadMenuOverlay(
                                 lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
                             },
                             onDrawSurface = { drawRect(containerColor) },
-                        ),
+                        )
+                        .height(100.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.BottomStart,
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 4.dp),
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, end = 4.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(onClick = onBack) {
@@ -139,14 +136,13 @@ fun ReadMenuOverlay(
                 }
             }
 
-            // ── 底栏（玻璃覆盖到手势栏：drawBackdrop 在 navigationBarsPadding 之前）──
+            // ── 底栏（玻璃延伸到手势栏）──
             AnimatedVisibility(
                 visible = state.menuVisible,
                 enter = slideInVertically { it } + fadeIn(),
                 exit = slideOutVertically { it } + fadeOut(),
                 modifier = Modifier.align(Alignment.BottomCenter),
             ) {
-                // 外层 Box 承载 drawBackdrop（延伸到手势栏区域）
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -160,12 +156,11 @@ fun ReadMenuOverlay(
                             },
                             onDrawSurface = { drawRect(containerColor) },
                         )
-                        // 内容区加 navigationBarsPadding，玻璃本身延伸到手势栏
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
                     Column {
-                        // 进度条行：上一章 / 进度 / 下一章
+                        // 进度条行：上一章 / LiquidSlider / 下一章
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -181,18 +176,15 @@ fun ReadMenuOverlay(
                                     .clickable(enabled = state.prevEnabled) { onPrevChapter() }
                                     .padding(horizontal = 8.dp, vertical = 6.dp),
                             )
-                            // 玻璃态 Slider
-                            Slider(
-                                value = state.seekProgress.toFloat(),
+                            LiquidSlider(
+                                value = { state.seekProgress.toFloat() },
                                 onValueChange = { state.seekProgress = it.toInt() },
-                                onValueChangeFinished = { onSeekTo(state.seekProgress) },
                                 valueRange = 0f..state.seekMax.toFloat().coerceAtLeast(1f),
-                                modifier = Modifier.weight(1f),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = contentColor,
-                                    activeTrackColor = contentColor,
-                                    inactiveTrackColor = containerColor,
-                                ),
+                                visibilityThreshold = 1f,
+                                backdrop = backdrop,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 8.dp),
                             )
                             BasicText(
                                 text = "下一章",
