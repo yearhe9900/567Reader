@@ -2,7 +2,9 @@ package com.qreader.reader.ui.book.read.config
 
 import android.annotation.SuppressLint
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -50,10 +52,20 @@ fun MoreConfigGlassSheet(
         // 正文保持清晰可读，不加全屏压暗/模糊蒙板
         showScrim = false,
     ) {
+        // 容器必须 MATCH_PARENT，否则 Preference 列表只包内容宽，条目会挤在左侧
         AndroidView(
             factory = { ctx ->
-                FrameLayout(ctx).apply { id = containerId }
+                FrameLayout(ctx).apply {
+                    id = containerId
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+                }
             },
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
             update = { container ->
                 val fm = activity.supportFragmentManager
                 if (fm.findFragmentById(container.id) == null) {
