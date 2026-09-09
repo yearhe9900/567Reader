@@ -1,7 +1,8 @@
 package com.qreader.reader.ui.compose.liquid
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -10,12 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,12 +21,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.consume
+import androidx.compose.ui.input.pointer.isConsumed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
@@ -44,6 +47,7 @@ import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.abs
 
 @Composable
 fun LiquidSlider(
@@ -66,14 +70,15 @@ fun LiquidSlider(
     val trackBackdrop = rememberLayerBackdrop()
 
     BoxWithConstraints(
-        modifier.fillMaxWidth(),
+        modifier
+            .fillMaxWidth()
+            .height(28.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         val trackWidth = constraints.maxWidth
 
         val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
         val animationScope = rememberCoroutineScope()
-        var didDrag by remember { mutableStateOf(false) }
         // 回调/latest 用 rememberUpdatedState，避免 remember 捕获首帧 lambda
         val currentOnValueChange = rememberUpdatedState(onValueChange)
         val currentOnValueChangeFinished = rememberUpdatedState(onValueChangeFinished)
@@ -85,34 +90,25 @@ fun LiquidSlider(
                 visibilityThreshold = visibilityThreshold,
                 initialScale = 1f,
                 pressedScale = 1.5f,
-                onDragStarted = {
-                    didDrag = false
-                },
-                onDragStopped = {
-                    if (didDrag) {
-                        currentOnValueChange.value(targetValue)
-                        currentOnValueChangeFinished.value?.invoke()
-                    }
-                },
-                onDrag = { _, dragAmount ->
-                    if (!didDrag) {
-                        didDrag = dragAmount.x != 0f
-                    }
-                    val delta = (valueRange.endInclusive - valueRange.start) * (dragAmount.x / trackWidth)
-                    currentOnValueChange.value(
-                        if (isLtr) (targetValue + delta).coerceIn(valueRange)
-                        else (targetValue - delta).coerceIn(valueRange)
-                    )
-                }
+                onDragStarted = {},
+                onDragStopped = {},
+                onDrag = { _, _ -> }
             )
         }
         LaunchedEffect(dampedDragAnimation) {
             snapshotFlow { value() }
-                .collectLatest { value ->
-                    if (dampedDragAnimation.targetValue != value) {
-                        dampedDragAnimation.updateValue(value)
+                .collectLatest { v ->
+                    if (dampedDragAnimation.targetValue != v) {
+                        dampedDragAnimation.updateValue(v)
                     }
                 }
+        }
+
+        fun valueFromX(x: Float): Float {
+            val fraction = (x / trackWidth).coerceIn(0f, 1f)
+            val raw = valueRange.start +
+                (valueRange.endInclusive - valueRange.start) * (if (isLtr) fraction else 1f - fraction)
+            return raw.coerceIn(valueRange)
         }
 
         Box(Modifier.layerBackdrop(trackBackdrop)) {
@@ -120,18 +116,6 @@ fun LiquidSlider(
                 Modifier
                     .clip(Capsule())
                     .background(trackColor)
-                    .pointerInput(animationScope) {
-                        detectTapGestures { position ->
-                            val delta = (valueRange.endInclusive - valueRange.start) * (position.x / trackWidth)
-                            val targetValue =
-                                (if (isLtr) valueRange.start + delta
-                                else valueRange.endInclusive - delta)
-                                    .coerceIn(valueRange)
-                            dampedDragAnimation.animateToValue(targetValue)
-                            onValueChange(targetValue)
-                            onValueChangeFinished?.invoke()
-                        }
-                    }
                     .height(6f.dp)
                     .fillMaxWidth()
             )
@@ -151,6 +135,7 @@ fun LiquidSlider(
             )
         }
 
+        // 滑块仅作视觉
         Box(
             Modifier
                 .graphicsLayer {
@@ -158,7 +143,6 @@ fun LiquidSlider(
                         (-size.width / 2f + trackWidth * dampedDragAnimation.progress)
                             .fastCoerceIn(-size.width / 4f, trackWidth - size.width * 3f / 4f) * if (isLtr) 1f else -1f
                 }
-                .then(dampedDragAnimation.modifier)
                 .drawBackdrop(
                     backdrop = rememberCombinedBackdrop(
                         backdrop,
@@ -215,6 +199,41 @@ fun LiquidSlider(
                     }
                 )
                 .size(40f.dp, 24f.dp)
+        )
+
+        // 整条轨道都可拖/点（对齐原版 SeekBar）。放在最上层保证手势优先命中，不被滑块/父级 clickable 抢走
+        Box(
+            Modifier
+                .matchParentSize()
+                .pointerInput(animationScope, valueRange, trackWidth) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = true)
+                        dampedDragAnimation.press()
+                        var current = valueFromX(down.position.x)
+                        currentOnValueChange.value(current)
+                        dampedDragAnimation.updateValue(current)
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes
+                                .fastFirstOrNull { it.id == down.id }
+                                ?: break
+                            if (change.changedToUpIgnoreConsumed()) break
+                            if (change.isConsumed) break
+                            val dragAmount = change.positionChange()
+                            if (abs(dragAmount.x) > 0f) {
+                                change.consume()
+                                val delta = (valueRange.endInclusive - valueRange.start) *
+                                    (dragAmount.x / trackWidth)
+                                current = (if (isLtr) current + delta else current - delta)
+                                    .coerceIn(valueRange)
+                                currentOnValueChange.value(current)
+                                dampedDragAnimation.updateValue(current)
+                            }
+                        }
+                        dampedDragAnimation.release()
+                        currentOnValueChangeFinished.value?.invoke()
+                    }
+                }
         )
     }
 }

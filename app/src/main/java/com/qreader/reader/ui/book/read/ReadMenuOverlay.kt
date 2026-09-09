@@ -106,16 +106,20 @@ fun ReadMenuOverlay(
                             },
                             onDrawSurface = { drawRect(containerColor) },
                         )
-                        // 消费栏内空白处的点击，避免透传到全屏蒙板导致误关菜单
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                            onClick = {},
-                        )
                         .height(100.dp)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.BottomStart,
                 ) {
+                    // 消费层放内容之下：空白处吃掉点击防误关菜单；子节点（返回键等）优先命中
+                    Box(
+                        Modifier
+                            .matchParentSize()
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = {},
+                            )
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -162,16 +166,20 @@ fun ReadMenuOverlay(
                             },
                             onDrawSurface = { drawRect(containerColor) },
                         )
-                        // 消费栏内空白处的点击，避免透传到全屏蒙板导致误关菜单
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                            onClick = {},
-                        )
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .windowInsetsPadding(WindowInsets.navigationBars),
                 ) {
-                    Column {
+                    // 消费层铺满整栏（含 padding 区），空白处吃掉点击防误关菜单；
+                    // 内容作为上层兄弟，Slider/按钮优先命中，不被 clickable 抢拖拽
+                    Box(
+                        Modifier
+                            .matchParentSize()
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = {},
+                            )
+                    )
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                         // 进度条行：上一章 / LiquidSlider / 下一章
                         Row(
                             modifier = Modifier.fillMaxWidth(),

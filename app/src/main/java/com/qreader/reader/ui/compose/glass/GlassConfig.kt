@@ -44,9 +44,9 @@ object GlassConfig {
     val lensY = 48.dp
     val chromaticAberration = true
 
-    // 容器半透明底色。亮色用暖白 #FFFDF8（ARGB 0xFFFFFDF8）@0.9f——0.4f 时 vibrancy/blur 结果占 60%，整体偏灰；
+    // 容器半透明底色。亮色用暖白 #FFFDF8，alpha 0.6——0.9 会把 blur/lens 几乎盖死，看起来像实心白板；
     // 深色保持 0.4f（深灰底 + 低透明度 = 恰好出暗玻璃感）。
-    val lightContainerColor = Color(0xFFFFFDF8).copy(alpha = 0.9f)
+    val lightContainerColor = Color(0xFFFFFDF8).copy(alpha = 0.6f)
     val darkContainerColor = Color(0xFF121212).copy(alpha = 0.4f)
 
     // 玻璃上承载的文字 / 图标色：亮色黑、暗色白（与背景反色）。
