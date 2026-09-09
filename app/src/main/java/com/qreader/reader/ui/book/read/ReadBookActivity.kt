@@ -3,8 +3,11 @@ package com.qreader.reader.ui.book.read
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
+import android.database.ContentObserver
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
+import android.provider.Settings
 import android.view.Gravity
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -12,6 +15,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import android.widget.ImageView
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -114,6 +118,7 @@ import com.qreader.reader.utils.applyOpenTint
 import com.qreader.reader.utils.buildMainHandler
 import com.qreader.reader.utils.dismissDialogFragment
 import com.qreader.reader.utils.getPrefBoolean
+import com.qreader.reader.utils.putPrefBoolean
 import com.qreader.reader.utils.getPrefString
 import com.qreader.reader.utils.hexString
 import com.qreader.reader.utils.iconItemOnLongClick
@@ -358,6 +363,10 @@ class ReadBookActivity : BaseReadBookActivity(),
                     readPageState.isNightTheme = AppConfig.isNightTheme
                     ThemeConfig.applyDayNight(this)
                 },
+                onToggleBrightnessAuto = { toggleBrightnessAuto() },
+                onToggleBrightnessPos = { toggleBrightnessPos() },
+                onBrightnessChange = { onBrightnessChange(it) },
+                onBrightnessChangeFinished = { onBrightnessChangeFinished(it) },
                 onReadAloud = {
                     readPageState.menuVisible = false
                     onClickReadAloud()
@@ -760,6 +769,9 @@ class ReadBookActivity : BaseReadBookActivity(),
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             if (isDown && !readPageState.canShowMenu) {
                 readPageState.isNightTheme = AppConfig.isNightTheme
+                readPageState.brightnessOnRight = AppConfig.brightnessVwPos
+                readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
+                upBrightnessState()
                 upSeekBarState()
                 readPageState.menuVisible = true
                 onMenuShow()
@@ -1215,7 +1227,94 @@ class ReadBookActivity : BaseReadBookActivity(),
 
     private fun upBrightnessState() {
         readPageState.brightness = AppConfig.readBrightness.toFloat()
-        readPageState.brightnessAuto = AppConfig.readBrightness == -1
+        readPageState.brightnessAuto = brightnessAuto()
+        setScreenBrightness(AppConfig.readBrightness.toFloat())
+    }
+
+    private fun brightnessAuto(): Boolean =
+        getPrefBoolean("brightnessAuto", false)
+
+    fun toggleBrightnessAuto() {
+        putPrefBoolean("brightnessAuto", !brightnessAuto())
+        upBrightnessState()
+    }
+
+    fun toggleBrightnessPos() {
+        AppConfig.brightnessVwPos = !AppConfig.brightnessVwPos
+        readPageState.brightnessOnRight = AppConfig.brightnessVwPos
+    }
+
+    fun onBrightnessChange(value: Float) {
+        setScreenBrightness(value)
+    }
+
+    fun onBrightnessChangeFinished(value: Float) {
+        AppConfig.readBrightness = value.toInt().coerceIn(0, 255)
+        readPageState.brightness = AppConfig.readBrightness.toFloat()
+    }
+
+    /**
+     * 系统亮度监听，在高阳光亮度时启用
+     */
+    private var contentObserver: ContentObserver? = null
+
+    /**
+     * 设置屏幕亮度（自原版 ReadMenu 迁入）
+     */
+    fun setScreenBrightness(value: Float) {
+        fun setBrightness(v: Float) {
+            val params = window.attributes
+            params.screenBrightness = v
+            window.attributes = params
+        }
+        val autoBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        if (brightnessAuto() || value == autoBrightness) {
+            setBrightness(autoBrightness)
+            return
+        }
+        val brightness = if (value < 1f) 0.004f else value / 255f
+        var isSunMax = false
+        if (brightness == 1f) {
+            val sysBrightness = getCurrentBrightness()
+            if (sysBrightness == 255) {
+                isSunMax = true
+            }
+        }
+        if (isSunMax) {
+            contentObserver = object : ContentObserver(handler) {
+                override fun onChange(selfChange: Boolean, uri: Uri?) {
+                    super.onChange(selfChange, uri)
+                    if (contentObserver == null) return
+                    if (uri == Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS)) {
+                        val sysBrightness = getCurrentBrightness()
+                        if (sysBrightness < 200) {
+                            setBrightness(brightness)
+                            contentObserver?.let {
+                                contentResolver.unregisterContentObserver(it)
+                            }
+                            contentObserver = null
+                        } else if (sysBrightness < 255) {
+                            setBrightness(brightness)
+                        } else {
+                            setBrightness(autoBrightness)
+                        }
+                    }
+                }
+            }
+            val brightnessUri = Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS)
+            contentResolver.registerContentObserver(brightnessUri, false, contentObserver!!)
+            setBrightness(autoBrightness)
+        } else {
+            setBrightness(brightness)
+        }
+    }
+
+    private fun getCurrentBrightness(): Int {
+        return try {
+            Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS)
+        } catch (_: Settings.SettingNotFoundException) {
+            -1
+        }
     }
 
     /**
@@ -1223,6 +1322,9 @@ class ReadBookActivity : BaseReadBookActivity(),
      */
     override fun showMenuBar() {
         readPageState.isNightTheme = AppConfig.isNightTheme
+        readPageState.brightnessOnRight = AppConfig.brightnessVwPos
+        readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
+        upBrightnessState()
         upSeekBarState()
         readPageState.menuVisible = true
         onMenuShow()
@@ -1265,6 +1367,9 @@ class ReadBookActivity : BaseReadBookActivity(),
             }
             else -> {
                 readPageState.isNightTheme = AppConfig.isNightTheme
+                readPageState.brightnessOnRight = AppConfig.brightnessVwPos
+                readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
+                upBrightnessState()
                 upSeekBarState()
                 readPageState.menuVisible = true
                 onMenuShow()
@@ -1859,6 +1964,10 @@ class ReadBookActivity : BaseReadBookActivity(),
 
     override fun onDestroy() {
         super.onDestroy()
+        contentObserver?.let {
+            contentResolver.unregisterContentObserver(it)
+            contentObserver = null
+        }
         tts?.clearTts()
         textActionMenu.dismiss()
         popupAction.dismiss()

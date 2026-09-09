@@ -75,6 +75,9 @@ class ReadPageOverlayState {
     /** 是否自动亮度 */
     var brightnessAuto by mutableStateOf(AppConfig.readBrightness == -1)
 
+    /** 亮度条是否靠右 */
+    var brightnessOnRight by mutableStateOf(AppConfig.brightnessVwPos)
+
     /** 是否显示亮度条（由 Activity 在 onResume 时同步） */
     var showBrightnessView by mutableStateOf(true)
 

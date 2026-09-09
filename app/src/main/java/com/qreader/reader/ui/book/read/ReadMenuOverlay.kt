@@ -5,7 +5,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,25 +30,35 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastFirstOrNull
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.qreader.reader.R
+import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.compose.liquid.LiquidSlider
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import kotlin.math.abs
 
 /**
  * 阅读页菜单覆盖层。
@@ -64,6 +78,10 @@ fun ReadMenuOverlay(
     onAutoPage: () -> Unit = {},
     onReplaceRule: () -> Unit = {},
     onToggleNightTheme: () -> Unit = {},
+    onToggleBrightnessAuto: () -> Unit = {},
+    onToggleBrightnessPos: () -> Unit = {},
+    onBrightnessChange: (Float) -> Unit = {},
+    onBrightnessChangeFinished: (Float) -> Unit = {},
     onCatalog: () -> Unit = {},
     onReadAloud: () -> Unit = {},
     onFont: () -> Unit = {},
@@ -149,6 +167,24 @@ fun ReadMenuOverlay(
                         )
                     }
                 }
+            }
+
+            // ── 亮度条（竖向，可左右切换）──
+            if (state.showBrightnessView) {
+                BrightnessPanel(
+                    state = state,
+                    contentColor = contentColor,
+                    containerColor = containerColor,
+                    backdrop = backdrop,
+                    onToggleAuto = onToggleBrightnessAuto,
+                    onTogglePos = onToggleBrightnessPos,
+                    onValueChange = onBrightnessChange,
+                    onValueChangeFinished = onBrightnessChangeFinished,
+                    modifier = Modifier
+                        .align(if (state.brightnessOnRight) Alignment.CenterEnd else Alignment.CenterStart)
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 120.dp, bottom = 220.dp),
+                )
             }
 
             // ── 底栏（玻璃延伸到手势栏）──
@@ -357,5 +393,113 @@ private fun SmallGlassFab(
             tint = tint,
             modifier = Modifier.size(22.dp),
         )
+    }
+}
+
+/**
+ * 竖向亮度条：自动亮度 / 竖向滑杆 0–255 / 左右位置切换。
+ * 对齐原版 ll_brightness。
+ */
+@Composable
+private fun BrightnessPanel(
+    state: ReadPageOverlayState,
+    contentColor: Color,
+    containerColor: Color,
+    backdrop: Backdrop,
+    onToggleAuto: () -> Unit,
+    onTogglePos: () -> Unit,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    var dragValue by remember(state.brightness, state.brightnessAuto) {
+        mutableFloatStateOf(state.brightness)
+    }
+    val enabled = !state.brightnessAuto
+    val autoTint = if (state.brightnessAuto) Color(context.accentColor) else contentColor.copy(alpha = 0.4f)
+
+    Column(
+        modifier = modifier
+            .width(40.dp)
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(12.dp))
+            .background(containerColor.copy(alpha = 0.55f))
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        IconButton(onClick = onToggleAuto, modifier = Modifier.size(36.dp)) {
+            Icon(
+                painter = painterResource(R.drawable.ic_brightness_auto),
+                contentDescription = "自动亮度",
+                tint = autoTint,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .width(28.dp)
+                .pointerInput(enabled) {
+                    if (!enabled) return@pointerInput
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = true)
+                        fun valueFromY(y: Float): Float {
+                            val fraction = (1f - y / size.height).coerceIn(0f, 1f)
+                            return (fraction * 255f).coerceIn(0f, 255f)
+                        }
+                        var current = valueFromY(down.position.y)
+                        dragValue = current
+                        onValueChange(current)
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes
+                                .fastFirstOrNull { it.id == down.id }
+                                ?: break
+                            if (change.changedToUpIgnoreConsumed()) break
+                            if (change.isConsumed) break
+                            val dy = change.positionChange().y
+                            if (abs(dy) > 0f) {
+                                val delta = -255f * (dy / size.height)
+                                current = (current + delta).coerceIn(0f, 255f)
+                                dragValue = current
+                                onValueChange(current)
+                            }
+                        }
+                        onValueChangeFinished(dragValue)
+                    }
+                },
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            // 轨道
+            Box(
+                Modifier
+                    .fillMaxHeight()
+                    .width(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(contentColor.copy(alpha = 0.15f))
+            )
+            // 进度（从底部填充）
+            Box(
+                Modifier
+                    .fillMaxHeight(if (enabled) dragValue / 255f else 0f)
+                    .width(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(
+                        if (enabled) Color(context.accentColor)
+                        else contentColor.copy(alpha = 0.2f)
+                    )
+            )
+        }
+
+        IconButton(onClick = onTogglePos, modifier = Modifier.size(36.dp)) {
+            Icon(
+                painter = painterResource(R.drawable.ic_swap_horiz),
+                contentDescription = "调整位置",
+                tint = contentColor,
+                modifier = Modifier.size(20.dp),
+            )
+        }
     }
 }
