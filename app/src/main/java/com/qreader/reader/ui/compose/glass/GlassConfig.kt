@@ -84,6 +84,22 @@ object GlassConfig {
     val toggleWidth: Dp = 64.dp
     val toggleHeight: Dp = 28.dp
 
+    /** 滑块视觉尺寸（比轨道略大，靠 capsule 裁切贴合）。 */
+    val toggleThumbWidth: Dp = 40.dp
+    val toggleThumbHeight: Dp = 24.dp
+
+    /**
+     * 按压缩放。1.5f 时 24dp 滑块变 36dp，垂直会超出 28dp 轨道约 4dp/侧；
+     * 必须配合 [toggleEffectPadding] 留白，否则高光/阴影/放大被父容器裁切。
+     */
+    const val togglePressedScale = 1.5f
+
+    /**
+     * Toggle 外围特效留白：覆盖按压缩放溢出 + Shadow/Highlight 半径。
+     * 父容器需 clipChildren=false，否则 View 体系仍会裁掉。
+     */
+    val toggleEffectPadding: Dp = 12.dp
+
     /** 轨道底色：亮色浅灰、暗色深灰。 */
     val toggleTrackLight = Color(0xFF787878).copy(alpha = 0.2f)
     val toggleTrackDark = Color(0xFF787880).copy(alpha = 0.36f)

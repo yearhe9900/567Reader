@@ -2,6 +2,7 @@ package com.qreader.reader.ui.compose.liquid
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,7 +76,7 @@ fun LiquidToggle(
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            pressedScale = 1.5f,
+            pressedScale = GlassConfig.togglePressedScale,
             onDragStarted = {},
             onDragStopped = {
                 if (didDrag) {
@@ -119,8 +120,10 @@ fun LiquidToggle(
     val trackBackdrop = rememberLayerBackdrop()
 
     Box(
-        modifier,
-        contentAlignment = Alignment.CenterStart
+        // 外围留白：按压缩放与 Shadow/Highlight 会画到轨道外，
+        // 布局尺寸必须包含这部分，否则 ComposeView/父 FrameLayout 会裁切特效
+        modifier.padding(GlassConfig.toggleEffectPadding),
+        contentAlignment = Alignment.Center
     ) {
         Box(
             Modifier
@@ -204,7 +207,7 @@ fun LiquidToggle(
                         drawRect(Color.White.copy(alpha = 0.6f - progress * 0.25f))
                     }
                 )
-                .size(40f.dp, 24f.dp)
+                .size(GlassConfig.toggleThumbWidth, GlassConfig.toggleThumbHeight)
         )
     }
 }

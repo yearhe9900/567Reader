@@ -59,6 +59,8 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone"
         android:gravity="right|center_vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:ignore="RtlHardcoded" />
