@@ -1,5 +1,7 @@
 package com.qreader.reader.ui.compose.liquid
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -22,14 +24,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.lerp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -45,6 +52,7 @@ import com.kyant.backdrop.shadow.Shadow
 import com.kyant.shapes.Capsule
 import com.qreader.reader.ui.compose.glass.GlassConfig
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.abs
 
 @Composable
 fun LiquidToggle(
@@ -69,8 +77,8 @@ fun LiquidToggle(
     // 避免 remember(animationScope) 的 DampedDragAnimation 捕获过期闭包。
     val latestSelected = rememberUpdatedState(selected)
     val latestOnSelect = rememberUpdatedState(onSelect)
+    val touchSlop = LocalViewConfiguration.current.touchSlop
 
-    var didDrag by remember { mutableStateOf(false) }
     var fraction by remember { mutableFloatStateOf(if (selected()) 1f else 0f) }
     val dampedDragAnimation = remember(animationScope) {
         DampedDragAnimation(
@@ -81,25 +89,8 @@ fun LiquidToggle(
             initialScale = 1f,
             pressedScale = GlassConfig.togglePressedScale,
             onDragStarted = {},
-            onDragStopped = {
-                if (didDrag) {
-                    fraction = if (targetValue >= 0.5f) 1f else 0f
-                    latestOnSelect.value(fraction == 1f)
-                    didDrag = false
-                } else {
-                    fraction = if (latestSelected.value()) 0f else 1f
-                    latestOnSelect.value(fraction == 1f)
-                }
-            },
-            onDrag = { _, dragAmount ->
-                if (!didDrag) {
-                    didDrag = dragAmount.x != 0f
-                }
-                val delta = dragAmount.x / dragWidth
-                fraction =
-                    if (isLtr) (fraction + delta).fastCoerceIn(0f, 1f)
-                    else (fraction - delta).fastCoerceIn(0f, 1f)
-            },
+            onDragStopped = {},
+            onDrag = { _, _ -> },
             minHoldDuration = GlassConfig.toggleMinHoldDurationMs
         )
     }
@@ -134,30 +125,67 @@ fun LiquidToggle(
             Modifier.size(GlassConfig.toggleWidth, GlassConfig.toggleHeight),
             contentAlignment = Alignment.CenterStart,
         ) {
+            // 整条轨道可点可拖：命中区 56×24，不依赖小滑块；
+            // 位移 ≤ touchSlop 视为点击取反；拖拽结束吸附。不挂 DampedDragAnimation.modifier，
+            // 避免父级消费事件时 inspectDragGestures 走 cancel 并误切换。
             Box(
                 Modifier
                     .matchParentSize()
+                    .pointerInput(animationScope, dragWidth, isLtr) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            dampedDragAnimation.press()
+                            var totalDx = 0f
+                            var current = dampedDragAnimation.value
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes
+                                    .fastFirstOrNull { it.id == down.id }
+                                    ?: break
+                                if (change.changedToUpIgnoreConsumed()) {
+                                    val next = if (abs(totalDx) <= touchSlop) {
+                                        if (latestSelected.value()) 0f else 1f
+                                    } else {
+                                        if (current >= 0.5f) 1f else 0f
+                                    }
+                                    fraction = next
+                                    latestOnSelect.value(next == 1f)
+                                    break
+                                }
+                                if (change.isConsumed) break
+                                val dx = change.positionChange().x
+                                totalDx += dx
+                                if (abs(totalDx) > touchSlop) {
+                                    change.consume()
+                                    val delta = dx / dragWidth
+                                    current = (if (isLtr) current + delta else current - delta)
+                                        .fastCoerceIn(0f, 1f)
+                                    fraction = current
+                                }
+                            }
+                            dampedDragAnimation.release()
+                        }
+                    }
                     .layerBackdrop(trackBackdrop)
                     .clip(Capsule())
                     .drawBehind {
-                        val fraction = dampedDragAnimation.value
-                        drawRect(lerp(trackColor, accentColor, fraction))
+                        val f = dampedDragAnimation.value
+                        drawRect(lerp(trackColor, accentColor, f))
                     }
             )
 
             Box(
                 Modifier
                     .graphicsLayer {
-                        val fraction = dampedDragAnimation.value
+                        val f = dampedDragAnimation.value
                         val padding = 2f.dp.toPx()
                         translationX =
-                            if (isLtr) lerp(padding, padding + dragWidth, fraction)
-                            else lerp(-padding, -(padding + dragWidth), fraction)
+                            if (isLtr) lerp(padding, padding + dragWidth, f)
+                            else lerp(-padding, -(padding + dragWidth), f)
                     }
                     .semantics {
                         role = Role.Switch
                     }
-                    .then(dampedDragAnimation.modifier)
                     .drawBackdrop(
                         backdrop = rememberCombinedBackdrop(
                             backdrop,
