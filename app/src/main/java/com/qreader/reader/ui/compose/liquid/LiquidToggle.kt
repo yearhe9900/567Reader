@@ -59,7 +59,10 @@ fun LiquidToggle(
 
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
-    val dragWidth = with(density) { 20f.dp.toPx() }
+    // 滑块水平行程：轨道宽 - 滑块宽 - 两侧 2dp 边距（与 graphicsLayer 内 padding 一致）
+    val dragWidth = with(density) {
+        (GlassConfig.toggleWidth - GlassConfig.toggleThumbWidth - 4.dp).toPx().coerceAtLeast(1f)
+    }
     val animationScope = rememberCoroutineScope()
 
     // 用 rememberUpdatedState 持有最新的 selected/onSelect 引用，

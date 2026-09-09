@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingLeft="16dp"
-    android:paddingTop="6dp"
+    android:paddingTop="4dp"
     android:paddingRight="16dp"
-    android:paddingBottom="6dp"
-    android:minHeight="48dp"
+    android:paddingBottom="4dp"
+    android:minHeight="44dp"
     android:clickable="true"
     android:orientation="horizontal"
     android:gravity="center_vertical"
@@ -32,7 +32,7 @@
         <TextView
             android:id="@+id/preference_title"
             android:singleLine="true"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:text="@string/title"
             android:textColor="@color/primaryText"
             android:layout_width="match_parent"
@@ -40,12 +40,12 @@
 
         <TextView
             android:id="@+id/preference_desc"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textColor="@color/tv_text_summary"
             android:text="@string/default1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="1dp" />
 
     </LinearLayout>
 
@@ -54,8 +54,8 @@
         android:orientation="vertical"
         android:layout_gravity="center"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
         android:visibility="gone"
         android:gravity="right|center_vertical"
         android:clipChildren="false"
