@@ -125,89 +125,96 @@ fun LiquidToggle(
         modifier.padding(GlassConfig.toggleEffectPadding),
         contentAlignment = Alignment.Center
     ) {
+        // 轨道盒：固定 toggle 尺寸；滑块必须相对轨道左缘定位（CenterStart），
+        // 若直接把滑块放在外层 Center 对齐的 Box 里，false 态会落在灰条中间。
         Box(
-            Modifier
-                .layerBackdrop(trackBackdrop)
-                .clip(Capsule())
-                .drawBehind {
-                    val fraction = dampedDragAnimation.value
-                    drawRect(lerp(trackColor, accentColor, fraction))
-                }
-                .size(GlassConfig.toggleWidth, GlassConfig.toggleHeight)
-        )
-
-        Box(
-            Modifier
-                .graphicsLayer {
-                    val fraction = dampedDragAnimation.value
-                    val padding = 2f.dp.toPx()
-                    translationX =
-                        if (isLtr) lerp(padding, padding + dragWidth, fraction)
-                        else lerp(-padding, -(padding + dragWidth), fraction)
-                }
-                .semantics {
-                    role = Role.Switch
-                }
-                .then(dampedDragAnimation.modifier)
-                .drawBackdrop(
-                    backdrop = rememberCombinedBackdrop(
-                        backdrop,
-                        rememberBackdrop(trackBackdrop) { drawBackdrop ->
-                            val progress = dampedDragAnimation.pressProgress
-                            val scaleX = lerp(2f / 3f, 0.75f, progress)
-                            val scaleY = lerp(0f, 0.75f, progress)
-                            scale(scaleX, scaleY) {
-                                drawBackdrop()
-                            }
-                        }
-                    ),
-                    shape = { Capsule() },
-                    effects = {
-                        val progress = dampedDragAnimation.pressProgress
-                        blur(8f.dp.toPx() * (1f - progress))
-                        lens(
-                            5f.dp.toPx() * progress,
-                            10f.dp.toPx() * progress,
-                            chromaticAberration = true
-                        )
-                    },
-                    highlight = {
-                        val progress = dampedDragAnimation.pressProgress
-                        Highlight.Ambient.copy(
-                            width = Highlight.Ambient.width / 1.5f,
-                            blurRadius = Highlight.Ambient.blurRadius / 1.5f,
-                            alpha = progress
-                        )
-                    },
-                    shadow = {
-                        Shadow(
-                            radius = 4f.dp,
-                            color = Color.Black.copy(alpha = 0.05f)
-                        )
-                    },
-                    innerShadow = {
-                        val progress = dampedDragAnimation.pressProgress
-                        InnerShadow(
-                            radius = 4f.dp * progress,
-                            alpha = progress
-                        )
-                    },
-                    layerBlock = {
-                        scaleX = dampedDragAnimation.scaleX
-                        scaleY = dampedDragAnimation.scaleY
-                        val velocity = dampedDragAnimation.velocity / 50f
-                        scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
-                        scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
-                    },
-                    // 官方 demo 的背景是丰富壁纸，surface 不透明白色即可借高光/阴影呈现玻璃感。
-                    // 本页背景为柔和渐变，若 rest 态 alpha=1 会完全盖住 blur/lens 采样结果，
-                    // 导致点击/静止时看不到玻璃折射。降低静止透明度，让 backdrop blur 始终可见。
-                    onDrawSurface = {
-                        val progress = dampedDragAnimation.pressProgress
-                        drawRect(Color.White.copy(alpha = 0.6f - progress * 0.25f))
+            Modifier.size(GlassConfig.toggleWidth, GlassConfig.toggleHeight),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .layerBackdrop(trackBackdrop)
+                    .clip(Capsule())
+                    .drawBehind {
+                        val fraction = dampedDragAnimation.value
+                        drawRect(lerp(trackColor, accentColor, fraction))
                     }
-                )
-                .size(GlassConfig.toggleThumbWidth, GlassConfig.toggleThumbHeight)
-        )
+            )
+
+            Box(
+                Modifier
+                    .graphicsLayer {
+                        val fraction = dampedDragAnimation.value
+                        val padding = 2f.dp.toPx()
+                        translationX =
+                            if (isLtr) lerp(padding, padding + dragWidth, fraction)
+                            else lerp(-padding, -(padding + dragWidth), fraction)
+                    }
+                    .semantics {
+                        role = Role.Switch
+                    }
+                    .then(dampedDragAnimation.modifier)
+                    .drawBackdrop(
+                        backdrop = rememberCombinedBackdrop(
+                            backdrop,
+                            rememberBackdrop(trackBackdrop) { drawBackdrop ->
+                                val progress = dampedDragAnimation.pressProgress
+                                val scaleX = lerp(2f / 3f, 0.75f, progress)
+                                val scaleY = lerp(0f, 0.75f, progress)
+                                scale(scaleX, scaleY) {
+                                    drawBackdrop()
+                                }
+                            }
+                        ),
+                        shape = { Capsule() },
+                        effects = {
+                            val progress = dampedDragAnimation.pressProgress
+                            blur(8f.dp.toPx() * (1f - progress))
+                            lens(
+                                5f.dp.toPx() * progress,
+                                10f.dp.toPx() * progress,
+                                chromaticAberration = true
+                            )
+                        },
+                        highlight = {
+                            val progress = dampedDragAnimation.pressProgress
+                            Highlight.Ambient.copy(
+                                width = Highlight.Ambient.width / 1.5f,
+                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                                alpha = progress
+                            )
+                        },
+                        shadow = {
+                            Shadow(
+                                radius = 4f.dp,
+                                color = Color.Black.copy(alpha = 0.05f)
+                            )
+                        },
+                        innerShadow = {
+                            val progress = dampedDragAnimation.pressProgress
+                            InnerShadow(
+                                radius = 4f.dp * progress,
+                                alpha = progress
+                            )
+                        },
+                        layerBlock = {
+                            scaleX = dampedDragAnimation.scaleX
+                            scaleY = dampedDragAnimation.scaleY
+                            val velocity = dampedDragAnimation.velocity / 50f
+                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                        },
+                        // 官方 demo 的背景是丰富壁纸，surface 不透明白色即可借高光/阴影呈现玻璃感。
+                        // 本页背景为柔和渐变，若 rest 态 alpha=1 会完全盖住 blur/lens 采样结果，
+                        // 导致点击/静止时看不到玻璃折射。降低静止透明度，让 backdrop blur 始终可见。
+                        onDrawSurface = {
+                            val progress = dampedDragAnimation.pressProgress
+                            drawRect(Color.White.copy(alpha = 0.6f - progress * 0.25f))
+                        }
+                    )
+                    .size(GlassConfig.toggleThumbWidth, GlassConfig.toggleThumbHeight)
+            )
+        }
     }
 }
