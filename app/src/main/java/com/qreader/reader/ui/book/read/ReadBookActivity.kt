@@ -83,7 +83,6 @@ import com.qreader.reader.ui.book.read.config.AutoReadDialog
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.BG_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_ACCENT_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_COLOR
-import com.qreader.reader.ui.book.read.config.MoreConfigDialog
 import com.qreader.reader.ui.book.read.config.ReadAloudDialog
 import com.qreader.reader.ui.book.read.config.ReadStyleDialog
 import com.qreader.reader.ui.book.read.config.TipConfigDialog.Companion.TIP_COLOR
@@ -1473,14 +1472,17 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
 
     /**
-     * 显示更多设置
+     * 显示更多设置（玻璃底部面板，in-tree overlay）
      */
     fun showMoreSetting() {
-        showDialogFragment<MoreConfigDialog>()
+        readPageState.menuVisible = false
+        onMenuHide()
+        readPageState.bottomDialogCount++
+        readPageState.showMoreConfigDialog = true
     }
 
     fun showSearchSetting() {
-        showDialogFragment<MoreConfigDialog>()
+        showMoreSetting()
     }
 
     /**

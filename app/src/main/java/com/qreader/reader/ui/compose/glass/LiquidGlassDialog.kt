@@ -54,6 +54,7 @@ import com.qreader.reader.help.config.AppConfig
  * @param cardRadius          卡片圆角（Dp），默认 28.dp
  * @param contentPadding      卡片内边距（绘制在玻璃表面之内），默认 0.dp（调用方可在内容里自行留白）
  * @param dismissOnScrimClick 点蒙板是否关闭，默认 true
+ * @param alignment           卡片在全屏中的对齐方式，默认居中；底部面板用 [Alignment.BottomCenter]
  * @param content             卡片内容 lambda，接收解析后的 [GlassDialogColors] 供调用方取色
  */
 @Composable
@@ -64,6 +65,7 @@ fun LiquidGlassDialog(
     cardRadius: Dp = 28.dp,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     dismissOnScrimClick: Boolean = true,
+    alignment: Alignment = Alignment.Center,
     content: @Composable ColumnScope.(colors: GlassDialogColors) -> Unit
 ) {
     val isEInkMode = AppConfig.isEInkMode
@@ -131,7 +133,7 @@ fun LiquidGlassDialog(
                         Modifier
                     }
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = alignment
         ) {
             Column(
                 modifier = modifier

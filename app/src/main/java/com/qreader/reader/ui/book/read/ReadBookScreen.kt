@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
 
 /**
@@ -79,5 +80,18 @@ fun ReadBookScreen(
             onSetting = onSetting,
             onDismiss = onDismissMenu,
         )
+
+        // ── 设置玻璃底部面板（采样 ReadView，必须在捕获层之外）──
+        if (state.showMoreConfigDialog) {
+            MoreConfigGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showMoreConfigDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
     }
 }

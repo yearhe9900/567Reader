@@ -114,9 +114,9 @@ class ReadPageOverlayState {
 
     // ── 辅助方法 ──
 
-    /** 菜单是否处于显示状态（包括搜索菜单和弹窗） */
+    /** 菜单是否处于显示状态（包括搜索菜单、设置玻璃面板和弹窗） */
     val menuLayoutIsVisible: Boolean
-        get() = bottomDialogCount > 0 || menuVisible || searchMenuVisible
+        get() = bottomDialogCount > 0 || menuVisible || searchMenuVisible || showMoreConfigDialog
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

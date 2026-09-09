@@ -64,6 +64,20 @@ object GlassConfig {
     /** 玻璃标题栏高度（不含 statusBarsPadding，仅纯内容高度）。 */
     val titleBarHeight: Dp = 56.dp
 
+    // ── 底部设置面板（阅读页「设置」等 Preference 底部玻璃弹层）──
+
+    /** 面板高度。 */
+    val sheetHeight: Dp = 360.dp
+
+    /** 面板圆角。 */
+    val sheetCornerRadius: Dp = 28.dp
+
+    /** 面板顶部留白（避开顶栏/状态栏）。 */
+    val sheetTopPadding: Dp = 100.dp
+
+    /** 面板水平内边距。 */
+    val sheetHorizontalPadding: Dp = 0.dp
+
     // ── 伪玻璃按钮参数（捕获层内部不能用 drawBackdrop 时的近似方案）──
 
     /** 伪玻璃按钮渐变高光颜色（白→透明，叠加在容器色上产生玻璃光泽）。 */
