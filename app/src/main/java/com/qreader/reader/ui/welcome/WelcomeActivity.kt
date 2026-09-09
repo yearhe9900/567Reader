@@ -2,8 +2,11 @@ package com.qreader.reader.ui.welcome
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.core.graphics.drawable.toDrawable
-import androidx.core.view.postDelayed
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.qreader.reader.base.BaseActivity
 import com.qreader.reader.constant.PreferKey
 import com.qreader.reader.constant.Theme
@@ -11,7 +14,6 @@ import com.qreader.reader.data.appDb
 import com.qreader.reader.databinding.ActivityWelcomeBinding
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ThemeConfig
-import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.ui.book.read.ReadBookActivity
 import com.qreader.reader.ui.main.MainActivity
@@ -23,28 +25,41 @@ import com.qreader.reader.utils.getPrefString
 import com.qreader.reader.utils.setStatusBarColorAuto
 import com.qreader.reader.utils.startActivity
 import com.qreader.reader.utils.viewbindingdelegate.viewBinding
-import com.qreader.reader.utils.visible
-import com.qreader.reader.utils.windowSize
 
 open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
 
     override val binding by viewBinding(ActivityWelcomeBinding::inflate)
 
+    private var uiShowText by mutableStateOf(true)
+    private var uiShowIcon by mutableStateOf(true)
+    private var uiBackgroundPath by mutableStateOf<String?>(null)
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         if (intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT != 0) {
-            // 避免从桌面启动程序后，会重新实例化入口类的activity
+            // 避免从桌面启动程序后，会重新实例化入口类的 activity
             finish()
         } else {
             val welcomeShowTime = getPrefInt(PreferKey.welcomeShowTime, 500)
-            if (welcomeShowTime == 0) {
+            if (welcomeShowTime <= 0) {
                 startMainActivity()
             } else {
-                binding.root.postDelayed(welcomeShowTime.toLong()) { startMainActivity() }
+                // 用主线程 Handler，不依赖 View.post：Compose 异常时仍能跳出欢迎页
+                Handler(Looper.getMainLooper()).postDelayed(
+                    { startMainActivity() },
+                    welcomeShowTime.toLong(),
+                )
             }
         }
-        binding.ivBook.setColorFilter(accentColor)
-        binding.vwTitleLine.setBackgroundColor(accentColor)
         applyCustomWelcomeBackground()
+        runCatching {
+            binding.composeView.setContent {
+                WelcomeScreen(
+                    showText = uiShowText,
+                    showIcon = uiShowIcon,
+                    backgroundPath = uiBackgroundPath,
+                )
+            }
+        }
     }
 
     override fun setupSystemBar() {
@@ -54,45 +69,33 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
     }
 
     private fun applyCustomWelcomeBackground() {
-        if (getPrefBoolean(PreferKey.customWelcome)) {
-            kotlin.runCatching {
-                when (ThemeConfig.getTheme()) {
-                    Theme.Dark -> {
-                        getPrefString(PreferKey.welcomeImageDark)?.let { path ->
-                            if (path.endsWith(".9.png")) {
-                                BitmapUtils.decodeNinePatchDrawable(path)?.let {
-                                    window.decorView.background = it
-                                }
-                            } else {
-                                val size = windowManager.windowSize
-                                BitmapUtils.decodeBitmap(path, size.widthPixels, size.heightPixels)?.let {
-                                    window.decorView.background = it.toDrawable(resources)
-                                }
-                            }
+        if (!getPrefBoolean(PreferKey.customWelcome)) return
+        kotlin.runCatching {
+            when (ThemeConfig.getTheme()) {
+                Theme.Dark -> {
+                    val path = getPrefString(PreferKey.welcomeImageDark)
+                    // 九宫格仍走窗口背景（Compose 难以精确拉伸 .9）
+                    if (path != null && path.endsWith(".9.png")) {
+                        BitmapUtils.decodeNinePatchDrawable(path)?.let {
+                            window.decorView.background = it
                         }
-                        binding.tvLegado.visible(AppConfig.welcomeShowTextDark)
-                        binding.ivBook.visible(AppConfig.welcomeShowIconDark)
-                        binding.tvGzh.visible(AppConfig.welcomeShowTextDark)
-                        return
+                    } else {
+                        uiBackgroundPath = path
                     }
-                    else -> {
-                        getPrefString(PreferKey.welcomeImage)?.let { path ->
-                            if (path.endsWith(".9.png")) {
-                                BitmapUtils.decodeNinePatchDrawable(path)?.let {
-                                    window.decorView.background = it
-                                }
-                            } else {
-                                val size = windowManager.windowSize
-                                BitmapUtils.decodeBitmap(path, size.widthPixels, size.heightPixels)?.let {
-                                    window.decorView.background = it.toDrawable(resources)
-                                }
-                            }
+                    uiShowText = AppConfig.welcomeShowTextDark
+                    uiShowIcon = AppConfig.welcomeShowIconDark
+                }
+                else -> {
+                    val path = getPrefString(PreferKey.welcomeImage)
+                    if (path != null && path.endsWith(".9.png")) {
+                        BitmapUtils.decodeNinePatchDrawable(path)?.let {
+                            window.decorView.background = it
                         }
-                        binding.tvLegado.visible(AppConfig.welcomeShowText)
-                        binding.ivBook.visible(AppConfig.welcomeShowIcon)
-                        binding.tvGzh.visible(AppConfig.welcomeShowText)
-                        return
+                    } else {
+                        uiBackgroundPath = path
                     }
+                    uiShowText = AppConfig.welcomeShowText
+                    uiShowIcon = AppConfig.welcomeShowIcon
                 }
             }
         }
