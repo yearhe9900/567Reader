@@ -176,6 +176,9 @@ class ReadBookActivity : BaseReadBookActivity(),
     lateinit var cursorRight: ImageView
         private set
 
+    /** 章节跳转是否已确认过（对齐原版 ReadMenu.confirmSkipToChapter） */
+    private var confirmSkipToChapter = false
+
     private val tocActivity =
         registerForActivityResult(TocActivityResult()) {
             it?.let {
@@ -314,7 +317,25 @@ class ReadBookActivity : BaseReadBookActivity(),
                     readPageState.menuVisible = false
                     ReadBook.moveToNextChapter(true)
                 },
-                onSeekTo = { index -> viewModel.openChapter(index) },
+                onSeekTo = { index ->
+                    when (AppConfig.progressBarBehavior) {
+                        "page" -> ReadBook.skipToPage(index)
+                        else -> {
+                            if (confirmSkipToChapter) {
+                                skipToChapter(index)
+                            } else {
+                                alert("章节跳转确认", "确定要跳转章节吗？") {
+                                    yesButton {
+                                        confirmSkipToChapter = true
+                                        skipToChapter(index)
+                                    }
+                                    noButton { upSeekBarState() }
+                                    onCancelled { upSeekBarState() }
+                                }
+                            }
+                        }
+                    }
+                },
                 onCatalog = {
                     readPageState.menuVisible = false
                     openChapterList()
@@ -720,6 +741,7 @@ class ReadBookActivity : BaseReadBookActivity(),
 
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             if (isDown && !readPageState.canShowMenu) {
+                upSeekBarState()
                 readPageState.menuVisible = true
                 onMenuShow()
                 return true
@@ -1151,9 +1173,18 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
 
     private fun upSeekBarState() {
-        val book = ReadBook.book ?: return
-        readPageState.seekMax = book.totalChapterNum - 1
-        readPageState.seekProgress = book.durChapterIndex
+        if (readPageState.isDraggingSeek) return
+        when (AppConfig.progressBarBehavior) {
+            "page" -> {
+                val chapter = ReadBook.curTextChapter ?: return
+                readPageState.seekMax = chapter.pageSize - 1
+                readPageState.seekProgress = ReadBook.durPageIndex
+            }
+            else -> {
+                readPageState.seekMax = ReadBook.simulatedChapterSize - 1
+                readPageState.seekProgress = ReadBook.durChapterIndex
+            }
+        }
     }
 
     private fun upBookViewState() {
@@ -1172,6 +1203,7 @@ class ReadBookActivity : BaseReadBookActivity(),
      * 显示菜单
      */
     override fun showMenuBar() {
+        upSeekBarState()
         readPageState.menuVisible = true
         onMenuShow()
     }
@@ -1212,6 +1244,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 onMenuShow()
             }
             else -> {
+                upSeekBarState()
                 readPageState.menuVisible = true
                 onMenuShow()
             }

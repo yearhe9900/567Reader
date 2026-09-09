@@ -106,6 +106,12 @@ fun ReadMenuOverlay(
                             },
                             onDrawSurface = { drawRect(containerColor) },
                         )
+                        // 消费栏内空白处的点击，避免透传到全屏蒙板导致误关菜单
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = {},
+                        )
                         .height(100.dp)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.BottomStart,
@@ -156,6 +162,12 @@ fun ReadMenuOverlay(
                             },
                             onDrawSurface = { drawRect(containerColor) },
                         )
+                        // 消费栏内空白处的点击，避免透传到全屏蒙板导致误关菜单
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = {},
+                        )
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
@@ -178,13 +190,20 @@ fun ReadMenuOverlay(
                             )
                             LiquidSlider(
                                 value = { state.seekProgress.toFloat() },
-                                onValueChange = { state.seekProgress = it.toInt() },
+                                onValueChange = {
+                                    state.isDraggingSeek = true
+                                    state.seekProgress = it.toInt()
+                                },
                                 valueRange = 0f..state.seekMax.toFloat().coerceAtLeast(1f),
                                 visibilityThreshold = 1f,
                                 backdrop = backdrop,
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(horizontal = 8.dp),
+                                onValueChangeFinished = {
+                                    state.isDraggingSeek = false
+                                    onSeekTo(state.seekProgress)
+                                },
                             )
                             BasicText(
                                 text = "下一章",

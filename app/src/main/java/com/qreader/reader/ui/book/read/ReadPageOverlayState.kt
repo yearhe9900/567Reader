@@ -46,6 +46,9 @@ class ReadPageOverlayState {
     /** 进度条显示页码文本 */
     var seekPageText by mutableStateOf("")
 
+    /** 用户正在拖动进度条（拖动期间禁止 Activity 回写 seekProgress，避免抢手势） */
+    var isDraggingSeek by mutableStateOf(false)
+
     /** 自动翻页是否开启 */
     var autoPage by mutableStateOf(false)
 
