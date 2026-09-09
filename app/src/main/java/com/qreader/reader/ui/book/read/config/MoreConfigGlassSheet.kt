@@ -7,8 +7,10 @@ import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,31 +20,37 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import com.kyant.backdrop.Backdrop
-import com.qreader.reader.R
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.shapes.Capsule
+import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.compose.glass.GlassDialogTokens
 import com.qreader.reader.ui.compose.glass.GlassListDialogHost
 import com.qreader.reader.ui.compose.glass.GlassToggleHost
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
@@ -114,87 +122,142 @@ fun MoreConfigGlassSheet(
     }
 
     // ── 列表选择玻璃弹框（双页 / 进度条行为等）──
+    // 观感与「主题模式」弹框一致：48dp 圆角、玻璃单选圈、取消/确定
     if (GlassListDialogHost.isOpen) {
+        val entries = GlassListDialogHost.entries
+        val values = GlassListDialogHost.entryValues
+        val selectedIndexInit = values.indexOfFirst { it.toString() == GlassListDialogHost.selectedValue }
+            .coerceAtLeast(0)
+        var selectedIndex by remember(GlassListDialogHost.isOpen) {
+            mutableStateOf(selectedIndexInit)
+        }
+
         LiquidGlassDialog(
             backdrop = backdrop,
             onDismiss = { GlassListDialogHost.dismiss() },
-            modifier = Modifier
-                .fillMaxWidth(0.86f)
-                .wrapContentHeight()
-                .padding(vertical = 24.dp),
-            cardRadius = GlassConfig.sheetCornerRadius,
+            modifier = Modifier.fillMaxWidth(0.78f),
+            cardRadius = GlassConfig.dialogCardRadius,
+            contentPadding = PaddingValues(0.dp),
             alignment = Alignment.Center,
-            // 列表弹框需要压住设置面板，保留默认蒙板
             showScrim = true,
         ) { colors ->
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(vertical = 12.dp),
-            ) {
-                BasicText(
-                    text = GlassListDialogHost.title.toString(),
-                    style = TextStyle(
-                        color = colors.contentColor,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                )
-                val entries = GlassListDialogHost.entries
-                val values = GlassListDialogHost.entryValues
-                val selected = GlassListDialogHost.selectedValue
+            val contentColor = colors.contentColor
+            val accentColor = colors.accentColor
+            val containerColor = colors.containerColor
+
+            BasicText(
+                text = GlassListDialogHost.title.toString(),
+                modifier = Modifier.padding(28.dp, 24.dp, 28.dp, 12.dp),
+                style = TextStyle(contentColor, 24.sp, FontWeight.Medium),
+            )
+
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 entries.forEachIndexed { index, entry ->
-                    val value = values.getOrNull(index)?.toString() ?: index.toString()
-                    val checked = value == selected
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            ) {
-                                GlassListDialogHost.confirm(value)
-                            }
-                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                            ) { selectedIndex = index }
+                            .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // 玻璃单选圈：选中强调色环 + 圆点
                         Box(
-                            Modifier
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (checked) colors.accentColor.copy(alpha = 0.18f)
-                                    else colors.contentColor.copy(alpha = 0.08f)
+                            modifier = Modifier
+                                .size(24.dp)
+                                .drawBackdrop(
+                                    backdrop = backdrop,
+                                    shape = { Capsule() },
+                                    effects = {
+                                        if (!AppConfig.isEInkMode) {
+                                            colorControls(
+                                                brightness = GlassDialogTokens.cardBrightness,
+                                                saturation = GlassDialogTokens.cardSaturation,
+                                            )
+                                            blur(GlassDialogTokens.widgetBlur.toPx())
+                                            lens(
+                                                GlassDialogTokens.widgetLensX.toPx(),
+                                                GlassDialogTokens.widgetLensY.toPx(),
+                                                depthEffect = true,
+                                            )
+                                        }
+                                    },
+                                    highlight = { Highlight.Plain },
+                                    onDrawSurface = {
+                                        drawRect(
+                                            if (index == selectedIndex) accentColor
+                                            else containerColor.copy(alpha = 0.3f),
+                                        )
+                                    },
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (checked) {
+                            if (index == selectedIndex) {
                                 Box(
                                     Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(colors.accentColor)
+                                        .size(8.dp)
+                                        .clip(Capsule())
+                                        .background(Color.White)
                                 )
                             }
                         }
                         Spacer(Modifier.width(12.dp))
-                        BasicText(
-                            text = entry.toString(),
-                            style = TextStyle(color = colors.contentColor, fontSize = 15.sp),
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (checked) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_check),
-                                contentDescription = null,
-                                tint = colors.accentColor,
-                                modifier = Modifier.size(18.dp),
+                        Box(
+                            modifier = Modifier.height(24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            BasicText(
+                                text = entry.toString(),
+                                style = TextStyle(contentColor.copy(alpha = 0.9f), 16.sp),
                             )
                         }
                     }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .padding(24.dp, 16.dp, 24.dp, 24.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(Capsule())
+                        .background(containerColor.copy(alpha = 0.2f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { GlassListDialogHost.dismiss() }
+                        .height(48.dp)
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicText(text = "取消", style = TextStyle(contentColor, 16.sp))
+                }
+                Row(
+                    modifier = Modifier
+                        .clip(Capsule())
+                        .background(accentColor)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            val value = values.getOrNull(selectedIndex)?.toString()
+                                ?: selectedIndex.toString()
+                            GlassListDialogHost.confirm(value)
+                        }
+                        .height(48.dp)
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicText(text = "确定", style = TextStyle(Color.White, 16.sp))
                 }
             }
         }

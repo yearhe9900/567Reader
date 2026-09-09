@@ -78,6 +78,9 @@ object GlassConfig {
     /** 面板水平内边距。 */
     val sheetHorizontalPadding: Dp = 0.dp
 
+    /** 确认/单选类玻璃弹框卡片圆角（主题模式、列表选择等，与主题模式弹框统一）。 */
+    val dialogCardRadius: Dp = 48.dp
+
     // ── 玻璃 Toggle（设置页 Web 服务 / 阅读页设置 Switch 等）──
 
     /** 轨道尺寸（偏紧凑，保证设置列表行高可控）。 */

@@ -253,12 +253,12 @@ private fun ThemeModeDialogOverlay(
 ) {
     var currentIndex by remember { mutableStateOf(initialIndex) }
 
-    // 复用通用液态玻璃弹框 LiquidGlassDialog（蒙板 + 圆角 48dp 玻璃卡片）
+    // 复用通用液态玻璃弹框 LiquidGlassDialog（蒙板 + GlassConfig.dialogCardRadius 玻璃卡片）
     LiquidGlassDialog(
         backdrop = backdrop,
         onDismiss = onDismiss,
         modifier = Modifier.fillMaxWidth(0.78f),
-        cardRadius = 48.dp,
+        cardRadius = GlassConfig.dialogCardRadius,
         contentPadding = PaddingValues(0.dp)
     ) { colors ->
         val contentColor = colors.contentColor
