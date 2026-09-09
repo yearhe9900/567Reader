@@ -1,55 +1,52 @@
 package com.qreader.reader.ui.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import android.widget.SeekBar
 import androidx.appcompat.widget.TooltipCompat
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.graphics.toArgb
 import com.qreader.reader.R
 import com.qreader.reader.databinding.ViewDetailSeekBarBinding
+import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.lib.theme.bottomBackground
 import com.qreader.reader.lib.theme.getPrimaryTextColor
-import com.qreader.reader.ui.compose.glass.GlassToggleHost
-import com.qreader.reader.ui.compose.liquid.LiquidSlider
+import com.qreader.reader.ui.compose.glass.GlassConfig
+import com.qreader.reader.ui.widget.seekbar.SeekBarChangeListener
 import com.qreader.reader.utils.ColorUtils
+import com.qreader.reader.utils.progressAdd
 
 /**
- * 界面面板滑杆：标题 + 减/加 + **LiquidSlider 真液态** + 数值。
+ * 界面面板滑杆（Seekbar + GlassConfig 着色）。
  *
- * 玻璃采样源由 [GlassToggleHost] 提供（ReadStyleGlassSheet 组合时 attach）；
- * 无 backdrop 时不渲染滑轨（仅保留 +/- 与数值，避免退回普通 SeekBar 观感）。
+ * 不在 AndroidView 内嵌 Compose LiquidSlider：layout 期间写 snapshot state
+ * 会触发无限 relayout，整页卡死。液态玻璃滑块需整页 Compose 化后再做。
  */
 class DetailSeekBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
-) : FrameLayout(context, attrs) {
-    private val binding: ViewDetailSeekBarBinding =
+) : FrameLayout(context, attrs),
+    SeekBarChangeListener {
+    private var binding: ViewDetailSeekBarBinding =
         ViewDetailSeekBarBinding.inflate(LayoutInflater.from(context), this, true)
     private val isBottomBackground: Boolean
 
-    private var progressState by mutableIntStateOf(0)
-    private var maxState by mutableIntStateOf(0)
-
     var valueFormat: ((progress: Int) -> String)? = null
     var onChanged: ((progress: Int) -> Unit)? = null
-
     var progress: Int
-        get() = progressState
+        get() = binding.seekBar.progress
         set(value) {
-            progressState = value.coerceIn(0, maxState)
+            binding.seekBar.progress = value
             upValue()
         }
-
     var max: Int
-        get() = maxState
+        get() = binding.seekBar.max
         set(value) {
-            maxState = value.coerceAtLeast(0)
-            progressState = progressState.coerceIn(0, maxState)
+            binding.seekBar.max = value
         }
 
     init {
@@ -61,9 +58,11 @@ class DetailSeekBar @JvmOverloads constructor(
             text = title
             TooltipCompat.setTooltipText(this, title)
         }
-        maxState = typedArray.getInteger(R.styleable.DetailSeekBar_max, 0)
+        binding.seekBar.max = typedArray.getInteger(R.styleable.DetailSeekBar_max, 0)
         typedArray.recycle()
-
+        if (!isInEditMode) {
+            applyGlassTint()
+        }
         if (isBottomBackground && !isInEditMode) {
             val isLight = ColorUtils.isColorLight(context.bottomBackground)
             val textColor = context.getPrimaryTextColor(isLight)
@@ -72,43 +71,40 @@ class DetailSeekBar @JvmOverloads constructor(
             binding.ivSeekReduce.setColorFilter(textColor, PorterDuff.Mode.SRC_IN)
             binding.tvSeekValue.setTextColor(textColor)
         }
-
         binding.ivSeekPlus.setOnClickListener {
-            progress = progress + 1
-            onChanged?.invoke(progress)
+            binding.seekBar.progressAdd(1)
+            onChanged?.invoke(binding.seekBar.progress)
         }
         binding.ivSeekReduce.setOnClickListener {
-            progress = progress - 1
-            onChanged?.invoke(progress)
+            binding.seekBar.progressAdd(-1)
+            onChanged?.invoke(binding.seekBar.progress)
         }
+        binding.seekBar.setOnSeekBarChangeListener(this)
+    }
 
-        if (!isInEditMode) {
-            binding.glassSlider.setViewCompositionStrategy(
-                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-            )
-            binding.glassSlider.setContent {
-                val backdrop = GlassToggleHost.backdrop
-                val isLight = GlassToggleHost.isLightTheme
-                if (backdrop != null) {
-                    LiquidSlider(
-                        value = { progressState.toFloat() },
-                        onValueChange = { p ->
-                            progressState = p.toInt().coerceIn(0, maxState)
-                            upValue(progressState)
-                        },
-                        valueRange = 0f..maxState.toFloat().coerceAtLeast(1f),
-                        visibilityThreshold = 1f,
-                        backdrop = backdrop,
-                        onValueChangeFinished = {
-                            onChanged?.invoke(progressState)
-                        },
-                    )
-                }
-            }
+    /** 轨道/进度/滑块走 GlassConfig，明暗按阅读页背景。 */
+    private fun applyGlassTint() {
+        val isLight = ColorUtils.isColorLight(ReadBookConfig.bgMeanColor)
+        val track = GlassConfig.toggleTrackColor(isLight)
+        val progress = GlassConfig.toggleAccentColor(isLight)
+        binding.seekBar.apply {
+            progressBackgroundTintList = ColorStateList.valueOf(track.toArgb())
+            progressTintList = ColorStateList.valueOf(progress.toArgb())
+            thumbTintList = ColorStateList.valueOf(Color.WHITE)
         }
     }
 
-    private fun upValue(progress: Int = progressState) {
+    private fun upValue(progress: Int = binding.seekBar.progress) {
         binding.tvSeekValue.text = valueFormat?.invoke(progress) ?: progress.toString()
+    }
+
+    override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+        upValue(progress)
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
+
+    override fun onStopTrackingTouch(seekBar: SeekBar) {
+        onChanged?.invoke(binding.seekBar.progress)
     }
 }

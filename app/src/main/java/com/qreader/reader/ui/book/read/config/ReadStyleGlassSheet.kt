@@ -29,11 +29,9 @@ import com.qreader.reader.lib.theme.accentColor
 import com.qreader.reader.model.ReadBook
 import com.qreader.reader.ui.book.read.ReadBookActivity
 import com.qreader.reader.ui.compose.glass.GlassConfig
-import com.qreader.reader.ui.compose.glass.GlassToggleHost
 import com.qreader.reader.ui.compose.glass.LiquidGlassDialog
 import com.qreader.reader.ui.font.FontSelectDialog
 import com.qreader.reader.utils.ChineseUtils
-import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.dpToPx
 import com.qreader.reader.utils.getIndexById
 import com.qreader.reader.utils.postEvent
@@ -45,7 +43,6 @@ import splitties.views.onLongClick
  *
  * 与 [MoreConfigGlassSheet] 同构：LiquidGlassDialog 底栏 + AndroidView 托管原布局；
  * 业务由 [ReadStyleBinder] 承载，不再走独立 Dialog 窗口。
- * DetailSeekBar 的 LiquidSlider 经 [GlassToggleHost] 取 backdrop。
  */
 @Composable
 fun ReadStyleGlassSheet(
@@ -54,14 +51,6 @@ fun ReadStyleGlassSheet(
 ) {
     val activity = LocalContext.current as? ReadBookActivity ?: return
     val binder = remember { ReadStyleBinder(activity) }
-    val isLightPage = remember { ColorUtils.isColorLight(ReadBookConfig.bgMeanColor) }
-
-    // 必须在 AndroidView setContent 之前 attach，否则首帧 LiquidSlider 读到 null backdrop 不绘制
-    GlassToggleHost.attach(backdrop, isLightPage)
-    DisposableEffect(backdrop, isLightPage) {
-        GlassToggleHost.attach(backdrop, isLightPage)
-        onDispose { GlassToggleHost.detach() }
-    }
 
     LiquidGlassDialog(
         backdrop = backdrop,
