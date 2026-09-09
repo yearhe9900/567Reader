@@ -49,7 +49,7 @@ import androidx.compose.ui.text.TextStyle
  * 阅读页菜单覆盖层。
  *
  * 顶栏：100dp 高度（延伸到状态栏），与 MainScreen 标题栏统一。
- * 底栏：LiquidSlider 玻璃进度条 + 目录·朗读·界面·设置，玻璃延伸到手势栏。
+ * 底栏：LiquidSlider 玻璃进度条 + 快捷操作（搜索/自动翻页/替换/日夜）+ 目录·朗读·界面·设置。
  */
 @Composable
 fun ReadMenuOverlay(
@@ -59,6 +59,10 @@ fun ReadMenuOverlay(
     onPrevChapter: () -> Unit = {},
     onNextChapter: () -> Unit = {},
     onSeekTo: (Int) -> Unit = {},
+    onSearch: () -> Unit = {},
+    onAutoPage: () -> Unit = {},
+    onReplaceRule: () -> Unit = {},
+    onToggleNightTheme: () -> Unit = {},
     onCatalog: () -> Unit = {},
     onReadAloud: () -> Unit = {},
     onFont: () -> Unit = {},
@@ -227,6 +231,29 @@ fun ReadMenuOverlay(
                         }
 
                         Spacer(Modifier.height(12.dp))
+
+                        // 快捷操作行：搜索 / 自动翻页 / 替换净化 / 日夜切换（对齐原版 FAB 行）
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            MenuButton(R.drawable.ic_search, "搜索", contentColor, onSearch)
+                            MenuButton(
+                                if (state.autoPage) R.drawable.ic_auto_page_stop else R.drawable.ic_auto_page,
+                                if (state.autoPage) "停止" else "自动",
+                                contentColor,
+                                onAutoPage,
+                            )
+                            MenuButton(R.drawable.ic_find_replace, "净化", contentColor, onReplaceRule)
+                            MenuButton(
+                                if (state.isNightTheme) R.drawable.ic_daytime else R.drawable.ic_brightness,
+                                if (state.isNightTheme) "日间" else "夜间",
+                                contentColor,
+                                onToggleNightTheme,
+                            )
+                        }
+
+                        Spacer(Modifier.height(8.dp))
 
                         // 功能按钮行：目录 / 朗读 / 界面 / 设置
                         Row(

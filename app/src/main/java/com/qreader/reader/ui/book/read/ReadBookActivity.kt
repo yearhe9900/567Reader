@@ -50,6 +50,7 @@ import com.qreader.reader.help.book.update
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.help.config.ReadTipConfig
+import com.qreader.reader.help.config.ThemeConfig
 import com.qreader.reader.help.coroutine.Coroutine
 import com.qreader.reader.help.source.getSourceType
 import com.qreader.reader.help.storage.Backup
@@ -339,6 +340,23 @@ class ReadBookActivity : BaseReadBookActivity(),
                 onCatalog = {
                     readPageState.menuVisible = false
                     openChapterList()
+                },
+                onSearch = {
+                    readPageState.menuVisible = false
+                    openSearchActivity(null)
+                },
+                onAutoPage = {
+                    readPageState.menuVisible = false
+                    autoPage()
+                },
+                onReplaceRule = {
+                    readPageState.menuVisible = false
+                    openReplaceRule()
+                },
+                onToggleNightTheme = {
+                    AppConfig.isNightTheme = !AppConfig.isNightTheme
+                    readPageState.isNightTheme = AppConfig.isNightTheme
+                    ThemeConfig.applyDayNight(this)
                 },
                 onReadAloud = {
                     readPageState.menuVisible = false
@@ -741,6 +759,7 @@ class ReadBookActivity : BaseReadBookActivity(),
 
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             if (isDown && !readPageState.canShowMenu) {
+                readPageState.isNightTheme = AppConfig.isNightTheme
                 upSeekBarState()
                 readPageState.menuVisible = true
                 onMenuShow()
@@ -1203,6 +1222,7 @@ class ReadBookActivity : BaseReadBookActivity(),
      * 显示菜单
      */
     override fun showMenuBar() {
+        readPageState.isNightTheme = AppConfig.isNightTheme
         upSeekBarState()
         readPageState.menuVisible = true
         onMenuShow()
@@ -1244,6 +1264,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 onMenuShow()
             }
             else -> {
+                readPageState.isNightTheme = AppConfig.isNightTheme
                 upSeekBarState()
                 readPageState.menuVisible = true
                 onMenuShow()
