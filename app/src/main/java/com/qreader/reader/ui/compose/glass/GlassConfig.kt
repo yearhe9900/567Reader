@@ -81,6 +81,13 @@ object GlassConfig {
     /** 确认/单选类玻璃弹框卡片圆角（主题模式、列表选择等，与主题模式弹框统一）。 */
     val dialogCardRadius: Dp = 48.dp
 
+    /**
+     * 弹框采样层用的中间调渐变色（主题模式 / 列表选择共用）。
+     * 纯色 blur 后仍是纯色，玻璃「透亮」依赖这层微妙渐变；不要改成采样正文/列表。
+     */
+    val dialogBackdropLightMid = Color(0xFFE8E0F0)
+    val dialogBackdropDarkMid = Color(0xFF1A1025)
+
     // ── 玻璃 Toggle（设置页 Web 服务 / 阅读页设置 Switch 等）──
 
     /** 轨道尺寸（偏紧凑，保证设置列表行高可控）。 */

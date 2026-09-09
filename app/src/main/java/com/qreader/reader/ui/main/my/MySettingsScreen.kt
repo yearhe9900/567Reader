@@ -150,11 +150,11 @@ fun MySettingsScreen(
                     Brush.verticalGradient(
                         colors = if (isLightTheme) listOf(
                             pageBackgroundColor,
-                            Color(0xFFE8E0F0), // 微妙紫调
+                            GlassConfig.dialogBackdropLightMid,
                             pageBackgroundColor,
                         ) else listOf(
                             pageBackgroundColor,
-                            Color(0xFF1A1025), // 深色微妙紫调
+                            GlassConfig.dialogBackdropDarkMid,
                             pageBackgroundColor,
                         )
                     )

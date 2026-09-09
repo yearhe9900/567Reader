@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -41,6 +43,8 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
@@ -49,6 +53,7 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.shapes.Capsule
 import com.qreader.reader.help.config.AppConfig
 import com.qreader.reader.help.config.ReadBookConfig
+import com.qreader.reader.lib.theme.backgroundColor
 import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.compose.glass.GlassDialogTokens
 import com.qreader.reader.ui.compose.glass.GlassListDialogHost
@@ -122,8 +127,11 @@ fun MoreConfigGlassSheet(
     }
 
     // ── 列表选择玻璃弹框（双页 / 进度条行为等）──
-    // 观感与「主题模式」弹框一致：48dp 圆角、玻璃单选圈、取消/确定
+    // 观感对齐「主题模式」：采样层用微妙渐变（不要采样正文，否则整屏糊成一团不透亮）
     if (GlassListDialogHost.isOpen) {
+        val listBackdrop = rememberLayerBackdrop()
+        val isLightDialog = GlassConfig.isLightTheme(context)
+        val pageBg = Color(context.backgroundColor)
         val entries = GlassListDialogHost.entries
         val values = GlassListDialogHost.entryValues
         val selectedIndexInit = values.indexOfFirst { it.toString() == GlassListDialogHost.selectedValue }
@@ -132,15 +140,36 @@ fun MoreConfigGlassSheet(
             mutableStateOf(selectedIndexInit)
         }
 
-        LiquidGlassDialog(
-            backdrop = backdrop,
-            onDismiss = { GlassListDialogHost.dismiss() },
-            modifier = Modifier.fillMaxWidth(0.78f),
-            cardRadius = GlassConfig.dialogCardRadius,
-            contentPadding = PaddingValues(0.dp),
-            alignment = Alignment.Center,
-            showScrim = true,
-        ) { colors ->
+        Box(Modifier.fillMaxSize()) {
+            // 与 MySettingsScreen 主题模式同一套渐变采样层
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = if (isLightDialog) listOf(
+                                pageBg,
+                                GlassConfig.dialogBackdropLightMid,
+                                pageBg,
+                            ) else listOf(
+                                pageBg,
+                                GlassConfig.dialogBackdropDarkMid,
+                                pageBg,
+                            )
+                        )
+                    )
+                    .layerBackdrop(listBackdrop)
+            )
+
+            LiquidGlassDialog(
+                backdrop = listBackdrop,
+                onDismiss = { GlassListDialogHost.dismiss() },
+                modifier = Modifier.fillMaxWidth(0.78f),
+                cardRadius = GlassConfig.dialogCardRadius,
+                contentPadding = PaddingValues(0.dp),
+                alignment = Alignment.Center,
+                showScrim = true,
+            ) { colors ->
             val contentColor = colors.contentColor
             val accentColor = colors.accentColor
             val containerColor = colors.containerColor
@@ -259,6 +288,7 @@ fun MoreConfigGlassSheet(
                 ) {
                     BasicText(text = "确定", style = TextStyle(Color.White, 16.sp))
                 }
+            }
             }
         }
     }
