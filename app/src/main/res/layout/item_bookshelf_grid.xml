@@ -5,7 +5,7 @@
     android:id="@+id/cv_content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_item_focused_on_tv"
+    android:background="@drawable/bg_bookshelf_glass_item"
     android:clickable="true"
     android:focusable="true"
     android:scrollbars="none"

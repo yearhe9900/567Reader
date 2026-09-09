@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">@color/md_blue_grey_600</color>
     <color name="primaryDark">@color/md_blue_grey_700</color>
@@ -42,4 +42,7 @@
 
     <!--statusBarBackground-->
     <color name="navigation_bar_bag">#222222</color>
+    <!-- glass item card -->
+    <color name="glass_item_fill">#66121212</color>
+    <color name="glass_item_stroke">#24FFFFFF</color>
 </resources>

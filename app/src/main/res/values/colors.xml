@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="launcher_background">#FF1A2F5A</color>
     <color name="primary">@color/md_light_blue_600</color>
@@ -117,4 +117,7 @@
     <color name="ate_navigation_drawer_selected_dark">#202020</color>
 
     <color name="book_ant_10">#141414</color>
+    <!-- glass item card -->
+    <color name="glass_item_fill">#99FFFDF8</color>
+    <color name="glass_item_stroke">#24FFFFFF</color>
 </resources>

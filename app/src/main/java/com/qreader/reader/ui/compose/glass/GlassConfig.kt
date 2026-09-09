@@ -39,14 +39,15 @@ import com.qreader.reader.utils.ColorUtils
 object GlassConfig {
 
     // ── bar 类玻璃效果（导航栏 / 标题栏 / 玻璃按钮 / 下拉菜单）──
-    val blur = 12.dp
+    // 对齐 AndroidLiquidGlass 官方 LiquidBottomTabs：blur(8.dp) + lens(24.dp, 24.dp)。
+    // blur 过大（曾用 12）会糊掉结构；lensY 过大（曾用 48）会把透镜拉成竖向涂抹。
+    val blur = 8.dp
     val lensX = 24.dp
-    val lensY = 48.dp
+    val lensY = 24.dp
     val chromaticAberration = true
 
-    // 容器半透明底色。亮色用暖白 #FFFDF8，alpha 0.6——0.9 会把 blur/lens 几乎盖死，看起来像实心白板；
-    // 深色保持 0.4f（深灰底 + 低透明度 = 恰好出暗玻璃感）。
-    val lightContainerColor = Color(0xFFFFFDF8).copy(alpha = 0.6f)
+    // 容器半透明底色。与官方一致取 0.4f：再高会把 blur/lens 几乎盖死，看起来像实心板。
+    val lightContainerColor = Color(0xFFFFFDF8).copy(alpha = 0.4f)
     val darkContainerColor = Color(0xFF121212).copy(alpha = 0.4f)
 
     // 玻璃上承载的文字 / 图标色：亮色黑、暗色白（与背景反色）。

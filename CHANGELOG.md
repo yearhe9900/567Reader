@@ -88,3 +88,14 @@
 * 玻璃态参数统一收敛到 GlassConfig 全局配置（glassButtonSurfaceAlpha / glassButtonCornerRadius / titleBarHeight / pseudoGlass 修饰符）。
 * 书籍信息编辑页 Compose 化 + 玻璃标题栏。
 * 删除 GlassDemoActivity（死代码）。
+
+**2026/09/09**
+
+* 欢迎页迁到 Compose 并玻璃化（氛围底 + pseudoGlass 品牌卡）；跳转改主线程 Handler，避免嵌套 drawBackdrop 卡死。
+* 删除 17 个无引用 View 布局（旧书籍信息、style2 书架 item 等，~57KB）。
+* 书架列表改为 Compose LazyColumn / LazyVerticalGrid；先试玻璃卡片后回退为无折射简洁列表。
+* GlassConfig 对齐官方 AndroidLiquidGlass：blur 12→8dp，lensY 48→24dp，亮色容器 alpha 0.6→0.4。
+* 阅读页设置改为玻璃底部面板；设置项行距收紧；LiquidToggle 整轨可点可拖。
+* 双页等列表选择弹框玻璃态化；主题模式/列表弹框改为选中即生效。
+* 界面面板改为 in-tree 玻璃底栏；界面滑杆玻璃态（后回退内嵌方案，避免整页卡死）。
+* 固定部分阅读配置（刘海、状态栏、屏幕方向/超时等）并删除对应设置入口。
