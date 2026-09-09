@@ -243,8 +243,11 @@ object ReadBookConfig {
      */
     val textBottomJustify get() = appCtx.getPrefBoolean(PreferKey.textBottomJustify, true)
 
-    var hideStatusBar = appCtx.getPrefBoolean(PreferKey.hideStatusBar)
-    var hideNavigationBar = appCtx.getPrefBoolean(PreferKey.hideNavigationBar)
+    /** 阅读页状态栏固定不隐藏（设置入口已移除） */
+    var hideStatusBar = false
+
+    /** 阅读页导航栏固定不隐藏（设置入口已移除） */
+    var hideNavigationBar = false
     var useZhLayout = appCtx.getPrefBoolean(PreferKey.useZhLayout)
 
     val config get() = if (shareLayout) shareConfig else durConfig
