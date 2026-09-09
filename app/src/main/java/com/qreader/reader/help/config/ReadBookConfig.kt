@@ -196,7 +196,8 @@ object ReadBookConfig {
     }
 
     //配置写入读取
-    var readBodyToLh = appCtx.getPrefBoolean(PreferKey.readBodyToLh, true)
+    /** 扩展到刘海，固定关闭（设置入口已移除） */
+    var readBodyToLh = false
     var autoReadSpeed = appCtx.getPrefInt(PreferKey.autoReadSpeed, 10)
         set(value) {
             field = value

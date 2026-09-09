@@ -4,52 +4,6 @@
 
     <com.qreader.reader.lib.prefs.NameListPreference
         android:defaultValue="0"
-        android:entries="@array/screen_direction_title"
-        android:entryValues="@array/screen_direction_value"
-        android:key="screenOrientation"
-        android:title="@string/screen_direction"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.NameListPreference
-        android:defaultValue="0"
-        android:entries="@array/screen_time_out"
-        android:entryValues="@array/screen_time_out_value"
-        android:key="keep_light"
-        android:title="@string/keep_light"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="hideStatusBar"
-        android:title="@string/pt_hide_status_bar"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="hideNavigationBar"
-        android:title="@string/pt_hide_navigation_bar"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="true"
-        android:key="readBodyToLh"
-        android:title="@string/read_body_to_lh"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.SwitchPreference
-        android:defaultValue="false"
-        android:key="paddingDisplayCutouts"
-        android:title="@string/padding_display_cutouts"
-        app:iconSpaceReserved="false"
-        app:isBottomBackground="true" />
-
-    <com.qreader.reader.lib.prefs.NameListPreference
-        android:defaultValue="0"
         android:entries="@array/double_page_title"
         android:entryValues="@array/double_page_value"
         android:key="doubleHorizontalPage"

@@ -98,9 +98,6 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
             PreferKey.clickActionBR -> clickActionBR =
                 appCtx.getPrefInt(PreferKey.clickActionBR, 1)
 
-            PreferKey.readBodyToLh -> ReadBookConfig.readBodyToLh =
-                appCtx.getPrefBoolean(PreferKey.readBodyToLh, true)
-
             PreferKey.useZhLayout -> ReadBookConfig.useZhLayout =
                 appCtx.getPrefBoolean(PreferKey.useZhLayout)
 
@@ -598,8 +595,8 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     val mouseWheelPage
         get() = appCtx.getPrefBoolean(PreferKey.mouseWheelPage, true)
 
-    val paddingDisplayCutouts
-        get() = appCtx.getPrefBoolean(PreferKey.paddingDisplayCutouts, false)
+    /** 填充刘海区域，固定开启（设置入口已移除） */
+    val paddingDisplayCutouts get() = true
 
     var searchScope: String
         get() = appCtx.getPrefString("searchScope") ?: ""

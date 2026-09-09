@@ -115,22 +115,7 @@ class MoreConfigDialog : BasePrefDialogFragment() {
             key: String?
         ) {
             when (key) {
-                PreferKey.readBodyToLh -> activity?.recreate()
-                PreferKey.hideStatusBar -> {
-                    ReadBookConfig.hideStatusBar = getPrefBoolean(PreferKey.hideStatusBar)
-                    postEvent(EventBus.UP_CONFIG, arrayListOf(0, 2))
-                }
-
-                PreferKey.hideNavigationBar -> {
-                    ReadBookConfig.hideNavigationBar = getPrefBoolean(PreferKey.hideNavigationBar)
-                    postEvent(EventBus.UP_CONFIG, arrayListOf(0, 2))
-                }
-
-                PreferKey.keepLight -> postEvent(key, true)
                 PreferKey.textSelectAble -> postEvent(key, getPrefBoolean(key))
-                PreferKey.screenOrientation -> {
-                    (activity as? ReadBookActivity)?.setOrientation()
-                }
 
                 PreferKey.textFullJustify,
                 PreferKey.textBottomJustify,
