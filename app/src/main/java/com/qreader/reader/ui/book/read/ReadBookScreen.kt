@@ -9,6 +9,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
+import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
 
 /**
@@ -87,6 +88,19 @@ fun ReadBookScreen(
                 backdrop = readBackdrop,
                 onDismiss = {
                     state.showMoreConfigDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 界面玻璃底部面板 ──
+        if (state.showReadStyleDialog) {
+            ReadStyleGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showReadStyleDialog = false
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }

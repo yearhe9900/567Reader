@@ -84,7 +84,6 @@ import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.BG_CO
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_ACCENT_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_COLOR
 import com.qreader.reader.ui.book.read.config.ReadAloudDialog
-import com.qreader.reader.ui.book.read.config.ReadStyleDialog
 import com.qreader.reader.ui.book.read.config.TipConfigDialog.Companion.TIP_COLOR
 import com.qreader.reader.ui.book.read.config.TipConfigDialog.Companion.TIP_DIVIDER_COLOR
 import com.qreader.reader.ui.book.read.page.ContentTextView
@@ -165,7 +164,21 @@ class ReadBookActivity : BaseReadBookActivity(),
     AutoReadDialog.CallBack,
     TxtTocRuleDialog.CallBack,
     ColorPickerDialogListener,
-    LayoutProgressListener {
+    LayoutProgressListener,
+    com.qreader.reader.ui.font.FontSelectDialog.CallBack {
+
+    override val curFontPath: String
+        get() = ReadBookConfig.textFont
+
+    override fun selectFont(path: String) {
+        if (path != ReadBookConfig.textFont || path.isEmpty()) {
+            ReadBookConfig.textFont = path
+            com.qreader.reader.utils.postEvent(
+                com.qreader.reader.constant.EventBus.UP_CONFIG,
+                arrayListOf(2, 5),
+            )
+        }
+    }
 
     /** ReadView 实例，由 Compose AndroidView 工厂创建 */
     lateinit var readView: ReadView
@@ -1467,8 +1480,14 @@ class ReadBookActivity : BaseReadBookActivity(),
     /**
      * 显示阅读样式配置
      */
+    /**
+     * 显示「界面」玻璃底部面板（in-tree）
+     */
     fun showReadStyle() {
-        showDialogFragment<ReadStyleDialog>()
+        readPageState.menuVisible = false
+        onMenuHide()
+        readPageState.bottomDialogCount++
+        readPageState.showReadStyleDialog = true
     }
 
     /**
