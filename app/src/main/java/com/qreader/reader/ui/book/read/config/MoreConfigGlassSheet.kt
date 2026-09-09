@@ -158,8 +158,18 @@ fun MoreConfigGlassSheet(
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            ) { selectedIndex = index }
-                            .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp),
+                            ) {
+                                selectedIndex = index
+                                val value = values.getOrNull(index)?.toString()
+                                    ?: index.toString()
+                                GlassListDialogHost.confirm(value)
+                            }
+                            .padding(
+                                start = 24.dp,
+                                end = 24.dp,
+                                top = 10.dp,
+                                bottom = if (index == entries.lastIndex) 24.dp else 10.dp,
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(
@@ -212,51 +222,6 @@ fun MoreConfigGlassSheet(
                             )
                         }
                     }
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .padding(24.dp, 16.dp, 24.dp, 24.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Row(
-                    modifier = Modifier
-                        .clip(Capsule())
-                        .background(containerColor.copy(alpha = 0.2f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) { GlassListDialogHost.dismiss() }
-                        .height(48.dp)
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    BasicText(text = "取消", style = TextStyle(contentColor, 16.sp))
-                }
-                Row(
-                    modifier = Modifier
-                        .clip(Capsule())
-                        .background(accentColor)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            val value = values.getOrNull(selectedIndex)?.toString()
-                                ?: selectedIndex.toString()
-                            GlassListDialogHost.confirm(value)
-                        }
-                        .height(48.dp)
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    BasicText(text = "确定", style = TextStyle(Color.White, 16.sp))
                 }
             }
         }

@@ -272,7 +272,7 @@ private fun ThemeModeDialogOverlay(
             style = TextStyle(contentColor, 24f.sp, FontWeight.Medium)
         )
 
-        // 单选列表（玻璃态圆形单选圈）
+        // 单选列表（玻璃态圆形单选圈）——选中即生效并关闭
         labels.forEachIndexed { index, label ->
             Row(
                 modifier = Modifier
@@ -280,8 +280,16 @@ private fun ThemeModeDialogOverlay(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { currentIndex = index }
-                    .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 10.dp),
+                    ) {
+                        currentIndex = index
+                        onConfirm(index)
+                    }
+                    .padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 10.dp,
+                        bottom = if (index == labels.lastIndex) 24.dp else 10.dp,
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -335,63 +343,6 @@ private fun ThemeModeDialogOverlay(
                         style = TextStyle(contentColor.copy(0.9f), 16f.sp)
                     )
                 }
-            }
-        }
-
-        // 按钮
-        Row(
-            modifier = Modifier
-                .padding(24f.dp, 16f.dp, 24f.dp, 24f.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16f.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 取消按钮
-            Row(
-                modifier = Modifier
-                    .clip(Capsule())
-                    .background(containerColor.copy(0.2f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onDismiss() }
-                    .height(48f.dp)
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(
-                    4f.dp,
-                    Alignment.CenterHorizontally
-                ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicText(
-                    text = "取消",
-                    style = TextStyle(contentColor, 16f.sp)
-                )
-            }
-
-            // 确认按钮
-            Row(
-                modifier = Modifier
-                    .clip(Capsule())
-                    .background(accentColor)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onConfirm(currentIndex) }
-                    .height(48f.dp)
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(
-                    4f.dp,
-                    Alignment.CenterHorizontally
-                ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicText(
-                    text = "确定",
-                    style = TextStyle(Color.White, 16f.sp)
-                )
             }
         }
     }
