@@ -1,16 +1,21 @@
 package com.qreader.reader.ui.widget
 
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import androidx.appcompat.widget.TooltipCompat
+import androidx.compose.ui.graphics.toArgb
 import com.qreader.reader.R
 import com.qreader.reader.databinding.ViewDetailSeekBarBinding
+import com.qreader.reader.help.config.ReadBookConfig
 import com.qreader.reader.lib.theme.bottomBackground
 import com.qreader.reader.lib.theme.getPrimaryTextColor
+import com.qreader.reader.ui.compose.glass.GlassConfig
 import com.qreader.reader.ui.widget.seekbar.SeekBarChangeListener
 import com.qreader.reader.utils.ColorUtils
 import com.qreader.reader.utils.progressAdd
@@ -50,6 +55,9 @@ class DetailSeekBar @JvmOverloads constructor(
         }
         binding.seekBar.max = typedArray.getInteger(R.styleable.DetailSeekBar_max, 0)
         typedArray.recycle()
+        if (!isInEditMode) {
+            applyGlassTint()
+        }
         if (isBottomBackground && !isInEditMode) {
             val isLight = ColorUtils.isColorLight(context.bottomBackground)
             val textColor = context.getPrimaryTextColor(isLight)
@@ -67,6 +75,21 @@ class DetailSeekBar @JvmOverloads constructor(
             onChanged?.invoke(binding.seekBar.progress)
         }
         binding.seekBar.setOnSeekBarChangeListener(this)
+    }
+
+    /**
+     * 玻璃态着色：轨道/进度/滑块走 [GlassConfig]，
+     * 明暗按阅读页背景（[ReadBookConfig.bgMeanColor]），与界面面板其它玻璃件一致。
+     */
+    private fun applyGlassTint() {
+        val isLight = ColorUtils.isColorLight(ReadBookConfig.bgMeanColor)
+        val track = GlassConfig.toggleTrackColor(isLight)
+        val progress = GlassConfig.toggleAccentColor(isLight)
+        binding.seekBar.apply {
+            progressBackgroundTintList = ColorStateList.valueOf(track.toArgb())
+            progressTintList = ColorStateList.valueOf(progress.toArgb())
+            thumbTintList = ColorStateList.valueOf(Color.WHITE)
+        }
     }
 
     private fun upValue(progress: Int = binding.seekBar.progress) {
