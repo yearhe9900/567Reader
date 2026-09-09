@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,15 +12,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,7 +42,6 @@ import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
-import com.kyant.shapes.RoundedRectangle
 import com.qreader.reader.R
 import com.qreader.reader.ui.compose.glass.GlassConfig
 import androidx.compose.foundation.text.BasicText
@@ -51,8 +50,8 @@ import androidx.compose.ui.text.TextStyle
 /**
  * 阅读页菜单覆盖层（替换原 ReadMenu FrameLayout）。
  *
- * 顶栏：返回 + 章节名
- * 底栏：上一章 / 进度条 / 下一章 + 目录·朗读·界面·设置
+ * 顶栏：返回 + 章节名（玻璃标题栏，与 MainScreen/BookInfoScreen 统一样式）
+ * 底栏：上一章 / 进度条 / 下一章 + 目录·朗读·界面·设置（玻璃覆盖到手势栏）
  * 蒙板点击关闭菜单。
  */
 @Composable
@@ -91,7 +90,7 @@ fun ReadMenuOverlay(
                     ) { onDismiss() }
             )
 
-            // ── 顶栏 ──
+            // ── 顶栏（与 MainScreen 标题栏统一：vibrancy + blur + lens，onDrawSurface 用完整 containerColor）──
             AnimatedVisibility(
                 visible = state.menuVisible,
                 enter = slideInVertically { -it } + fadeIn(),
@@ -107,13 +106,11 @@ fun ReadMenuOverlay(
                             backdrop = backdrop,
                             shape = { RoundedCornerShape(0.dp) },
                             effects = {
+                                vibrancy()
                                 blur(GlassConfig.blur.toPx())
                                 lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                                vibrancy()
                             },
-                            onDrawSurface = {
-                                drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha))
-                            },
+                            onDrawSurface = { drawRect(containerColor) },
                         ),
                 ) {
                     Row(
@@ -142,87 +139,90 @@ fun ReadMenuOverlay(
                 }
             }
 
-            // ── 底栏 ──
+            // ── 底栏（玻璃覆盖到手势栏：drawBackdrop 在 navigationBarsPadding 之前）──
             AnimatedVisibility(
                 visible = state.menuVisible,
                 enter = slideInVertically { it } + fadeIn(),
                 exit = slideOutVertically { it } + fadeOut(),
                 modifier = Modifier.align(Alignment.BottomCenter),
             ) {
-                Column(
+                // 外层 Box 承载 drawBackdrop（延伸到手势栏区域）
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding()
                         .drawBackdrop(
                             backdrop = backdrop,
                             shape = { RoundedCornerShape(0.dp) },
                             effects = {
+                                vibrancy()
                                 blur(GlassConfig.blur.toPx())
                                 lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                                vibrancy()
                             },
-                            onDrawSurface = {
-                                drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha))
-                            },
+                            onDrawSurface = { drawRect(containerColor) },
                         )
+                        // 内容区加 navigationBarsPadding，玻璃本身延伸到手势栏
+                        .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
-                    // 进度条行：上一章 / 进度 / 下一章
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        BasicText(
-                            text = "上一章",
-                            style = TextStyle(
-                                color = if (state.prevEnabled) contentColor else contentColor.copy(alpha = 0.3f),
-                                fontSize = 14.sp,
-                            ),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable(enabled = state.prevEnabled) { onPrevChapter() }
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                        )
-                        Slider(
-                            value = state.seekProgress.toFloat(),
-                            onValueChange = { /* 拖拽中不跳转 */ },
-                            onValueChangeFinished = { onSeekTo(state.seekProgress) },
-                            valueRange = 0f..state.seekMax.toFloat().coerceAtLeast(1f),
-                            modifier = Modifier.weight(1f),
-                            colors = SliderDefaults.colors(
-                                thumbColor = contentColor,
-                                activeTrackColor = contentColor.copy(alpha = 0.6f),
-                                inactiveTrackColor = contentColor.copy(alpha = 0.2f),
-                            ),
-                        )
-                        BasicText(
-                            text = "下一章",
-                            style = TextStyle(
-                                color = if (state.nextEnabled) contentColor else contentColor.copy(alpha = 0.3f),
-                                fontSize = 14.sp,
-                            ),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable(enabled = state.nextEnabled) { onNextChapter() }
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                        )
-                    }
+                    Column {
+                        // 进度条行：上一章 / 进度 / 下一章
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            BasicText(
+                                text = "上一章",
+                                style = TextStyle(
+                                    color = if (state.prevEnabled) contentColor else contentColor.copy(alpha = 0.3f),
+                                    fontSize = 14.sp,
+                                ),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable(enabled = state.prevEnabled) { onPrevChapter() }
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                            )
+                            // 玻璃态 Slider
+                            Slider(
+                                value = state.seekProgress.toFloat(),
+                                onValueChange = { state.seekProgress = it.toInt() },
+                                onValueChangeFinished = { onSeekTo(state.seekProgress) },
+                                valueRange = 0f..state.seekMax.toFloat().coerceAtLeast(1f),
+                                modifier = Modifier.weight(1f),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = contentColor,
+                                    activeTrackColor = contentColor,
+                                    inactiveTrackColor = containerColor,
+                                ),
+                            )
+                            BasicText(
+                                text = "下一章",
+                                style = TextStyle(
+                                    color = if (state.nextEnabled) contentColor else contentColor.copy(alpha = 0.3f),
+                                    fontSize = 14.sp,
+                                ),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable(enabled = state.nextEnabled) { onNextChapter() }
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                            )
+                        }
 
-                    Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(12.dp))
 
-                    // 功能按钮行：目录 / 朗读 / 界面 / 设置
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                    ) {
-                        MenuButton(R.drawable.ic_toc, "目录", contentColor, onCatalog)
-                        MenuButton(
-                            if (state.isReadAloud) R.drawable.ic_stop_black_24dp else R.drawable.ic_read_aloud,
-                            if (state.isReadAloud) "停止" else "朗读",
-                            contentColor, onReadAloud
-                        )
-                        MenuButton(R.drawable.ic_interface_setting, "界面", contentColor, onFont)
-                        MenuButton(R.drawable.ic_settings, "设置", contentColor, onSetting)
+                        // 功能按钮行：目录 / 朗读 / 界面 / 设置
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            MenuButton(R.drawable.ic_toc, "目录", contentColor, onCatalog)
+                            MenuButton(
+                                if (state.isReadAloud) R.drawable.ic_stop_black_24dp else R.drawable.ic_read_aloud,
+                                if (state.isReadAloud) "停止" else "朗读",
+                                contentColor, onReadAloud
+                            )
+                            MenuButton(R.drawable.ic_interface_setting, "界面", contentColor, onFont)
+                            MenuButton(R.drawable.ic_settings, "设置", contentColor, onSetting)
+                        }
                     }
                 }
             }
@@ -248,7 +248,7 @@ private fun MenuButton(
             painter = painterResource(iconRes),
             contentDescription = label,
             tint = tint,
-            modifier =Modifier.size(24.dp),
+            modifier = Modifier.size(24.dp),
         )
         Spacer(Modifier.height(4.dp))
         BasicText(
