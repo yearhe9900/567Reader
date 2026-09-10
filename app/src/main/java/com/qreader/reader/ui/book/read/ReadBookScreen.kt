@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -43,6 +44,7 @@ fun ReadBookScreen(
     modifier: Modifier = Modifier,
 ) {
     val readBackdrop = rememberLayerBackdrop()
+    val hostActivity = LocalContext.current as? ReadBookActivity
 
     Box(modifier = modifier.fillMaxSize()) {
         // ── 捕获层：ReadView（正文渲染）──
@@ -119,6 +121,8 @@ fun ReadBookScreen(
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }
+                    // 恢复自动翻页节奏（对齐原 Dialog onDismiss → onMenuHide）
+                    hostActivity?.onMenuHide()
                 },
             )
         }

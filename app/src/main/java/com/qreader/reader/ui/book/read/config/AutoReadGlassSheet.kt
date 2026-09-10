@@ -144,7 +144,7 @@ fun AutoReadGlassSheet(
                     label = stringResource(R.string.stop),
                     tint = contentColor,
                 ) {
-                    onDismiss()
+                    // 只调 autoPageStop：其内部在面板打开时负责关面板并减 bottomDialogCount
                     activity.autoPageStop()
                 }
                 SheetAction(

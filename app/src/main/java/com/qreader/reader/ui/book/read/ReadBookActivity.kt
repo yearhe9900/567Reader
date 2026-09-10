@@ -1371,8 +1371,10 @@ class ReadBookActivity : BaseReadBookActivity(),
         when {
             BaseReadAloudService.isRun -> showReadAloudDialog()
             isAutoPage -> {
+                // 与原 AutoReadDialog 一致：打开时暂停自动翻页
                 readPageState.bottomDialogCount++
                 readPageState.showAutoReadDialog = true
+                onMenuShow()
             }
             isShowingSearchResult -> {
                 readPageState.searchMenuVisible = true
@@ -1416,9 +1418,12 @@ class ReadBookActivity : BaseReadBookActivity(),
         if (isAutoPage) {
             readView.autoPager.stop()
             readPageState.autoPage = false
-            readPageState.showAutoReadDialog = false
-            if (readPageState.bottomDialogCount > 0) {
-                readPageState.bottomDialogCount--
+            // 仅在面板实际打开时关闭并减计数；onPause/朗读等路径不会误伤其它玻璃面板
+            if (readPageState.showAutoReadDialog) {
+                readPageState.showAutoReadDialog = false
+                if (readPageState.bottomDialogCount > 0) {
+                    readPageState.bottomDialogCount--
+                }
             }
             upScreenTimeOut()
         }
