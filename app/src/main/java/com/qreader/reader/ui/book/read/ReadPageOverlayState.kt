@@ -126,7 +126,7 @@ class ReadPageOverlayState {
             showAutoReadDialog || showClickActionDialog ||
             showPaddingConfigDialog || showTipConfigDialog ||
             showBgTextConfigDialog || showReadAloudConfigDialog ||
-            pendingBookmark != null
+            showReadAloudDialog || pendingBookmark != null
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

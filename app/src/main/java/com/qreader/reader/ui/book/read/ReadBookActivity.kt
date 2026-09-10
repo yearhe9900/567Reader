@@ -82,7 +82,6 @@ import com.qreader.reader.ui.book.info.BookInfoActivity
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.BG_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_ACCENT_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_COLOR
-import com.qreader.reader.ui.book.read.config.ReadAloudDialog
 import com.qreader.reader.ui.book.read.config.TipConfigDialog.Companion.TIP_COLOR
 import com.qreader.reader.ui.book.read.config.TipConfigDialog.Companion.TIP_DIVIDER_COLOR
 import com.qreader.reader.ui.book.read.page.ContentTextView
@@ -156,7 +155,6 @@ class ReadBookActivity : BaseReadBookActivity(),
     TextActionMenu.CallBack,
     ContentTextView.CallBack,
     PopupMenu.OnMenuItemClickListener,
-    ReadAloudDialog.CallBack,
     ChangeBookSourceDialog.CallBack,
     ChangeChapterSourceDialog.CallBack,
     ReadBook.CallBack,
@@ -1332,7 +1330,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     /**
      * 显示菜单
      */
-    override fun showMenuBar() {
+    fun showMenuBar() {
         readPageState.isNightTheme = AppConfig.isNightTheme
         readPageState.brightnessOnRight = AppConfig.brightnessVwPos
         readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
@@ -1403,7 +1401,8 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
 
     fun showReadAloudDialog() {
-        showDialogFragment<ReadAloudDialog>()
+        readPageState.bottomDialogCount++
+        readPageState.showReadAloudDialog = true
     }
 
     /**
@@ -1696,7 +1695,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     /**
      * 朗读按钮
      */
-    override fun onClickReadAloud() {
+    fun onClickReadAloud() {
         autoPageStop()
         when {
             !BaseReadAloudService.isRun -> {

@@ -16,6 +16,7 @@ import com.qreader.reader.ui.book.read.config.ClickActionGlassSheet
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.PaddingGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadAloudConfigGlassSheet
+import com.qreader.reader.ui.book.read.config.ReadAloudGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
 import com.qreader.reader.ui.book.read.config.TipConfigGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
@@ -206,6 +207,19 @@ fun ReadBookScreen(
                 backdrop = readBackdrop,
                 onDismiss = {
                     state.showReadAloudConfigDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 朗读主面板 ──
+        if (state.showReadAloudDialog) {
+            ReadAloudGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showReadAloudDialog = false
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }
