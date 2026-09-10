@@ -18,6 +18,8 @@ import com.qreader.reader.ui.book.read.config.PaddingGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadAloudConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadAloudGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
+import com.qreader.reader.ui.book.changesource.ChangeBookSourceGlassSheet
+import com.qreader.reader.ui.book.changesource.ChangeBookSourceGlassSheet
 import com.qreader.reader.ui.book.read.config.TipConfigGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
 
@@ -258,6 +260,24 @@ fun ReadBookScreen(
                 },
                 onDismiss = {
                     activity?.exitSearchMenu()
+                },
+            )
+        }
+
+        // ── 换源玻璃面板 ──
+        if (state.showChangeSourceDialog) {
+            val oldBook = com.qreader.reader.model.ReadBook.book
+            ChangeBookSourceGlassSheet(
+                backdrop = readBackdrop,
+                oldBook = oldBook,
+                onDismiss = {
+                    state.showChangeSourceDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+                onChangeTo = { source, book, toc ->
+                    hostActivity?.changeTo(source, book, toc)
                 },
             )
         }

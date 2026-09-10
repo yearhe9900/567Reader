@@ -590,7 +590,8 @@ class ReadBookActivity : BaseReadBookActivity(),
                 readPageState.menuVisible = false
                 onMenuHide()
                 ReadBook.book?.let {
-                    showDialogFragment(ChangeBookSourceDialog(it.name, it.author))
+                    readPageState.bottomDialogCount++
+                    readPageState.showChangeSourceDialog = true
                 }
             }
 
