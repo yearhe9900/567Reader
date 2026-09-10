@@ -1397,6 +1397,11 @@ class ReadBookActivity : BaseReadBookActivity(),
     /**
      * 显示朗读菜单
      */
+    fun showReadAloudConfig() {
+        readPageState.bottomDialogCount++
+        readPageState.showReadAloudConfigDialog = true
+    }
+
     fun showReadAloudDialog() {
         showDialogFragment<ReadAloudDialog>()
     }
