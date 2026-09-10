@@ -10,6 +10,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.qreader.reader.ui.book.read.config.AutoReadGlassSheet
+import com.qreader.reader.ui.book.read.config.BgTextConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.BookmarkGlassSheet
 import com.qreader.reader.ui.book.read.config.ClickActionGlassSheet
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
@@ -178,6 +179,19 @@ fun ReadBookScreen(
                 backdrop = readBackdrop,
                 onDismiss = {
                     state.showTipConfigDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 文字/背景样式 ──
+        if (state.showBgTextConfigDialog) {
+            BgTextConfigGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showBgTextConfigDialog = false
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }

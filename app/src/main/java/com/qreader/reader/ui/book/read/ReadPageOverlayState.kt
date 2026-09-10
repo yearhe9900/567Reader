@@ -123,7 +123,8 @@ class ReadPageOverlayState {
         get() = bottomDialogCount > 0 || menuVisible || searchMenuVisible ||
             showMoreConfigDialog || showReadStyleDialog ||
             showAutoReadDialog || showClickActionDialog ||
-            showPaddingConfigDialog || showTipConfigDialog || pendingBookmark != null
+            showPaddingConfigDialog || showTipConfigDialog ||
+            showBgTextConfigDialog || pendingBookmark != null
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

@@ -119,7 +119,8 @@ abstract class BaseReadBookActivity :
     }
 
     fun showBgTextConfig() {
-        showDialogFragment<BgTextConfigDialog>()
+        readPageState.bottomDialogCount++
+        readPageState.showBgTextConfigDialog = true
     }
 
     fun showClickRegionalConfig() {
