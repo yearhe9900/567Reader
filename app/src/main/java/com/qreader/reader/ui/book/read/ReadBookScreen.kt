@@ -212,5 +212,40 @@ fun ReadBookScreen(
                 },
             )
         }
+
+        // ── 书内搜索浮层 ──
+        if (state.searchMenuVisible) {
+            val activity = hostActivity
+            SearchMenuGlassSheet(
+                backdrop = readBackdrop,
+                state = state,
+                onPrevResult = {
+                    val idx = (state.searchResultIndex - 1).coerceAtLeast(0)
+                    state.searchResultIndex = idx
+                    state.searchResults.getOrNull(idx)?.let { activity?.navigateToSearch(it, idx) }
+                },
+                onNextResult = {
+                    val idx = (state.searchResultIndex + 1)
+                        .coerceAtMost(state.searchResults.lastIndex.coerceAtLeast(0))
+                    state.searchResultIndex = idx
+                    state.searchResults.getOrNull(idx)?.let { activity?.navigateToSearch(it, idx) }
+                },
+                onOpenSearch = {
+                    state.searchMenuVisible = false
+                    activity?.openSearchActivity(state.searchQuery)
+                },
+                onMainMenu = {
+                    state.searchMenuVisible = false
+                    activity?.cancelSelect()
+                    activity?.showMenuBar()
+                },
+                onExit = {
+                    activity?.exitSearchMenu()
+                },
+                onDismiss = {
+                    activity?.exitSearchMenu()
+                },
+            )
+        }
     }
 }
