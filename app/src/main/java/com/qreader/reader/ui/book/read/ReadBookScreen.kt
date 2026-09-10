@@ -12,6 +12,7 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.qreader.reader.ui.book.read.config.AutoReadGlassSheet
 import com.qreader.reader.ui.book.read.config.ClickActionGlassSheet
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
+import com.qreader.reader.ui.book.read.config.PaddingGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
 
@@ -133,6 +134,19 @@ fun ReadBookScreen(
                 backdrop = readBackdrop,
                 onDismiss = {
                     state.showClickActionDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 边距玻璃面板 ──
+        if (state.showPaddingConfigDialog) {
+            PaddingGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showPaddingConfigDialog = false
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }

@@ -100,9 +100,9 @@ class ReadPageOverlayState {
     var showMoreConfigDialog by mutableStateOf(false)
     var showAutoReadDialog by mutableStateOf(false)
     var showClickActionDialog by mutableStateOf(false)
+    var showPaddingConfigDialog by mutableStateOf(false)
     var showReadAloudDialog by mutableStateOf(false)
     var showBgTextConfigDialog by mutableStateOf(false)
-    var showPaddingConfigDialog by mutableStateOf(false)
     var showTipConfigDialog by mutableStateOf(false)
     var showPageKeyDialog by mutableStateOf(false)
 
@@ -118,7 +118,8 @@ class ReadPageOverlayState {
     val menuLayoutIsVisible: Boolean
         get() = bottomDialogCount > 0 || menuVisible || searchMenuVisible ||
             showMoreConfigDialog || showReadStyleDialog ||
-            showAutoReadDialog || showClickActionDialog
+            showAutoReadDialog || showClickActionDialog ||
+            showPaddingConfigDialog
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

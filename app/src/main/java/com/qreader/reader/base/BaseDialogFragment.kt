@@ -9,6 +9,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import androidx.annotation.LayoutRes
+import androidx.compose.ui.graphics.toArgb
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
@@ -65,7 +66,38 @@ abstract class BaseDialogFragment(
                     }
                 }
             })
+        } else {
+            applyGlassSheetChrome()
         }
+    }
+
+    /** P1：剩余 DialogFragment 统一玻璃窗体，与 in-tree GlassSheet 观感一致。 */
+    private fun applyGlassSheetChrome() {
+        val window = dialog?.window ?: return
+        val isBottom = window.attributes.gravity == Gravity.BOTTOM
+        window.setBackgroundDrawableResource(android.R.color.transparent)
+        if (isBottom) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            val attr = window.attributes
+            attr.dimAmount = 0.0f
+            window.attributes = attr
+        }
+        val isLight = com.qreader.reader.utils.ColorUtils.isColorLight(
+            com.qreader.reader.help.config.ReadBookConfig.bgMeanColor
+        )
+        val container = com.qreader.reader.ui.compose.glass.GlassConfig.containerColor(isLight)
+        val radius = com.qreader.reader.ui.compose.glass.GlassConfig.sheetCornerRadius.value *
+            resources.displayMetrics.density
+        val drawable = android.graphics.drawable.GradientDrawable().apply {
+            if (isBottom) {
+                cornerRadii = floatArrayOf(radius, radius, radius, radius, 0f, 0f, 0f, 0f)
+            } else {
+                cornerRadius = radius
+            }
+            setColor(container.toArgb())
+        }
+        window.decorView.background = drawable
+        view?.background = drawable
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
