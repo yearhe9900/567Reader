@@ -106,6 +106,10 @@ class ReadPageOverlayState {
     var showTipConfigDialog by mutableStateOf(false)
     var showPageKeyDialog by mutableStateOf(false)
 
+    /** 阅读页书签编辑（玻璃面板）；null = 关闭 */
+    var pendingBookmark by mutableStateOf<com.qreader.reader.data.entities.Bookmark?>(null)
+    var pendingBookmarkEditPos by mutableIntStateOf(-1)
+
     // ── 目录抽屉 ──
     var tocDrawerOpen by mutableStateOf(false)
 
@@ -119,7 +123,7 @@ class ReadPageOverlayState {
         get() = bottomDialogCount > 0 || menuVisible || searchMenuVisible ||
             showMoreConfigDialog || showReadStyleDialog ||
             showAutoReadDialog || showClickActionDialog ||
-            showPaddingConfigDialog
+            showPaddingConfigDialog || pendingBookmark != null
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

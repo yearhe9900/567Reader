@@ -10,6 +10,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.qreader.reader.ui.book.read.config.AutoReadGlassSheet
+import com.qreader.reader.ui.book.read.config.BookmarkGlassSheet
 import com.qreader.reader.ui.book.read.config.ClickActionGlassSheet
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.PaddingGlassSheet
@@ -147,6 +148,22 @@ fun ReadBookScreen(
                 backdrop = readBackdrop,
                 onDismiss = {
                     state.showPaddingConfigDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 书签编辑 ──
+        state.pendingBookmark?.let { bm ->
+            BookmarkGlassSheet(
+                backdrop = readBackdrop,
+                bookmark = bm,
+                editPos = state.pendingBookmarkEditPos,
+                onDismiss = {
+                    state.pendingBookmark = null
+                    state.pendingBookmarkEditPos = -1
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }

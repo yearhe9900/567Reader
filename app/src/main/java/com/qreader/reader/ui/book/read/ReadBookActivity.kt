@@ -995,7 +995,9 @@ class ReadBookActivity : BaseReadBookActivity(),
                 if (bookmark == null) {
                     toastOnUi(R.string.create_bookmark_error)
                 } else {
-                    showDialogFragment(BookmarkDialog(bookmark))
+                    readPageState.bottomDialogCount++
+                    readPageState.pendingBookmark = bookmark
+                    readPageState.pendingBookmarkEditPos = -1
                 }
                 return true
             }
@@ -1924,7 +1926,9 @@ class ReadBookActivity : BaseReadBookActivity(),
                 chapterName = page.title
                 bookText = page.text.trim()
             }
-            showDialogFragment(BookmarkDialog(bookmark))
+            readPageState.bottomDialogCount++
+            readPageState.pendingBookmark = bookmark
+            readPageState.pendingBookmarkEditPos = -1
         }
     }
 
