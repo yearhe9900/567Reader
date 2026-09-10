@@ -15,6 +15,7 @@ import com.qreader.reader.ui.book.read.config.ClickActionGlassSheet
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.PaddingGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
+import com.qreader.reader.ui.book.read.config.TipConfigGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
 
 /**
@@ -164,6 +165,19 @@ fun ReadBookScreen(
                 onDismiss = {
                     state.pendingBookmark = null
                     state.pendingBookmarkEditPos = -1
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 信息栏玻璃面板 ──
+        if (state.showTipConfigDialog) {
+            TipConfigGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showTipConfigDialog = false
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }

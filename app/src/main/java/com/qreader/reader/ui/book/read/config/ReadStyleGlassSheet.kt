@@ -166,7 +166,8 @@ fun ReadStyleGlassSheet(
                     activity.showPaddingConfig()
                 }
                 ActionChip(stringResource(R.string.information), contentColor) {
-                    TipConfigDialog().show(activity.supportFragmentManager, "tipConfigDialog")
+                    activity.readPageState.bottomDialogCount++
+                    activity.readPageState.showTipConfigDialog = true
                 }
             }
 
