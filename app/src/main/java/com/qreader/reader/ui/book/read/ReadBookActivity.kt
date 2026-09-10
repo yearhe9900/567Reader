@@ -79,7 +79,6 @@ import com.qreader.reader.ui.book.bookmark.BookmarkDialog
 import com.qreader.reader.ui.book.changesource.ChangeBookSourceDialog
 import com.qreader.reader.ui.book.changesource.ChangeChapterSourceDialog
 import com.qreader.reader.ui.book.info.BookInfoActivity
-import com.qreader.reader.ui.book.read.config.AutoReadDialog
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.BG_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_ACCENT_COLOR
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog.Companion.TEXT_COLOR
@@ -161,7 +160,6 @@ class ReadBookActivity : BaseReadBookActivity(),
     ChangeBookSourceDialog.CallBack,
     ChangeChapterSourceDialog.CallBack,
     ReadBook.CallBack,
-    AutoReadDialog.CallBack,
     TxtTocRuleDialog.CallBack,
     ColorPickerDialogListener,
     LayoutProgressListener,
@@ -1372,7 +1370,10 @@ class ReadBookActivity : BaseReadBookActivity(),
     override fun showActionMenu() {
         when {
             BaseReadAloudService.isRun -> showReadAloudDialog()
-            isAutoPage -> showDialogFragment<AutoReadDialog>()
+            isAutoPage -> {
+                readPageState.bottomDialogCount++
+                readPageState.showAutoReadDialog = true
+            }
             isShowingSearchResult -> {
                 readPageState.searchMenuVisible = true
                 onMenuShow()
@@ -1415,7 +1416,10 @@ class ReadBookActivity : BaseReadBookActivity(),
         if (isAutoPage) {
             readView.autoPager.stop()
             readPageState.autoPage = false
-            dismissDialogFragment<AutoReadDialog>()
+            readPageState.showAutoReadDialog = false
+            if (readPageState.bottomDialogCount > 0) {
+                readPageState.bottomDialogCount--
+            }
             upScreenTimeOut()
         }
     }

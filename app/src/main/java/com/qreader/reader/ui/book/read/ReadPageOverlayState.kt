@@ -98,12 +98,12 @@ class ReadPageOverlayState {
 
     var showReadStyleDialog by mutableStateOf(false)
     var showMoreConfigDialog by mutableStateOf(false)
+    var showAutoReadDialog by mutableStateOf(false)
+    var showClickActionDialog by mutableStateOf(false)
     var showReadAloudDialog by mutableStateOf(false)
     var showBgTextConfigDialog by mutableStateOf(false)
     var showPaddingConfigDialog by mutableStateOf(false)
-    var showAutoReadDialog by mutableStateOf(false)
     var showTipConfigDialog by mutableStateOf(false)
-    var showClickActionDialog by mutableStateOf(false)
     var showPageKeyDialog by mutableStateOf(false)
 
     // ── 目录抽屉 ──
@@ -114,10 +114,11 @@ class ReadPageOverlayState {
 
     // ── 辅助方法 ──
 
-    /** 菜单是否处于显示状态（包括搜索菜单、界面/设置玻璃面板和弹窗） */
+    /** 菜单是否处于显示状态（搜索/界面/设置/自动翻页/点击区域等玻璃面板） */
     val menuLayoutIsVisible: Boolean
         get() = bottomDialogCount > 0 || menuVisible || searchMenuVisible ||
-            showMoreConfigDialog || showReadStyleDialog
+            showMoreConfigDialog || showReadStyleDialog ||
+            showAutoReadDialog || showClickActionDialog
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

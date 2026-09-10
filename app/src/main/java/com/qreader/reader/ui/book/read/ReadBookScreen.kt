@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.qreader.reader.ui.book.read.config.AutoReadGlassSheet
+import com.qreader.reader.ui.book.read.config.ClickActionGlassSheet
 import com.qreader.reader.ui.book.read.config.MoreConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
@@ -101,6 +103,32 @@ fun ReadBookScreen(
                 backdrop = readBackdrop,
                 onDismiss = {
                     state.showReadStyleDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 自动翻页玻璃面板 ──
+        if (state.showAutoReadDialog) {
+            AutoReadGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showAutoReadDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+            )
+        }
+
+        // ── 点击区域设置 ──
+        if (state.showClickActionDialog) {
+            ClickActionGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showClickActionDialog = false
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }

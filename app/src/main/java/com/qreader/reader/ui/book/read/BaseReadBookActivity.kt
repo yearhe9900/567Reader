@@ -27,7 +27,6 @@ import com.qreader.reader.lib.theme.ThemeStore
 import com.qreader.reader.model.CacheBook
 import com.qreader.reader.model.ReadBook
 import com.qreader.reader.ui.book.read.config.BgTextConfigDialog
-import com.qreader.reader.ui.book.read.config.ClickActionConfigDialog
 import com.qreader.reader.ui.book.read.config.PaddingConfigDialog
 import com.qreader.reader.ui.book.read.config.PageKeyDialog
 import com.qreader.reader.ui.file.HandleFileContract
@@ -124,7 +123,8 @@ abstract class BaseReadBookActivity :
     }
 
     fun showClickRegionalConfig() {
-        showDialogFragment<ClickActionConfigDialog>()
+        readPageState.bottomDialogCount++
+        readPageState.showClickActionDialog = true
     }
 
     private fun showCustomPageKeyConfig() {
