@@ -114,6 +114,9 @@ class ReadPageOverlayState {
     /** 换源玻璃面板是否打开 */
     var showChangeSourceDialog by mutableStateOf(false)
 
+    /** 目录玻璃面板是否打开 */
+    var showTocDialog by mutableStateOf(false)
+
     // ── 目录抽屉 ──
     var tocDrawerOpen by mutableStateOf(false)
 
@@ -130,7 +133,7 @@ class ReadPageOverlayState {
             showPaddingConfigDialog || showTipConfigDialog ||
             showBgTextConfigDialog || showReadAloudConfigDialog ||
             showReadAloudDialog || showChangeSourceDialog ||
-            pendingBookmark != null
+            showTocDialog || pendingBookmark != null
 
     /** 阅读页明暗判定（基于书页背景色，非 App 主题） */
     val isLightPage: Boolean

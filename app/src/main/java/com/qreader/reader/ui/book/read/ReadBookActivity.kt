@@ -1461,11 +1461,12 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
 
     /**
-     * 打开目录
+     * 打开目录（阅读页玻璃面板；其它入口仍可走 TocActivity）
      */
     override fun openChapterList() {
         ReadBook.book?.let {
-            tocActivity.launch(it.bookUrl)
+            readPageState.bottomDialogCount++
+            readPageState.showTocDialog = true
         }
     }
 

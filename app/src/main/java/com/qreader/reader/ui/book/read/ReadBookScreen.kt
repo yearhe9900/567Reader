@@ -19,7 +19,7 @@ import com.qreader.reader.ui.book.read.config.ReadAloudConfigGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadAloudGlassSheet
 import com.qreader.reader.ui.book.read.config.ReadStyleGlassSheet
 import com.qreader.reader.ui.book.changesource.ChangeBookSourceGlassSheet
-import com.qreader.reader.ui.book.changesource.ChangeBookSourceGlassSheet
+import com.qreader.reader.ui.book.toc.TocGlassSheet
 import com.qreader.reader.ui.book.read.config.TipConfigGlassSheet
 import com.qreader.reader.ui.book.read.page.ReadView
 
@@ -278,6 +278,29 @@ fun ReadBookScreen(
                 },
                 onChangeTo = { source, book, toc ->
                     hostActivity?.changeTo(source, book, toc)
+                },
+            )
+        }
+
+        // ── 目录玻璃面板 ──
+        if (state.showTocDialog) {
+            TocGlassSheet(
+                backdrop = readBackdrop,
+                onDismiss = {
+                    state.showTocDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                },
+                onOpenChapter = { index, chapterPos ->
+                    state.showTocDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
+                    }
+                    hostActivity?.let { act ->
+                        // viewModel 是 protected，用 ReadBook 的公开 openChapter 直接调用
+                        com.qreader.reader.model.ReadBook.openChapter(index, chapterPos)
+                    }
                 },
             )
         }
