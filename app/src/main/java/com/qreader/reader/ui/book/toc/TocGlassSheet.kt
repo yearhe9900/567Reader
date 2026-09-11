@@ -25,6 +25,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,12 +41,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -473,31 +481,80 @@ private fun TocTopBar(
 
             // Tab 或搜索框
             if (searchActive) {
+                // 搜索框：对齐 SearchScreen 的「胶囊玻璃 + 放大镜 + 自动聚焦」范式。
+                // 原先只有一个裸 BasicTextField，无焦点/无光标/无键盘、视觉上近乎不可见，
+                // 用户点完搜索图标会觉得「没反应」。
+                val focusRequester = remember { FocusRequester() }
+                val keyboard = LocalSoftwareKeyboardController.current
+                LaunchedEffect(Unit) {
+                    // 等一帧让输入框挂进视图树再请求焦点，否则 requestFocus 无效
+                    kotlinx.coroutines.delay(80)
+                    focusRequester.requestFocus()
+                    keyboard?.show()
+                }
                 Row(
-                    Modifier
+                    modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.Bottom,
+                        .drawBackdrop(
+                            backdrop = backdrop,
+                            shape = { RoundedCornerShape(50) },
+                            effects = {
+                                vibrancy()
+                                blur(GlassConfig.blur.toPx())
+                                lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                            },
+                            onDrawSurface = { drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha)) },
+                        )
+                        .height(40.dp)
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_search),
+                        contentDescription = null,
+                        tint = contentColor.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
                     BasicTextField(
                         value = searchKey,
                         onValueChange = onSearchKeyChange,
                         singleLine = true,
                         textStyle = TextStyle(contentColor, 16.sp),
                         cursorBrush = SolidColor(accent),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .focusRequester(focusRequester),
                         decorationBox = { inner ->
-                            if (searchKey.isEmpty()) {
-                                BasicText(
-                                    text = ctx.getString(R.string.search),
-                                    style = TextStyle(contentColor.copy(alpha = 0.5f), 16.sp),
-                                )
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (searchKey.isEmpty()) {
+                                    BasicText(
+                                        text = ctx.getString(R.string.search),
+                                        style = TextStyle(contentColor.copy(alpha = 0.5f), 16.sp),
+                                    )
+                                }
+                                inner()
                             }
-                            inner()
                         },
                     )
+                    // 清除（有输入时显示）
+                    if (searchKey.isNotEmpty()) {
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = ctx.getString(R.string.clear),
+                            tint = contentColor.copy(alpha = 0.6f),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { onSearchKeyChange("") },
+                                ),
+                        )
+                    }
                 }
             } else {
                 Row(
