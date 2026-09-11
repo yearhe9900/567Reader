@@ -282,7 +282,7 @@ fun ReadBookScreen(
             )
         }
 
-        // ── 目录玻璃面板 ──
+        // ── 目录玻璃页（全屏）──
         if (state.showTocDialog) {
             TocGlassSheet(
                 backdrop = readBackdrop,
@@ -297,10 +297,16 @@ fun ReadBookScreen(
                     if (state.bottomDialogCount > 0) {
                         state.bottomDialogCount--
                     }
-                    hostActivity?.let { act ->
-                        // viewModel 是 protected，用 ReadBook 的公开 openChapter 直接调用
-                        com.qreader.reader.model.ReadBook.openChapter(index, chapterPos)
+                    // viewModel 是 protected，用 ReadBook 的公开 openChapter 直接调用
+                    com.qreader.reader.model.ReadBook.openChapter(index, chapterPos)
+                },
+                onDismissToMainMenu = {
+                    state.showTocDialog = false
+                    if (state.bottomDialogCount > 0) {
+                        state.bottomDialogCount--
                     }
+                    // 回退到阅读菜单（对齐原版 TocActivity 返回后菜单仍展开）
+                    state.menuVisible = true
                 },
             )
         }
