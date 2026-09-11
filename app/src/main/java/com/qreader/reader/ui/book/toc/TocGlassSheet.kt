@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,8 +74,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** 顶部导航栏高度（不含状态栏）。 */
-private val TocTopBarHeight = GlassConfig.titleBarHeight
+/**
+ * 顶部导航栏高度（含状态栏区域）。
+ *
+ * 与全 App 标题栏统一为 100dp：外层 `statusBarsPadding()` 把内容推离状态栏后，
+ * 玻璃本身仍向下延伸满 100dp，和 MainScreen / SearchScreen 顶栏完全等高。
+ */
+private val TocTopBarHeight = 100.dp
 
 /** 目录页数据聚合（章节 + 预计算的显示标题 + 本地已缓存文件名集合）。 */
 private data class TocData(
@@ -400,6 +406,12 @@ fun TocGlassSheet(
 /**
  * 顶部玻璃导航栏：返回 / Tab「目录|书签」/ 搜索 / 更多。
  *
+ * 视觉与全 App 标题栏统一（对齐 MainScreen.BookshelfGlassTitleBar / SearchScreen 顶栏）：
+ *  - 高度 [TocTopBarHeight] = 100dp（含状态栏区域，由外层 `statusBarsPadding()` 让位后仍占满高度）；
+ *  - 内容底部对齐（`Alignment.Bottom` + `bottom = 12.dp`），让标题行贴住玻璃下缘；
+ *  - 图标按钮统一 `Box.drawBackdrop(...size(40.dp))` 玻璃块 + 内部 `IconButton`，
+ *    与书架页搜索/更多按钮的 40dp 玻璃按钮完全同款（圆角 12dp、表面 alpha 0.6）。
+ *
  * 搜索展开时就地把「目录|书签」Tab 替换为输入框（对齐原版 SearchView 展开时 tabLayout.gone()）。
  */
 @Composable
@@ -421,7 +433,7 @@ private fun TocTopBar(
         ColorUtils.isColorLight(ReadBookConfig.bgMeanColor)
     )
 
-    Row(
+    Box(
         Modifier
             .fillMaxWidth()
             .drawBackdrop(
@@ -434,99 +446,141 @@ private fun TocTopBar(
                 },
                 onDrawSurface = { drawRect(containerColor) },
             )
-            .height(TocTopBarHeight)
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .height(TocTopBarHeight),
     ) {
-        // 返回
-        Icon(
-            painter = painterResource(R.drawable.ic_arrow_back),
-            contentDescription = ctx.getString(R.string.back),
-            tint = contentColor,
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onBack,
-                )
-                .padding(8.dp),
-        )
+        Row(
+            Modifier
+                .fillMaxSize()
+                .padding(start = 4.dp, end = 4.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            // 返回
+            TocGlassIconButton(
+                iconRes = R.drawable.ic_arrow_back,
+                contentDescription = ctx.getString(R.string.back),
+                contentColor = contentColor,
+                containerColor = containerColor,
+                backdrop = backdrop,
+                onClick = onBack,
+            )
 
-        // Tab 或搜索框
-        if (searchActive) {
-            BasicTextField(
-                value = searchKey,
-                onValueChange = onSearchKeyChange,
-                singleLine = true,
-                textStyle = TextStyle(contentColor, 15.sp),
-                cursorBrush = SolidColor(accent),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp),
-                decorationBox = { inner ->
-                    if (searchKey.isEmpty()) {
-                        BasicText(
-                            text = ctx.getString(R.string.search),
-                            style = TextStyle(contentColor.copy(alpha = 0.5f), 15.sp),
-                        )
-                    }
-                    inner()
+            // Tab 或搜索框
+            if (searchActive) {
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    BasicTextField(
+                        value = searchKey,
+                        onValueChange = onSearchKeyChange,
+                        singleLine = true,
+                        textStyle = TextStyle(contentColor, 16.sp),
+                        cursorBrush = SolidColor(accent),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        decorationBox = { inner ->
+                            if (searchKey.isEmpty()) {
+                                BasicText(
+                                    text = ctx.getString(R.string.search),
+                                    style = TextStyle(contentColor.copy(alpha = 0.5f), 16.sp),
+                                )
+                            }
+                            inner()
+                        },
+                    )
+                }
+            } else {
+                Row(
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    TocTabItem(
+                        text = ctx.getString(R.string.chapter_list),
+                        selected = tab == 0,
+                        contentColor = contentColor,
+                        accent = accent,
+                        onClick = { onTabChange(0) },
+                    )
+                    Spacer(Modifier.width(24.dp))
+                    TocTabItem(
+                        text = ctx.getString(R.string.bookmark),
+                        selected = tab == 1,
+                        contentColor = contentColor,
+                        accent = accent,
+                        onClick = { onTabChange(1) },
+                    )
+                }
+            }
+
+            // 搜索
+            TocGlassIconButton(
+                iconRes = R.drawable.ic_search,
+                contentDescription = ctx.getString(R.string.search),
+                contentColor = contentColor,
+                containerColor = containerColor,
+                backdrop = backdrop,
+                onClick = onSearchToggle,
+            )
+
+            // 更多
+            TocGlassIconButton(
+                iconRes = R.drawable.ic_more_vert,
+                contentDescription = "more",
+                contentColor = contentColor,
+                containerColor = containerColor,
+                backdrop = backdrop,
+                onClick = onMenuClick,
+            )
+        }
+    }
+}
+
+/**
+ * 顶栏玻璃图标按钮：40dp 方形玻璃块 + 居中图标。
+ *
+ * 与 [com.qreader.reader.ui.main.MainScreen] 的 BookshelfGlassTitleBar 搜索/更多按钮同构
+ * （`drawBackdrop` 圆角 [GlassConfig.glassButtonCornerRadius] + 表面 alpha
+ * [GlassConfig.glassButtonSurfaceAlpha]），保证全 App 标题栏按钮视觉一致。
+ *
+ * 注意：本组件位于目录页顶层（不在 `layerBackdrop` 捕获层内），可以安全使用 `drawBackdrop`。
+ */
+@Composable
+private fun TocGlassIconButton(
+    iconRes: Int,
+    contentDescription: String,
+    contentColor: Color,
+    containerColor: Color,
+    backdrop: Backdrop,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .drawBackdrop(
+                backdrop = backdrop,
+                shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
+                effects = {
+                    vibrancy()
+                    blur(GlassConfig.blur.toPx())
+                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
+                },
+                onDrawSurface = {
+                    drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha))
                 },
             )
-        } else {
-            Row(
-                Modifier.weight(1f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TocTabItem(
-                    text = ctx.getString(R.string.chapter_list),
-                    selected = tab == 0,
-                    contentColor = contentColor,
-                    accent = accent,
-                    onClick = { onTabChange(0) },
-                )
-                Spacer(Modifier.width(24.dp))
-                TocTabItem(
-                    text = ctx.getString(R.string.bookmark),
-                    selected = tab == 1,
-                    contentColor = contentColor,
-                    accent = accent,
-                    onClick = { onTabChange(1) },
-                )
-            }
+            .size(40.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = contentDescription,
+                tint = contentColor,
+            )
         }
-
-        // 搜索
-        Icon(
-            painter = painterResource(R.drawable.ic_search),
-            contentDescription = ctx.getString(R.string.search),
-            tint = contentColor,
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onSearchToggle,
-                )
-                .padding(8.dp),
-        )
-
-        // 更多
-        Icon(
-            painter = painterResource(R.drawable.ic_more_vert),
-            contentDescription = "more",
-            tint = contentColor,
-            modifier = Modifier
-                .size(40.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onMenuClick,
-                )
-                .padding(8.dp),
-        )
     }
 }
 
