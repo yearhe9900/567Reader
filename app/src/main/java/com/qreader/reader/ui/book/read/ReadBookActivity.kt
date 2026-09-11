@@ -778,8 +778,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             if (isDown && !readPageState.canShowMenu) {
                 readPageState.isNightTheme = AppConfig.isNightTheme
-                readPageState.brightnessOnRight = AppConfig.brightnessVwPos
-                readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
+                // 亮度相关状态（含亮度条显示开关 / 左右位置）统一由 upBrightnessState 刷新
                 upBrightnessState()
                 upSeekBarState()
                 readPageState.menuVisible = true
@@ -1236,14 +1235,41 @@ class ReadBookActivity : BaseReadBookActivity(),
         upSeekBarState()
     }
 
+    /**
+     * 亮度相关状态的**唯一收敛点**。
+     *
+     * 注意这里同时回写 [ReadPageOverlayState.showBrightnessView] 与
+     * [ReadPageOverlayState.brightnessOnRight]：这两个开关都由设置页（View 体系
+     * PreferenceFragment）修改，改完只发一个 LiveEventBus 事件过来。
+     * 若本方法只刷新亮度值而不回读开关，`state.showBrightnessView` 会永远停在
+     * 进入阅读页那一刻的快照 —— 表现为「设置里明明开着，阅读页的竖向亮度条却不出现」
+     * （对齐原版 `ReadMenu.initView()` 每次显示菜单都重读 `showBrightnessView` 的行为）。
+     */
     private fun upBrightnessState() {
+        // showBrightnessView 必须先于 brightnessAuto 求值：
+        // brightnessAuto() 依赖它（见下方 `|| !showBrightnessView`）。
+        readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
         readPageState.brightness = AppConfig.readBrightness.toFloat()
         readPageState.brightnessAuto = brightnessAuto()
+        readPageState.brightnessOnRight = AppConfig.brightnessVwPos
         setScreenBrightness(AppConfig.readBrightness.toFloat())
     }
 
+    /**
+     * 是否跟随系统亮度。
+     *
+     * 对齐原版 `ReadMenu.brightnessAuto()`：
+     * ```
+     * context.getPrefBoolean("brightnessAuto", true) || !showBrightnessView
+     * ```
+     * 两层含义，缺一不可：
+     * 1. 默认值为 `true` —— 首次进入阅读页时「自动亮度」是开启的；
+     * 2. **亮度条被隐藏时强制视为自动亮度** —— 因为用户没有任何入口去调节它，
+     *    此时必须交还给系统，否则窗口会永久停留在上一次的 `screenBrightness` 覆盖值上。
+     */
     private fun brightnessAuto(): Boolean =
-        getPrefBoolean("brightnessAuto", false)
+        getPrefBoolean("brightnessAuto", true) ||
+            !getPrefBoolean(PreferKey.showBrightnessView, true)
 
     fun toggleBrightnessAuto() {
         putPrefBoolean("brightnessAuto", !brightnessAuto())
@@ -1333,8 +1359,7 @@ class ReadBookActivity : BaseReadBookActivity(),
      */
     fun showMenuBar() {
         readPageState.isNightTheme = AppConfig.isNightTheme
-        readPageState.brightnessOnRight = AppConfig.brightnessVwPos
-        readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
+        // 亮度相关状态（含亮度条显示开关 / 左右位置）统一由 upBrightnessState 刷新
         upBrightnessState()
         upSeekBarState()
         readPageState.menuVisible = true
@@ -1383,8 +1408,7 @@ class ReadBookActivity : BaseReadBookActivity(),
             }
             else -> {
                 readPageState.isNightTheme = AppConfig.isNightTheme
-                readPageState.brightnessOnRight = AppConfig.brightnessVwPos
-                readPageState.showBrightnessView = getPrefBoolean(PreferKey.showBrightnessView, true)
+                // 亮度相关状态（含亮度条显示开关 / 左右位置）统一由 upBrightnessState 刷新
                 upBrightnessState()
                 upSeekBarState()
                 readPageState.menuVisible = true

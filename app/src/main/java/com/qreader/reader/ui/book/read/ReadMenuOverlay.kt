@@ -175,7 +175,6 @@ fun ReadMenuOverlay(
                     state = state,
                     contentColor = contentColor,
                     containerColor = containerColor,
-                    backdrop = backdrop,
                     onToggleAuto = onToggleBrightnessAuto,
                     onTogglePos = onToggleBrightnessPos,
                     onValueChange = onBrightnessChange,
@@ -399,13 +398,15 @@ private fun SmallGlassFab(
 /**
  * 竖向亮度条：自动亮度 / 竖向滑杆 0–255 / 左右位置切换。
  * 对齐原版 ll_brightness。
+ *
+ * 面板是**纯色半透明块**（`containerColor` alpha 0.55），不做玻璃采样 ——
+ * 它常驻在内容流里，若用 `drawBackdrop` 会命中「捕获层内部调用」的崩溃约束。
  */
 @Composable
 private fun BrightnessPanel(
     state: ReadPageOverlayState,
     contentColor: Color,
     containerColor: Color,
-    backdrop: Backdrop,
     onToggleAuto: () -> Unit,
     onTogglePos: () -> Unit,
     onValueChange: (Float) -> Unit,
