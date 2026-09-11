@@ -21,3 +21,5 @@ package-lock.json
 .vscode
 # WorkBuddy agent 生成的临时产物（overview 等），不进版本库
 .workbuddy/artifacts/
+# 签名密钥库（包含私钥，绝不提交）
+keystore/
