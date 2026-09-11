@@ -123,6 +123,29 @@
 - **MySettingsScreen**：设置页（玻璃态分组卡片 + 玻璃态开关）
 - **玻璃弹框系统**：LiquidGlassDialog、SortDialogOverlay、GroupEditOverlay、GroupDrawerOverlay，以及编辑分组、删除书籍、主题模式等弹框统一玻璃态
 
+#### 阅读页玻璃面板（本项目新增）
+
+阅读页所有设置与功能弹层已全部 Compose 化为 `*GlassSheet`，与设置面板同构（`LiquidGlassDialog` + `GlassConfig` 单一真源），真采样正文：
+
+| 面板 | 说明 |
+|------|------|
+| 设置 | 进度条行为 / 音量键 / 亮度等偏好 |
+| 界面 | 字体/粗细/缩进/简繁/滑杆/翻页动画/颜色/背景图 |
+| 自动翻页 | 速度调节 + 目录/菜单/停止/翻页动画设置 |
+| 点击区域 | 9 区域动作配置（玻璃浮层，写 PreferKey） |
+| 边距 | 页眉/正文/页脚四向滑杆 + 分割线开关 |
+| 书签 | 章节名 + 双输入 + 删除/确定（仅阅读页） |
+| 信息栏 | 标题模式/字号/页眉页脚槽位/颜色入口 |
+| 文字/背景 | 名称/恢复/深色状态栏/下划线/颜色/透明度/预置图 |
+| 朗读设置 | Preference 托管（ignoreAudioFocus / 按页读 / TTS 引擎等） |
+| 朗读主面板 | 上/下章 + 播控 + 定时 + 语速 + 目录/菜单/后台/设置 |
+| 书内搜索 | 上一条/下一条圆钮 + 信息行 + 搜索结果/主菜单/退出 |
+| 换源 | ChangeBookSourceViewModel + Adapter 托管 |
+| 目录 | 纯 Compose LazyColumn，对齐 legado 原版 item（高亮/VIP/字数/缓存图标） |
+
+共享组件：`GlassSheetComponents`（`GlassSliderRow` / `GlassToggleRow`）。  
+`BaseDialogFragment` 对非 E-Ink 弹框统一应用 `GlassConfig.sheetCornerRadius` + 容器色（P1 视觉批量）。
+
 暂不迁移的模块：阅读器（Canvas 手绘翻页）、漫画阅读器、WebView。
 
 ---
@@ -144,7 +167,9 @@
 │   │       │   └── bookshelf/           # 书架 ViewModel + Adapter
 │   │       ├── ui/book/          # 书籍相关 Compose 页面
 │   │       │   ├── search/SearchScreen.kt   # 搜索页（还原 legado-E UI）
-│   │       │   └── info/BookInfoScreen.kt   # 书籍信息页
+│   │       │   ├── info/BookInfoScreen.kt   # 书籍信息页
+│   │       │   ├── read/            # 阅读页（ReadBookScreen + 玻璃面板家族）
+│   │       │   └── toc/TocGlassSheet.kt     # 目录面板（纯 Compose）
 │   │       ├── ui/compose/       # Compose 通用组件
 │   │       │   ├── glass/        # 玻璃态组件（LiquidGlassDialog、GlassDialogTokens）
 │   │       │   └── liquid/       # 液态导航栏组件
@@ -153,7 +178,7 @@
 │   │       ├── help/             # 工具类、配置、网络、协程
 │   │       ├── service/          # 后台服务（TTS、Web、BookAudio）
 │   │       └── ...
-│   ├── src/main/res/             # 资源文件（200 个 XML 布局、多语言）
+│   ├── src/main/res/             # 资源文件（~160 个 XML 布局、多语言）
 │   └── build.gradle              # 应用构建配置
 ├── modules/
 │   ├── book/                     # 书源 / 书籍解析核心逻辑
