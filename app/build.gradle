@@ -118,10 +118,12 @@ android {
     }
 
     // AGP 9.0+ 使用新的 API 设置输出文件名
+    // debug → 567Reader_debug.apk，release → 567Reader_release.apk
     androidComponents {
         onVariants(selector().all()) { variant ->
+            val buildType = variant.buildType ?: "unknown"
             variant.outputs.forEach { output ->
-                output.outputFileName.set("567Reader.apk")
+                output.outputFileName.set("567Reader_${buildType}.apk")
             }
         }
     }
