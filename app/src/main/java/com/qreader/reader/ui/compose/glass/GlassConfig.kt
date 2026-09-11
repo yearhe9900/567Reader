@@ -76,6 +76,15 @@ object GlassConfig {
     /** 面板顶部留白（避开顶栏/状态栏）。 */
     val sheetTopPadding: Dp = 100.dp
 
+    /**
+     * 面板**内容区**顶部留白。
+     *
+     * 与 [sheetTopPadding] 区分：那个是面板相对屏幕的定位留白，这个是面板内部
+     * 内容相对玻璃上边缘的呼吸空间。不留的话元素会紧贴玻璃顶边，像被裁掉一截。
+     * 阅读页「设置」与「界面」两个弹层共用此值，保证两者视觉一致。
+     */
+    val sheetContentTopPadding: Dp = 5.dp
+
     /** 面板水平内边距。 */
     val sheetHorizontalPadding: Dp = 0.dp
 

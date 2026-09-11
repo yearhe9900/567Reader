@@ -122,6 +122,9 @@ fun ReadStyleGlassSheet(
             Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
+                // 内容区顶部留白：顶部那排按钮（粗细/字体/缩进/简繁/边距/信息）原本紧贴
+                // 玻璃上边缘，视觉像被切掉一截；与「设置」弹层共用同一 token 保一致
+                .padding(top = GlassConfig.sheetContentTopPadding)
                 .padding(bottom = 16.dp),
         ) {
             // ── 顶部：粗细 / 字体 / 缩进 / 简繁 / 边距 / 信息 ──

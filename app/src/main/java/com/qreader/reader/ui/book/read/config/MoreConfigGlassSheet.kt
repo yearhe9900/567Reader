@@ -107,7 +107,10 @@ fun MoreConfigGlassSheet(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                // 内容区顶部留白：Preference 列表第一行原本紧贴玻璃上边缘，
+                // 视觉上像是被切掉一截，这里给 5dp 呼吸空间（对齐「界面」弹层的处理）
+                .padding(top = GlassConfig.sheetContentTopPadding),
             update = { container ->
                 val fm = activity.supportFragmentManager
                 if (fm.findFragmentById(container.id) == null) {
