@@ -3,6 +3,7 @@ package com.qreader.reader.ui.book.read.config
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -128,11 +129,14 @@ fun ReadStyleGlassSheet(
                 .padding(bottom = 16.dp),
         ) {
             // ── 顶部：粗细 / 字体 / 缩进 / 简繁 / 边距 / 信息 ──
+            // 六个按钮加了底色与内边距后总宽变大，SpaceEvenly + 固定宽度在窄屏会挤变形；
+            // 改为横向可滚动 + spacedBy，保证每个按钮都保持完整 pill 形状。
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 FontWeightRow(
@@ -402,6 +406,13 @@ fun ReadStyleGlassSheet(
     }
 }
 
+/**
+ * 顶排按钮：带底色 pill 的动作按钮。
+ *
+ * 之前是裸文字（只有 `clip` + `padding`，没有 background），看不出是可点的按钮。
+ * 这里补上 `contentColor.copy(alpha = 0.08f)` 底色，与同面板「翻页动画」那排
+ * 未选中项的底色保持一致，选中态才用 accent 填充。
+ */
 @Composable
 private fun ActionChip(
     label: String,
@@ -410,18 +421,24 @@ private fun ActionChip(
 ) {
     BasicText(
         text = label,
-        style = TextStyle(contentColor, 14.sp),
+        style = TextStyle(contentColor, 14.sp, textAlign = TextAlign.Center),
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
+            .background(contentColor.copy(alpha = 0.08f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
     )
 }
 
+/**
+ * 「中/粗/细」字重三态按钮：整体作为一个 pill，选中段用 accent 填充。
+ *
+ * 三段共用一层底色与圆角，视觉上是一个整体分段控件，而不是三个孤立文字。
+ */
 @Composable
 private fun FontWeightRow(
     selected: Int,
@@ -430,27 +447,37 @@ private fun FontWeightRow(
     onSelect: (Int) -> Unit,
 ) {
     val parts = listOf("中", "粗", "细")
-    Row {
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(contentColor.copy(alpha = 0.08f)),
+    ) {
         parts.forEachIndexed { index, s ->
+            val isSelected = selected == index
             BasicText(
                 text = s,
                 style = TextStyle(
-                    color = if (selected == index) accent else contentColor,
+                    color = if (isSelected) Color.White else contentColor,
                     fontSize = 14.sp,
-                    fontWeight = if (selected == index) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    textAlign = TextAlign.Center,
                 ),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (isSelected) accent else Color.Transparent)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                     ) { onSelect(index) }
-                    .padding(horizontal = 3.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
             )
         }
     }
 }
 
+/**
+ * 「简/繁」转换二态按钮：与 [FontWeightRow] 同构，整体一个 pill、选中段 accent 填充。
+ */
 @Composable
 private fun ChineseChip(
     type: Int,
@@ -458,22 +485,29 @@ private fun ChineseChip(
     accent: Color,
     onSelect: (Int) -> Unit,
 ) {
-    Row {
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(contentColor.copy(alpha = 0.08f)),
+    ) {
         listOf("简", "繁").forEachIndexed { i, s ->
             val idx = i + 1
+            val isSelected = type == idx
             BasicText(
                 text = s,
                 style = TextStyle(
-                    color = if (type == idx) accent else contentColor,
+                    color = if (isSelected) Color.White else contentColor,
                     fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
                 ),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(if (isSelected) accent else Color.Transparent)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                     ) { onSelect(idx) }
-                    .padding(horizontal = 3.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
             )
         }
     }
@@ -544,6 +578,12 @@ private fun StyleSliderRow(
     }
 }
 
+/**
+ * 滑杆两侧的「−」「+」步进按钮：同样给底色，避免退化成裸文字。
+ *
+ * 尺寸比顶排按钮略小（18sp 的 +/− 本身就是强符号，不需要大内边距），
+ * 底色透明度与顶排/翻页动画保持一致。
+ */
 @Composable
 private fun StepBtn(
     text: String,
@@ -552,15 +592,16 @@ private fun StepBtn(
 ) {
     BasicText(
         text = text,
-        style = TextStyle(contentColor, 18.sp),
+        style = TextStyle(contentColor, 18.sp, textAlign = TextAlign.Center),
         modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(6.dp))
+            .background(contentColor.copy(alpha = 0.08f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp, vertical = 2.dp),
     )
 }
 
