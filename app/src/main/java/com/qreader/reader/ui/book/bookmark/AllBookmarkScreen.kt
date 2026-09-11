@@ -1,5 +1,6 @@
 package com.qreader.reader.ui.book.bookmark
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -138,6 +139,7 @@ fun AllBookmarkScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BookmarkList(
     bookmarks: List<Bookmark>,
