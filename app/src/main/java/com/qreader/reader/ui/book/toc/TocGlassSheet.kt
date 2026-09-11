@@ -126,7 +126,6 @@ fun TocGlassSheet(
 
     val isLocal = book.isLocal
     val isLocalTxt = book.isLocalTxt
-    val showWordCount = AppConfig.tocCountWords
 
     var tab by remember { mutableIntStateOf(0) }
     var searchActive by remember { mutableStateOf(false) }
@@ -134,6 +133,10 @@ fun TocGlassSheet(
     var menuOpen by remember { mutableStateOf(false) }
     var pendingBookmark by remember { mutableStateOf<Bookmark?>(null) }
     var pendingBookmarkPos by remember { mutableIntStateOf(-1) }
+
+    // 两个设置开关提升为本地状态：改完立即重组（AppConfig 不是 Compose 可观察的）
+    var useReplace by remember { mutableStateOf(AppConfig.tocUiUseReplace) }
+    var showWordCount by remember { mutableStateOf(AppConfig.tocCountWords) }
 
     val chapterListState = rememberLazyListState()
     val bookmarkListState = rememberLazyListState()
@@ -160,9 +163,8 @@ fun TocGlassSheet(
     // 章节数据（跟随搜索词过滤）
     // displayTitle 在 IO 线程预计算（对齐原版 ChapterListAdapter.upDisplayTitles，
     // getDisplayTitle 内部会跑正则替换，放 Compose 渲染里会掉帧）
-    val tocData by produceState(TocData(emptyList(), emptyMap(), emptySet()), bookUrl, searchKey) {
+    val tocData by produceState(TocData(emptyList(), emptyMap(), emptySet()), bookUrl, searchKey, useReplace) {
         val end = (book.simulatedTotalChapterNum() - 1).coerceAtLeast(0)
-        val useReplace = AppConfig.tocUiUseReplace
         val chineseConvert = AppConfig.chineseConverterType != 0
         val (chs, titles) = withContext(Dispatchers.IO) {
             val list = if (searchKey.isBlank()) {
@@ -343,14 +345,20 @@ fun TocGlassSheet(
                 TocMenuItem(
                     text = ctx.getString(R.string.use_replace),
                     contentColor = contentColor,
-                    checked = AppConfig.tocUiUseReplace,
-                    onClick = { AppConfig.tocUiUseReplace = !AppConfig.tocUiUseReplace },
+                    checked = useReplace,
+                    onClick = {
+                        useReplace = !useReplace
+                        AppConfig.tocUiUseReplace = useReplace
+                    },
                 )
                 TocMenuItem(
                     text = ctx.getString(R.string.load_word_count),
                     contentColor = contentColor,
-                    checked = AppConfig.tocCountWords,
-                    onClick = { AppConfig.tocCountWords = !AppConfig.tocCountWords },
+                    checked = showWordCount,
+                    onClick = {
+                        showWordCount = !showWordCount
+                        AppConfig.tocCountWords = showWordCount
+                    },
                 )
             } else {
                 TocMenuItem(
