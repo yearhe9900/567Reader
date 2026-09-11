@@ -21,14 +21,12 @@ import com.qreader.reader.model.ReadManga
 import com.qreader.reader.ui.browser.WebViewActivity
 import com.qreader.reader.ui.widget.seekbar.SeekBarChangeListener
 import com.qreader.reader.utils.ColorUtils
-import com.qreader.reader.utils.ConstraintModify
 import com.qreader.reader.utils.activity
 import com.qreader.reader.utils.applyNavigationBarPadding
 import com.qreader.reader.utils.dpToPx
 import com.qreader.reader.utils.gone
 import com.qreader.reader.utils.invisible
 import com.qreader.reader.utils.loadAnimation
-import com.qreader.reader.utils.modifyBegin
 import com.qreader.reader.utils.openUrl
 import com.qreader.reader.utils.startActivity
 import com.qreader.reader.utils.visible
@@ -118,19 +116,19 @@ class MangaMenu @JvmOverloads constructor(
         bottomMenu.applyNavigationBarPadding()
     }
 
-    private fun upBrightnessVwPos() {
-        if (AppConfig.brightnessVwPos) {
-            binding.root.modifyBegin()
-                .clear(R.id.ll_brightness, ConstraintModify.Anchor.LEFT)
-                .rightToRightOf(R.id.ll_brightness, R.id.vw_menu_root)
-                .commit()
-        } else {
-            binding.root.modifyBegin()
-                .clear(R.id.ll_brightness, ConstraintModify.Anchor.RIGHT)
-                .leftToLeftOf(R.id.ll_brightness, R.id.vw_menu_root)
-                .commit()
-        }
-    }
+    /**
+     * 竖向亮度条的左右位置切换。
+     *
+     * 原 legado 用 ConstraintModify 改 `ll_brightness` 的锚点，但本项目
+     * `view_manga_menu.xml` 从来没有 `ll_brightness` 这个 id（它只存在于
+     * Compose 阅读页的 `ReadMenuOverlay`，那边的对应物是纯 Compose 定位，
+     * 靠 `Modifier.align(CenterStart/CenterEnd)` 实现）。
+     *
+     * 漫画菜单这里既没有该 view，也没有漫画版亮度条，所以本方法无事可做。
+     * 保留空实现是为了维持与 `initView()` 的调用关系；真正对齐 AppConfig 的
+     * 逻辑由 `ReadMangaActivity.updateWindowBrightness()` 承担。
+     */
+    private fun upBrightnessVwPos() = Unit
 
     private fun initAnimation() {
         menuTopIn.setAnimationListener(menuInListener)
