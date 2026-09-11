@@ -19,4 +19,12 @@
 
     <item name="view_pager_main" type="id" />
 
+    <!--
+      ConfigActivity / QrCodeActivity 的 Fragment 挂载点。
+      Compose 化后容器不再由 XML 提供，改由 Activity 手动 new FrameLayout 并赋该 id，
+      所以必须在这里声明，否则 R.id.xxx 编译不过。
+    -->
+    <item name="configFrameLayout" type="id" />
+    <item name="qrFragmentContainer" type="id" />
+
 </resources>
