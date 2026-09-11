@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -465,12 +464,10 @@ private fun TocTopBar(
             verticalAlignment = Alignment.Bottom,
         ) {
             // 返回
-            TocGlassIconButton(
+            TocIconButton(
                 iconRes = R.drawable.ic_arrow_back,
                 contentDescription = ctx.getString(R.string.back),
                 contentColor = contentColor,
-                containerColor = containerColor,
-                backdrop = backdrop,
                 onClick = onBack,
             )
 
@@ -527,22 +524,18 @@ private fun TocTopBar(
             }
 
             // 搜索
-            TocGlassIconButton(
+            TocIconButton(
                 iconRes = R.drawable.ic_search,
                 contentDescription = ctx.getString(R.string.search),
                 contentColor = contentColor,
-                containerColor = containerColor,
-                backdrop = backdrop,
                 onClick = onSearchToggle,
             )
 
             // 更多
-            TocGlassIconButton(
+            TocIconButton(
                 iconRes = R.drawable.ic_more_vert,
                 contentDescription = "more",
                 contentColor = contentColor,
-                containerColor = containerColor,
-                backdrop = backdrop,
                 onClick = onMenuClick,
             )
         }
@@ -550,48 +543,32 @@ private fun TocTopBar(
 }
 
 /**
- * 顶栏玻璃图标按钮：40dp 方形玻璃块 + 居中图标。
+ * 顶栏图标按钮：裸图标 + 40dp 触摸区，**不加**玻璃框。
  *
- * 与 [com.qreader.reader.ui.main.MainScreen] 的 BookshelfGlassTitleBar 搜索/更多按钮同构
- * （`drawBackdrop` 圆角 [GlassConfig.glassButtonCornerRadius] + 表面 alpha
- * [GlassConfig.glassButtonSurfaceAlpha]），保证全 App 标题栏按钮视觉一致。
- *
- * 注意：本组件位于目录页顶层（不在 `layerBackdrop` 捕获层内），可以安全使用 `drawBackdrop`。
+ * 顶栏本身已经是一整块玻璃，按钮再套一层 40dp 玻璃块会在玻璃上叠出可见的方块边界，
+ * 视觉上像贴了三个按钮底板。这里保持纯图标（与阅读页 ReadMenuOverlay 顶栏返回键同款），
+ * 只有图标本身，触摸区靠 40dp 保证。
  */
 @Composable
-private fun TocGlassIconButton(
+private fun TocIconButton(
     iconRes: Int,
     contentDescription: String,
     contentColor: Color,
-    containerColor: Color,
-    backdrop: Backdrop,
     onClick: () -> Unit,
 ) {
-    Box(
+    Icon(
+        painter = painterResource(iconRes),
+        contentDescription = contentDescription,
+        tint = contentColor,
         modifier = Modifier
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { RoundedCornerShape(GlassConfig.glassButtonCornerRadius) },
-                effects = {
-                    vibrancy()
-                    blur(GlassConfig.blur.toPx())
-                    lens(GlassConfig.lensX.toPx(), GlassConfig.lensY.toPx())
-                },
-                onDrawSurface = {
-                    drawRect(containerColor.copy(alpha = GlassConfig.glassButtonSurfaceAlpha))
-                },
+            .size(40.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
             )
-            .size(40.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = contentDescription,
-                tint = contentColor,
-            )
-        }
-    }
+            .padding(8.dp),
+    )
 }
 
 /**
