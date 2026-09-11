@@ -75,10 +75,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * 顶部导航栏高度（含状态栏区域）。
+ * 顶部导航栏玻璃高度（从屏幕顶边算起，把状态栏一起包住）。
  *
- * 与全 App 标题栏统一为 100dp：外层 `statusBarsPadding()` 把内容推离状态栏后，
- * 玻璃本身仍向下延伸满 100dp，和 MainScreen / SearchScreen 顶栏完全等高。
+ * 与全 App 标题栏统一为 100dp。注意这个高度是**含状态栏**的：顶栏内部自己
+ * `statusBarsPadding()` 把按钮行推离状态栏，玻璃底色则一直铺到屏幕顶边，
+ * 这样状态栏背后和顶栏是同一块玻璃，不会出现断层色带
+ * （对齐 MainScreen.BookshelfGlassTitleBar 的 `.height(100.dp).statusBarsPadding()`）。
  */
 private val TocTopBarHeight = 100.dp
 
@@ -234,10 +236,11 @@ fun TocGlassSheet(
                 )
         )
 
+        // 内容层**不加** statusBarsPadding：顶栏玻璃要一直延伸到屏幕顶边与状态栏连成一片。
+        // 顶栏自己吃掉状态栏高度（见 TocTopBar 内部的 statusBarsPadding），
+        // 这样状态栏背后也是同一块玻璃，不会出现「状态栏一条、顶栏另一条」的断层。
         Column(
-            Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+            Modifier.fillMaxSize()
         ) {
             TocTopBar(
                 backdrop = backdrop,
@@ -406,11 +409,14 @@ fun TocGlassSheet(
 /**
  * 顶部玻璃导航栏：返回 / Tab「目录|书签」/ 搜索 / 更多。
  *
- * 视觉与全 App 标题栏统一（对齐 MainScreen.BookshelfGlassTitleBar / SearchScreen 顶栏）：
- *  - 高度 [TocTopBarHeight] = 100dp（含状态栏区域，由外层 `statusBarsPadding()` 让位后仍占满高度）；
- *  - 内容底部对齐（`Alignment.Bottom` + `bottom = 12.dp`），让标题行贴住玻璃下缘；
- *  - 图标按钮统一 `Box.drawBackdrop(...size(40.dp))` 玻璃块 + 内部 `IconButton`，
- *    与书架页搜索/更多按钮的 40dp 玻璃按钮完全同款（圆角 12dp、表面 alpha 0.6）。
+ * 与全 App 标题栏一致的关键点是**玻璃一直延伸到屏幕顶边**、把状态栏也包进来，
+ * 状态栏背后和顶栏是同一块玻璃（对齐 MainScreen / SearchScreen 顶栏 / ReadMenuOverlay 的做法），
+ * 而不是「状态栏一条 + 顶栏另一条」的色带断层。
+ *
+ * 高度安排（对齐 MainScreen.BookshelfGlassTitleBar）：
+ *  - 玻璃本体 `.height(100.dp)`，从屏幕顶边起算；
+ *  - 内部先 `statusBarsPadding()` 把内容推离状态栏，再往下排按钮行；
+ *  - 按钮行底部对齐（`Alignment.Bottom` + `bottom = 12.dp`），与其它页标题栏同款。
  *
  * 搜索展开时就地把「目录|书签」Tab 替换为输入框（对齐原版 SearchView 展开时 tabLayout.gone()）。
  */
@@ -433,7 +439,7 @@ private fun TocTopBar(
         ColorUtils.isColorLight(ReadBookConfig.bgMeanColor)
     )
 
-    Box(
+    Column(
         Modifier
             .fillMaxWidth()
             .drawBackdrop(
@@ -446,11 +452,15 @@ private fun TocTopBar(
                 },
                 onDrawSurface = { drawRect(containerColor) },
             )
-            .height(TocTopBarHeight),
+            // 玻璃整体从屏幕顶边起算 100dp，把状态栏一起包进来
+            .height(TocTopBarHeight)
+            // 内容让开状态栏；玻璃本身仍铺满状态栏区域
+            .statusBarsPadding(),
     ) {
         Row(
             Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .weight(1f)
                 .padding(start = 4.dp, end = 4.dp, bottom = 12.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
