@@ -99,3 +99,22 @@
 * 双页等列表选择弹框玻璃态化；主题模式/列表弹框改为选中即生效。
 * 界面面板改为 in-tree 玻璃底栏；界面滑杆玻璃态（后回退内嵌方案，避免整页卡死）。
 * 固定部分阅读配置（刘海、状态栏、屏幕方向/超时等）并删除对应设置入口。
+
+**2026/09/10**
+
+* 阅读页各功能面板陆续玻璃态化：边距、书签编辑、信息栏、文字/背景样式、朗读设置、书内搜索、朗读主面板、换源。
+* 自动翻页与点击区域改为玻璃浮层；界面面板改为纯 Compose 复刻。
+* 目录（Toc）改为玻璃浮层并对齐 legado 原版设计。
+* 删除阅读页已无宿主的死代码（ReadMenu / SearchMenu 等）。
+* 交付 view-to-compose-dialogs 迁移 spec。
+
+**2026/09/11**
+
+* 目录改为全屏玻璃页并对齐原版 TocActivity；「使用替换/加载字数」开关即时生效。
+* 抽取共享玻璃顶栏组件 GlassTopBar / GlassTopBarIcon / GlassTopBarReservedHeight（GlassScaffold.kt）。
+* 第 1 批页面 Compose 化：设置页（ConfigActivity）、二维码页（QrCodeActivity）。
+* 清理 5 个无引用死布局；恢复被误删的 item_1line_text 等；移除 MangaMenu 悬空引用。
+* 修复阅读页竖向亮度条不显示（View 偏好 → Compose 状态桥接，开关与数值同刷）。
+* 修复目录页搜索按钮「点击无效」（对齐胶囊玻璃搜索框范式）。
+* 全部书签页（AllBookmarkActivity）迁移 Compose：玻璃顶栏 + LazyColumn 粘性分组头 + 玻璃下拉菜单。
+* 输出 Compose 剩余布局盘点报告（158 布局，页面级 27 个分档）。
